@@ -30,12 +30,6 @@ class CustomerController {
 
       const customers = await prisma.customer.findMany({
         where,
-        include: {
-          contacts: true,
-          projects: true,
-          quotations: true,
-          invoices: true
-        },
         orderBy: { createdAt: 'desc' }
       });
 

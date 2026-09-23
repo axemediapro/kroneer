@@ -11,8 +11,13 @@ const routes = require('./src/routes');
 const { globalLocals } = require('./src/middleware/auth');
 const { notFoundHandler, errorHandler } = require('./src/middleware/error');
 
+const compression = require('compression');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Gzip Compression për përgjigje ultra të shpejta
+app.use(compression());
 
 // Konfigurimi i EJS & Layouts
 app.use(expressLayouts);
@@ -25,7 +30,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '7d',
+  etag: true
+}));
 
 // Sesionet
 app.use(

@@ -1,9 +1,18 @@
 const prisma = require('../config/prisma');
 
+let cachedDashboardData = null;
+let cachedDashboardTime = 0;
+const DASHBOARD_CACHE_TTL = 15 * 1000; // 15 sekonda cache për shpejtësi të menjëhershme
+
 class DashboardController {
   static async getIndex(req, res) {
     try {
-      // 1. Statistikat financiare dhe operacionale në kohë reale
+      const now = Date.now();
+      if (cachedDashboardData && (now - cachedDashboardTime < DASHBOARD_CACHE_TTL)) {
+        return res.render('dashboard/index', cachedDashboardData);
+      }
+
+      // 1. Ekzekutimi i të gjitha 20 kërkesave në NJË `Promise.all` të vetëm paralel
       const [
         totalPaymentsAgg,
         unpaidInvoicesAgg,
@@ -13,7 +22,18 @@ class DashboardController {
         maintenanceCount,
         recentActivities,
         recentTickets,
-        recentQuotes
+        recentQuotes,
+        contactsCount,
+        customersCount,
+        oppsCount,
+        quotesCount,
+        contractsCount,
+        invoicesCount,
+        paymentsCount,
+        projectsCount,
+        installationsCount,
+        handoversCount,
+        maintenanceTotal
       ] = await Promise.all([
         prisma.payment.aggregate({ _sum: { amount: true } }),
         prisma.invoice.aggregate({ _sum: { balanceDue: true } }),
@@ -35,15 +55,26 @@ class DashboardController {
         }),
         prisma.serviceTicket.findMany({
           where: { status: { in: ['Hapur', 'Caktuar', 'Në proces'] } },
-          include: { customer: true },
+          include: { customer: { select: { companyName: true, firstName: true, lastName: true, code: true } } },
           orderBy: { createdAt: 'desc' },
           take: 5
         }),
         prisma.quotation.findMany({
-          include: { customer: true },
+          include: { customer: { select: { companyName: true, firstName: true, lastName: true, code: true } } },
           orderBy: { createdAt: 'desc' },
           take: 5
-        })
+        }),
+        prisma.contact.count(),
+        prisma.customer.count(),
+        prisma.opportunity.count(),
+        prisma.quotation.count(),
+        prisma.contract.count(),
+        prisma.invoice.count(),
+        prisma.payment.count(),
+        prisma.project.count(),
+        prisma.installation.count(),
+        prisma.handover.count(),
+        prisma.maintenanceContract.count()
       ]);
 
       const totalRevenue = totalPaymentsAgg._sum.amount || 0;
@@ -63,35 +94,8 @@ class DashboardController {
           'Lift shërbimi',
           'Platformë ngritëse'
         ],
-        data: [42, 18, 14, 10, 8, 5, 3] // Përqindje / Vlera
+        data: [42, 18, 14, 10, 8, 5, 3]
       };
-
-      // 4. Numërimet e etapave të Funnel-it të shitjes
-      const [
-        contactsCount,
-        customersCount,
-        oppsCount,
-        quotesCount,
-        contractsCount,
-        invoicesCount,
-        paymentsCount,
-        projectsCount,
-        installationsCount,
-        handoversCount,
-        maintenanceTotal
-      ] = await Promise.all([
-        prisma.contact.count(),
-        prisma.customer.count(),
-        prisma.opportunity.count(),
-        prisma.quotation.count(),
-        prisma.contract.count(),
-        prisma.invoice.count(),
-        prisma.payment.count(),
-        prisma.project.count(),
-        prisma.installation.count(),
-        prisma.handover.count(),
-        prisma.maintenanceContract.count()
-      ]);
 
       const funnelCounts = {
         contacts: contactsCount,
@@ -107,7 +111,7 @@ class DashboardController {
         maintenance: maintenanceTotal
       };
 
-      res.render('dashboard/index', {
+      const payload = {
         pageTitle: 'Paneli Kryesor - KRONEER',
         stats: {
           totalRevenue,
@@ -123,7 +127,12 @@ class DashboardController {
         recentActivities,
         recentTickets,
         recentQuotes
-      });
+      };
+
+      cachedDashboardData = payload;
+      cachedDashboardTime = now;
+
+      res.render('dashboard/index', payload);
     } catch (err) {
       console.error('Gabim në ngarkimin e Dashboard-it:', err);
       req.flash('error', 'Nuk u arrit të ngarkohen të dhënat e panelit.');

@@ -9,14 +9,16 @@ function isAuthenticated(req, res, next) {
   return res.redirect('/kycu');
 }
 
-async function globalLocals(req, res, next) {
-  try {
-    res.locals.currentUser = req.session ? req.session.user : null;
-    res.locals.currentPath = req.path;
-    res.locals.flashSuccess = req.flash('success');
-    res.locals.flashError = req.flash('error');
+let cachedSettings = null;
+let cachedSettingsTime = 0;
+const SETTINGS_CACHE_TTL = 3 * 60 * 1000; // 3 minuta cache
 
-    // Merr cilësimet e kompanisë me cache të lehtë
+async function getCachedCompanySettings() {
+  const now = Date.now();
+  if (cachedSettings && (now - cachedSettingsTime < SETTINGS_CACHE_TTL)) {
+    return cachedSettings;
+  }
+  try {
     let settings = await prisma.companySettings.findFirst();
     if (!settings) {
       settings = {
@@ -24,7 +26,7 @@ async function globalLocals(req, res, next) {
         tagline: 'SISTEME LIFTSH',
         logoUrl: null,
         logoSvg: null,
-        logoDarkBgUrl: null,
+        logoDarkBgUrl: '/images/kroneer-logo-white.svg',
         logoDarkBgSvg: null,
         phone: '+383 (0) 38 500 600',
         email: 'info@kroneer-lifts.com',
@@ -33,16 +35,42 @@ async function globalLocals(req, res, next) {
         vatRate: 18
       };
     }
-    res.locals.company = settings;
+    cachedSettings = settings;
+    cachedSettingsTime = now;
+    return settings;
+  } catch (e) {
+    return cachedSettings || {
+      companyName: 'KRONEER',
+      tagline: 'SISTEME LIFTSH',
+      logoDarkBgUrl: '/images/kroneer-logo-white.svg'
+    };
+  }
+}
 
-    // Njoftimet
-    if (res.locals.currentUser) {
-      res.locals.unreadNotifCount = await NotificationService.getUnreadCount(res.locals.currentUser.id);
-      res.locals.recentNotifications = await NotificationService.getRecent(res.locals.currentUser.id, 5);
-    } else {
-      res.locals.unreadNotifCount = 0;
-      res.locals.recentNotifications = [];
-    }
+function invalidateCompanySettingsCache() {
+  cachedSettings = null;
+  cachedSettingsTime = 0;
+}
+
+async function globalLocals(req, res, next) {
+  try {
+    res.locals.currentUser = req.session ? req.session.user : null;
+    res.locals.currentPath = req.path;
+    res.locals.flashSuccess = req.flash('success');
+    res.locals.flashError = req.flash('error');
+
+    // Ekzekuto paralelisht marrjen e cilësimeve dhe njoftimeve për shpejtësi maksimale
+    const [settings, notifData] = await Promise.all([
+      getCachedCompanySettings(),
+      res.locals.currentUser ? Promise.all([
+        NotificationService.getUnreadCount(res.locals.currentUser.id),
+        NotificationService.getRecent(res.locals.currentUser.id, 5)
+      ]) : Promise.resolve([0, []])
+    ]);
+
+    res.locals.company = settings;
+    res.locals.unreadNotifCount = notifData[0];
+    res.locals.recentNotifications = notifData[1];
 
     // Formatuesit e ndihmës në shqip
     res.locals.formatCurrency = (amount) => {
@@ -99,5 +127,6 @@ async function globalLocals(req, res, next) {
 
 module.exports = {
   isAuthenticated,
-  globalLocals
+  globalLocals,
+  invalidateCompanySettingsCache
 };

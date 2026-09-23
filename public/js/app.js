@@ -719,3 +719,163 @@ function markAllNotificationsRead() {
       if (countBadge) countBadge.remove();
     });
 }
+
+// 5. Instant Fast Page Transitions & Link Prefetching (AJAX Fast Response Time)
+(function initInstantNavigation() {
+  const pageCache = new Map();
+  const prefetchingUrls = new Set();
+
+  function isValidNavigationLink(el) {
+    if (!el || el.tagName !== 'A') return false;
+    const href = el.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
+    if (el.target && el.target !== '_self') return false;
+    if (el.hasAttribute('download')) return false;
+    if (href.includes('/dil') || href.includes('/print') || href.includes('-pdf') || href.includes('/backup')) return false;
+    
+    try {
+      const url = new URL(href, window.location.origin);
+      return url.origin === window.location.origin;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function prefetchUrl(url) {
+    if (pageCache.has(url) || prefetchingUrls.has(url)) return;
+    prefetchingUrls.add(url);
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => {
+        if (res.ok && (res.headers.get('content-type') || '').includes('text/html')) {
+          return res.text();
+        }
+        return null;
+      })
+      .then(html => {
+        if (html) pageCache.set(url, html);
+      })
+      .catch(() => {})
+      .finally(() => prefetchingUrls.delete(url));
+  }
+
+  // Hover / Touchstart prefetching për përgjigje 0ms
+  document.addEventListener('pointerenter', (e) => {
+    const link = e.target.closest('a');
+    if (isValidNavigationLink(link)) {
+      prefetchUrl(link.href);
+    }
+  }, { capture: true, passive: true });
+
+  document.addEventListener('touchstart', (e) => {
+    const link = e.target.closest('a');
+    if (isValidNavigationLink(link)) {
+      prefetchUrl(link.href);
+    }
+  }, { capture: true, passive: true });
+
+  async function navigateTo(url, pushState = true) {
+    let html = pageCache.get(url);
+    
+    // Top loader bar
+    let bar = document.getElementById('fast-nav-loader');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'fast-nav-loader';
+      bar.className = 'fixed top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 z-[9999] transition-all duration-200 shadow-md shadow-amber-500/50';
+      document.body.appendChild(bar);
+    }
+    bar.style.width = '35%';
+    bar.style.opacity = '1';
+
+    if (!html) {
+      try {
+        bar.style.width = '65%';
+        const res = await fetch(url, { credentials: 'same-origin' });
+        if (!res.ok || !(res.headers.get('content-type') || '').includes('text/html')) {
+          window.location.href = url;
+          return;
+        }
+        html = await res.text();
+        pageCache.set(url, html);
+      } catch (err) {
+        window.location.href = url;
+        return;
+      }
+    }
+
+    bar.style.width = '100%';
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const newMain = doc.querySelector('main');
+    const curMain = document.querySelector('main');
+
+    if (newMain && curMain) {
+      curMain.innerHTML = newMain.innerHTML;
+      if (doc.title) document.title = doc.title;
+
+      if (pushState) {
+        window.history.pushState({ url }, '', url);
+      }
+
+      // Update active links on sidebar & mobile navbar
+      const newPath = new URL(url, window.location.origin).pathname;
+      document.querySelectorAll('#main-sidebar a, #mobile-bottom-navbar a').forEach(a => {
+        const aPath = a.getAttribute('href');
+        if (!aPath) return;
+        const isActive = (aPath === newPath) || (aPath !== '/paneli' && aPath !== '/' && newPath.startsWith(aPath));
+        a.classList.toggle('text-amber-400', isActive);
+        if (a.closest('#main-sidebar')) {
+          a.classList.toggle('bg-amber-500/15', isActive);
+          a.classList.toggle('border-amber-500/30', isActive);
+        }
+      });
+
+      // Close mobile drawer if open
+      const sidebar = document.getElementById('main-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar && backdrop) {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+
+      // Re-run inline scripts in newMain
+      newMain.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+
+      // Re-run Lucide Icons
+      if (window.lucide) window.lucide.createIcons();
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      window.location.href = url;
+    }
+
+    setTimeout(() => {
+      if (bar) {
+        bar.style.opacity = '0';
+        setTimeout(() => { if (bar) bar.style.width = '0%'; }, 200);
+      }
+    }, 150);
+  }
+
+  // Intercept click on internal links
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link || !isValidNavigationLink(link)) return;
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    
+    e.preventDefault();
+    navigateTo(link.href, true);
+  });
+
+  // Handle browser back / forward
+  window.addEventListener('popstate', () => {
+    navigateTo(window.location.href, false);
+  });
+})();
