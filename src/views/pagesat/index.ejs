@@ -1,0 +1,102 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-black text-slate-100 font-mono">PAGESAT DHE ARKËTIMET</h1>
+    <p class="text-xs text-slate-400 mt-1">Regjistri i pagesave të kryera nga klientët me dëftesa zyrtare</p>
+  </div>
+  <a href="/pagesat/krijo" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    <span>Regjistro Pagesë të Re</span>
+  </a>
+</div>
+
+<!-- Kartela e Totalit të Arkëtuar -->
+<div class="mb-6 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl flex items-center justify-between">
+  <div>
+    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">TOTALI I ARKËTUAR NË SISTEM</span>
+    <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono mt-1"><%= formatCurrency(totalCollected) %></div>
+  </div>
+  <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-mono font-bold text-lg">
+    €
+  </div>
+</div>
+
+<!-- Filtruesi -->
+<div class="mb-6 bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+  <form method="GET" action="/pagesat" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div>
+      <input type="text" name="search" value="<%= filters.search %>" placeholder="Kërko me numër pagese, referencë..." class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+    </div>
+    <div>
+      <select name="method" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <option value="">Të gjitha metodat e pagesës</option>
+        <% methods.forEach(m => { %>
+          <option value="<%= m %>" <%= filters.method === m ? 'selected' : '' %>><%= m %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" class="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700">Filtro</button>
+      <% if (filters.search || filters.method) { %>
+        <a href="/pagesat" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg flex items-center justify-center">Pastro</a>
+      <% } %>
+    </div>
+  </form>
+</div>
+
+<!-- Tabela e Pagesave -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-slate-800 bg-slate-950/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <th class="p-4">ID e Pagesës</th>
+          <th class="p-4">Klienti</th>
+          <th class="p-4">Fatura e Lidhur</th>
+          <th class="p-4">Data</th>
+          <th class="p-4">Metoda</th>
+          <th class="p-4">Referenca</th>
+          <th class="p-4">Shuma e Paguar</th>
+          <th class="p-4 text-right">Dëftesë</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/60 text-xs">
+        <% if (payments && payments.length > 0) { %>
+          <% payments.forEach(p => { %>
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="p-4 font-mono font-bold text-amber-400"><%= p.number %></td>
+              <td class="p-4 font-bold text-slate-200">
+                <%= p.customer ? p.customer.companyName : '-' %>
+              </td>
+              <td class="p-4 font-mono">
+                <% if (p.invoice) { %>
+                  <a href="/faturat/<%= p.invoice.id %>" class="text-blue-400 hover:underline"><%= p.invoice.number %></a>
+                <% } else { %>
+                  <span class="text-slate-500">-</span>
+                <% } %>
+              </td>
+              <td class="p-4 text-slate-300 font-mono"><%= formatDate(p.date) %></td>
+              <td class="p-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                  <%= p.paymentMethod %>
+                </span>
+              </td>
+              <td class="p-4 font-mono text-slate-400"><%= p.referenceNumber || '-' %></td>
+              <td class="p-4 font-mono font-bold text-emerald-400 text-sm">
+                <%= formatCurrency(p.amount) %>
+              </td>
+              <td class="p-4 text-right">
+                <a href="/pagesat/<%= p.id %>/deftese" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 text-xs font-semibold border border-slate-700">
+                  Dëftesë
+                </a>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="p-8 text-center text-slate-500">Nuk u gjet asnjë pagesë.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

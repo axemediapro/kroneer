@@ -1,0 +1,304 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono">KRIJO KONTRATË TË RE</h1>
+      <span class="font-mono text-sm font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= nextNumber %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Gjeneroni një kontratë zyrtare me artikuj dhe klauzola të personalizueshme</p>
+  </div>
+  <a href="/kontratat" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+    Anulo
+  </a>
+</div>
+
+<%
+  const compName = company.companyName || 'KRONEER';
+  const compAddr = company.address || 'Prishtinë';
+  const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+  const compTax = company.taxNumber || '330123456';
+  
+  const initialCustId = selectedCustomer ? selectedCustomer.id : (customers[0] ? customers[0].id : '');
+  const initialCust = selectedCustomer || customers[0] || {};
+  const initialElevId = selectedQuotation && selectedQuotation.configurations && selectedQuotation.configurations[0] && selectedQuotation.configurations[0].elevatorId ? selectedQuotation.configurations[0].elevatorId : '';
+  const initialValue = selectedQuotation ? selectedQuotation.total : 0;
+  const initialPayment = selectedQuotation ? selectedQuotation.paymentTerms : '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit';
+  const initialWarranty = selectedQuotation ? (selectedQuotation.warrantyMonths || 24) : 24;
+  
+  const today = new Date();
+  const defDelivery = new Date(today.getTime() + 42 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const defInstall = new Date(today.getTime() + 63 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+%>
+
+<form action="/kontratat/krijo" method="POST" id="contract-create-form" class="space-y-6" x-data="{
+  customerId: '<%= initialCustId %>',
+  customers: <%= JSON.stringify(customers.map(c => ({ id: c.id, name: c.companyName || `${c.firstName || ''} ${c.lastName || ''}`.trim(), city: c.city || 'Kosovë', address: c.address || '-', tax: c.taxNumber || c.businessNumber || '-', building: c.buildingName || 'Objekti i Porositësit' }))) %>,
+  elevators: <%= JSON.stringify(elevators.map(e => ({ id: e.id, model: e.model, type: e.type, capacity: e.capacityKg }))) %>,
+  elevatorId: '<%= initialElevId %>',
+  value: <%= initialValue %>,
+  paymentTerms: '<%= initialPayment.replace(/'/g, "\\'") %>',
+  warrantyMonths: <%= initialWarranty %>,
+  deliveryDate: '<%= defDelivery %>',
+  installationDate: '<%= defInstall %>',
+  
+  compName: '<%= compName.replace(/'/g, "\\'") %>',
+  compAddr: '<%= compAddr.replace(/'/g, "\\'") %>',
+  compCity: '<%= compCity.replace(/'/g, "\\'") %>',
+  compTax: '<%= compTax.replace(/'/g, "\\'") %>',
+  
+  contractTitle: 'KONTRATË PËR FURNIZIMIN, MONTIMIN DHE MIRËMBAJTJEN E SISTEMEVE TË LIFTEVE',
+  preamble: '',
+  art1Title: 'NENI 1: OBJEKTI I KONTRATËS',
+  art1Text: '',
+  art2Title: 'NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS',
+  art2Text: '',
+  art3Title: 'NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA',
+  art3Text: '',
+  art4Title: 'NENI 4: MIRËMBAJTJA & SHËRBIMI',
+  art4Text: 'Mirëmbajtje falas gjatë periudhës së garancisë sipas standardit evropian EN 13015 me shërbim emergjence 24/7 dhe kontrolle periodike mujore.',
+  art5Title: 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE',
+  art5Text: '1. Shitësi obligohet të zbatojë me përpikmëri standardet evropiane të sigurisë EN 81-20 dhe EN 81-50 gjatë të gjitha fazave të punimeve.\n2. Porositësi obligohet të sigurojë hapësirën e pastër të pusit të liftit sipas specifikimeve teknike, furnizim të pandërprerë me energji elektrike 380V/50Hz në vendndodhjen teknike, dhe qasje të papenguar për ekipin montues.',
+  art6Title: 'NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE',
+  art6Text: 'Çdo ndryshim apo plotësim i kësaj kontrate do të jetë i vlefshëm vetëm me shkrim me pëlqimin e të dyja palëve. Mosmarrëveshjet eventuale do të zgjidhen me mirëkuptim, ose në mungesë marrëveshjeje nga Gjykata kompetente në Prishtinë.',
+  closing: 'Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.',
+  
+  init() {
+    this.updateTexts();
+  },
+  
+  getSelectedCustomer() {
+    return this.customers.find(c => c.id == this.customerId) || { name: 'Klienti', city: 'Kosovë', address: '-', tax: '-', building: 'Objekti i Porositësit' };
+  },
+  
+  getSelectedElevator() {
+    return this.elevators.find(e => e.id == this.elevatorId) || { model: 'Sisteme Lifti KRONEER' };
+  },
+  
+  updateTexts() {
+    const cust = this.getSelectedCustomer();
+    const elev = this.getSelectedElevator();
+    const valFormatted = parseFloat(this.value || 0).toLocaleString('de-DE', {minimumFractionDigits: 2});
+    
+    this.preamble = `Kjo Kontratë lidhet ndërmjet ${this.compName} me seli në ${this.compAddr}, ${this.compCity}, NUI: ${this.compTax} (në vijim: \'Shitësi / Kryesi i Punëve\'), dhe ${cust.name} me seli në ${cust.address}, ${cust.city}, NUI: ${cust.tax} (në vijim: \'Blerësi / Porositësi\').`;
+    this.art1Text = `Shitësi merr përsipër furnizimin me pajisje, transportin, montimin profesional, testimin dinamik dhe dorëzimin e plotë funksional të sistemit të liftit: ${elev.model} për objektin \'${cust.building}\'.`;
+    this.art2Text = `Vlera totale e dakorduar kontraktuale është €${valFormatted} (përfshirë TVSH 18%). Kushtet e pagesës janë: ${this.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
+    this.art3Text = `Afati i dorëzimit të pajisjeve në kantier është deri më ${this.deliveryDate || 'sipas marrëveshjes'}. Përfundimi i montimit dhe testimit parashikohet më ${this.installationDate || 'sipas marrëveshjes'}. Periudha e Garancisë Inxhinierike është ${this.warrantyMonths || 24} Muaj nga dita e nënshkrimit të Procesverbalit të Dorëzimit Teknik.`;
+  }
+}">
+
+  <% if (selectedQuotation) { %>
+    <input type="hidden" name="quotationId" value="<%= selectedQuotation.id %>">
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between text-xs">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center font-mono">
+          ✓
+        </span>
+        <div>
+          <span class="font-bold text-amber-400">Gjenerim nga Oferta: <%= selectedQuotation.number %></span>
+          <p class="text-slate-400">Të dhënat janë plotësuar automatikisht nga oferta e përzgjedhur.</p>
+        </div>
+      </div>
+      <span class="font-mono font-black text-amber-300 text-sm">€<%= selectedQuotation.total.toLocaleString('de-DE', {minimumFractionDigits: 2}) %></span>
+    </div>
+  <% } %>
+
+  <!-- 1. Të Dhënat Kryesore & Parametrat Automatikë -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        1. Parametrat Kryesorë të Kontratës
+      </h3>
+      <span class="text-[11px] text-slate-400">Zgjidhni klientin dhe vlerat për llogaritje automatike</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+      <div x-data="quickCustomerModal()">
+        <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" x-model="customerId" @change="updateTexts()" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>" <%= initialCustId === c.id ? 'selected' : '' %>>
+                <%= c.companyName %> (<%= c.city || 'Kosovë' %>)
+              </option>
+            <% }); %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Modeli i Ashensorit</label>
+        <select name="elevatorId" x-model="elevatorId" @change="updateTexts()" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="">-- Pa model specifik --</option>
+          <% elevators.forEach(e => { %>
+            <option value="<%= e.id %>" <%= initialElevId === e.id ? 'selected' : '' %>>
+              <%= e.model %> (<%= e.type %> - <%= e.capacityKg %>kg)
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Vlera Totale (€ përfshirë TVSH) *</label>
+        <input type="number" step="0.01" name="value" x-model.number="value" @input="updateTexts()" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono font-bold">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Statusi i Kontratës *</label>
+        <select name="status" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+          <option value="Aktive" selected>Aktive</option>
+          <option value="E Nënshkruar">E Nënshkruar</option>
+          <option value="E Përfunduar">E Përfunduar</option>
+          <option value="Anuluar">Anuluar</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Parashikuar e Dorëzimit</label>
+        <input type="date" name="deliveryDate" x-model="deliveryDate" @change="updateTexts()" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Përfundimit të Instalimit</label>
+        <input type="date" name="installationDate" x-model="installationDate" @change="updateTexts()" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Muajt e Garancisë</label>
+        <input type="number" name="warrantyMonths" x-model.number="warrantyMonths" @input="updateTexts()" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Kushtet e Pagesës (Etapat)</label>
+        <input type="text" name="paymentTerms" x-model="paymentTerms" @input="updateTexts()" placeholder="30% parapagim, 40% para dërgesës..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+    </div>
+  </div>
+
+  <!-- Butoni i sinkronizimit të teksteve -->
+  <div class="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 text-xs">
+    <div class="flex items-center gap-2 text-slate-300">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Tekstet e neneve më poshtë gjenerohen automatikisht dhe mund t'i personalizoni sipas dëshirës.</span>
+    </div>
+    <button type="button" @click="updateTexts()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold border border-slate-700 transition-all flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      <span>Rifresko Tekstet nga Parametrat</span>
+    </button>
+  </div>
+
+  <!-- 2. Titulli & Preambula -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2">
+      2. Titulli i Kontratës & Preambula (Palët)
+    </h3>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Titulli Kryesor i Kontratës</label>
+        <input type="text" name="contractTitle" x-model="contractTitle" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-bold uppercase focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Preambula / Prezantimi i Palëve Kontraktuese</label>
+        <textarea name="preambleText" rows="3" x-model="preamble" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400 font-sans"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Nenet e Kontratës -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2 flex items-center justify-between">
+      <span>3. Nenet dhe Klauzolat e Kontratës</span>
+      <span class="text-[11px] font-normal text-slate-400 lowercase">të gjithë artikujt mund të modifikohen lirisht</span>
+    </h3>
+
+    <!-- NENI 1 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 1</label>
+      <input type="text" name="article1Title" x-model="art1Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 1 (Objekti & Pajisja):</label>
+      <textarea name="article1Text" rows="3" x-model="art1Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+
+    <!-- NENI 2 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 2</label>
+      <input type="text" name="article2Title" x-model="art2Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 2 (Vlera & Mënyra e Pagesës):</label>
+      <textarea name="article2Text" rows="3" x-model="art2Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+
+    <!-- NENI 3 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 3</label>
+      <input type="text" name="article3Title" x-model="art3Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 3 (Afatet & Garancia):</label>
+      <textarea name="article3Text" rows="3" x-model="art3Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+
+    <!-- NENI 4 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 4</label>
+      <input type="text" name="article4Title" x-model="art4Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 4 (Mirëmbajtja & Shërbimi Emergjent):</label>
+      <textarea name="article4Text" rows="3" x-model="art4Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+
+    <!-- NENI 5 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 5</label>
+      <input type="text" name="article5Title" x-model="art5Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 5 (Detyrimet & Përgjegjësitë e Palëve):</label>
+      <textarea name="article5Text" rows="4" x-model="art5Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400 font-mono"></textarea>
+    </div>
+
+    <!-- NENI 6 -->
+    <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+      <label class="font-bold text-slate-200 text-xs block">Titulli i Nenit 6</label>
+      <input type="text" name="article6Title" x-model="art6Title" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-amber-300 font-bold uppercase focus:outline-none focus:border-amber-400">
+      <label class="block font-semibold text-slate-400 text-[11px] pt-1">Përmbajtja e Nenit 6 (Kushtet e Veçanta & Mosmarrëveshjet):</label>
+      <textarea name="article6Text" rows="3" x-model="art6Text" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+
+  </div>
+
+  <!-- 4. Dispozitat Përfundimtare & Shënime të Brendshme -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2">
+      4. Dispozitat Përfundimtare & Shënime
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Teksti Përmbyllës para Nënshkrimeve</label>
+        <textarea name="closingTerms" rows="3" x-model="closing" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Klauzola Speciale Shtesë (Opsionale)</label>
+        <textarea name="specialTerms" rows="3" placeholder="P.sh. Pajisje shtesë pa pagesë, kushte specifike të hyrjes..." class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed focus:outline-none focus:border-amber-400"></textarea>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="block font-semibold text-slate-300 mb-1">Shënime të Brendshme (Nuk shfaqen në printim)</label>
+        <input type="text" name="notes" placeholder="Shënime për përdorim të brendshëm të stafit..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+    </div>
+  </div>
+
+  <!-- Butonat e Veprimit -->
+  <div class="flex items-center justify-end gap-3 pt-4">
+    <a href="/kontratat" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+      Anulo
+    </a>
+    <button type="submit" class="px-7 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      <span>KRIJO DHE RUAJ KONTRATËN</span>
+    </button>
+  </div>
+
+</form>

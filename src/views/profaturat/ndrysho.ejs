@@ -1,0 +1,206 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono">NDRYSHO PROFATURËN</h1>
+      <span class="font-mono text-sm font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= proforma.number %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Përditësoni të dhënat, kushtet dhe etapat e financimit</p>
+  </div>
+  <a href="/profaturat/<%= proforma.id %>" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+    Anulo
+  </a>
+</div>
+
+<form action="/profaturat/<%= proforma.id %>/ndrysho" method="POST" id="proforma-edit-form" class="space-y-6">
+  
+  <!-- 1. Të Dhënat e Përgjithshme -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+      1. Të Dhënat e Klientit dhe Afateve
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+      <div x-data="quickCustomerModal()">
+        <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>" <%= proforma.customerId === c.id ? 'selected' : '' %>>
+                <%= c.companyName %> (<%= c.code %>) - <%= c.city || 'Kosovë' %>
+              </option>
+            <% }); %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Statusi *</label>
+        <select name="status" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+          <% statuses.forEach(st => { %>
+            <option value="<%= st %>" <%= proforma.status === st ? 'selected' : '' %>><%= st %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Lëshimit *</label>
+        <input type="date" name="date" value="<%= new Date(proforma.date).toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Afati i Pagesës (Due Date)</label>
+        <input type="date" name="dueDate" value="<%= proforma.dueDate ? new Date(proforma.dueDate).toISOString().split('T')[0] : '' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="block font-semibold text-slate-300 mb-1">Shënime mbi Profaturën</label>
+        <input type="text" name="notes" value="<%= proforma.notes || '' %>" placeholder="Shënime për bankën, numër marrëveshjeje, etj." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Etapat e Pagesës (Milestones) -->
+  <%
+    const initialMilestones = (proforma.items && proforma.items.length > 0)
+      ? proforma.items.map(it => ({
+          description: it.description || '',
+          percentage: it.percentage || 0,
+          amount: it.amount || 0,
+          isPaid: !!it.isPaid
+        }))
+      : [
+          { description: '30% PARAPAGIM', percentage: 30, amount: 9000, isPaid: false },
+          { description: '40% PARA INSTALIMIT', percentage: 40, amount: 12000, isPaid: false },
+          { description: '20% GJATË INSTALIMIT', percentage: 20, amount: 6000, isPaid: false },
+          { description: '10% PAS DORËZIMIT', percentage: 10, amount: 3000, isPaid: false }
+        ];
+  %>
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl" x-data="{
+    items: <%= JSON.stringify(initialMilestones) %>,
+    addItem() {
+      this.items.push({
+        description: 'Etapë e re pagese',
+        percentage: 0,
+        amount: 0,
+        isPaid: false
+      });
+    },
+    removeItem(idx) {
+      if (this.items.length > 1) {
+        this.items.splice(idx, 1);
+      } else {
+        alert('Profatura duhet të përmbajë të paktën një etapë.');
+      }
+    },
+    totalAmount() {
+      return this.items.reduce((s, it) => s + parseFloat(it.amount || 0), 0);
+    },
+    paidAmount() {
+      return this.items.filter(i => i.isPaid).reduce((s, it) => s + parseFloat(it.amount || 0), 0);
+    },
+    subtotal() {
+      return Math.round((this.totalAmount() / 1.18) * 100) / 100;
+    },
+    vatAmount() {
+      return Math.round((this.totalAmount() - this.subtotal()) * 100) / 100;
+    }
+  }">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+      <div>
+        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">2. Etapat e Pagesave (Milestones)</h3>
+        <p class="text-[11px] text-slate-400">Përcaktoni përqindjen, përshkrimin dhe shumën për secilën fazë të pagesës</p>
+      </div>
+      <button type="button" @click="addItem()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Shto Etapë
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 text-slate-400 uppercase font-bold text-[10px]">
+          <tr>
+            <th class="p-3 w-24">Përqindja (%)</th>
+            <th class="p-3">Përshkrimi i Etapës</th>
+            <th class="p-3 text-right w-36">Shuma (€)</th>
+            <th class="p-3 text-center w-28">Statusi</th>
+            <th class="p-3 text-center w-12"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <template x-for="(item, index) in items" :key="index">
+            <tr>
+              <td class="p-2">
+                <input type="number" x-model.number="item.percentage" min="0" max="100" step="1" class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-center focus:outline-none">
+              </td>
+              <td class="p-2">
+                <input type="text" x-model="item.description" required placeholder="p.sh. 30% PARAPAGIM" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none">
+              </td>
+              <td class="p-2 text-right">
+                <input type="number" x-model.number="item.amount" min="0" step="10" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-right focus:outline-none">
+              </td>
+              <td class="p-2 text-center">
+                <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs">
+                  <input type="checkbox" x-model="item.isPaid" class="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0">
+                  <span :class="item.isPaid ? 'text-emerald-400 font-bold' : 'text-slate-400'" x-text="item.isPaid ? 'Paguar' : 'Në Pritje'"></span>
+                </label>
+              </td>
+              <td class="p-2 text-center">
+                <button type="button" @click="removeItem(index)" class="text-slate-500 hover:text-rose-400 p-1 font-bold text-base">
+                  &times;
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Përmbledhja Financiare -->
+    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+      <div class="w-80 space-y-2 text-xs">
+        <div class="flex justify-between text-slate-400">
+          <span>Vlera bazë (pa TVSH):</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + subtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>TVSH (18% përfshirë):</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + vatAmount().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="flex justify-between text-emerald-400 font-semibold pt-1 border-t border-slate-800/80">
+          <span>Shuma e paguar aktualisht:</span>
+          <span class="font-mono font-bold" x-text="'€' + paidAmount().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="pt-3 border-t-2 border-amber-500/40 flex justify-between items-center">
+          <span class="font-black text-slate-100 text-sm">TOTALI PROFATURËS:</span>
+          <span class="text-2xl font-black text-amber-400 font-mono" x-text="'€' + totalAmount().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+      </div>
+    </div>
+
+    <input type="hidden" name="items" :value="JSON.stringify(items)">
+  </div>
+
+  <!-- Butonat e Veprimit -->
+  <div class="flex items-center justify-between pt-4">
+    <button type="button" onclick="if(confirm('A jeni të sigurt që dëshironi ta fshini këtë profaturë? Ky veprim nuk mund të kthehet.')) { document.getElementById('delete-proforma-form').submit(); }" class="px-5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Fshi Profaturën
+    </button>
+    <div class="flex items-center gap-3">
+      <a href="/profaturat/<%= proforma.id %>" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+        Anulo
+      </a>
+      <button type="submit" class="px-7 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+        RUAJ NDRYSHIMET
+      </button>
+    </div>
+  </div>
+
+</form>
+
+<form id="delete-proforma-form" action="/profaturat/<%= proforma.id %>/fshi" method="POST" class="hidden"></form>

@@ -1,0 +1,139 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/dorezimi" class="hover:text-amber-600 dark:hover:text-amber-400">Dorëzimi i Lifteve</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">SN: <%= handover.serialNumber %></span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Procesverbal i Pranim-Dorëzimit Teknik</h1>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <a href="/dorezimi/<%= handover.id %>/print" target="_blank" class="inline-flex items-center px-4 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+        <i data-lucide="printer" class="w-4 h-4 mr-2"></i>
+        Printo / Ruaj si PDF
+      </a>
+      <a href="/dorezimi" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+        Kthehu
+      </a>
+    </div>
+  </div>
+
+  <!-- Document Card -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm space-y-8">
+    <!-- Header of Protocol -->
+    <div class="flex items-start justify-between pb-6 border-b border-slate-200 dark:border-slate-700">
+      <div>
+        <span class="text-2xl font-black tracking-widest text-slate-900 dark:text-white">KRONEER</span>
+        <p class="text-xs uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold">SISTEME LIFTSH</p>
+      </div>
+      <div class="text-right">
+        <span class="px-3 py-1 text-xs font-bold font-mono rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+          <%= handover.status %>
+        </span>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Data: <%= new Date(handover.handoverDate).toLocaleDateString('sq-AL') %></p>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+      <div>
+        <span class="text-xs text-slate-400 block font-medium">Projekti / Objekti:</span>
+        <span class="font-bold text-slate-900 dark:text-white"><%= handover.project ? handover.project.name : '-' %></span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block font-medium">Klienti / Investitori:</span>
+        <span class="font-bold text-slate-900 dark:text-white"><%= handover.customer ? handover.customer.companyName : '-' %></span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block font-medium">Modeli i Liftit:</span>
+        <span class="font-bold text-slate-900 dark:text-white"><%= handover.elevatorModel %></span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block font-medium">Numri Serik (SN):</span>
+        <span class="font-bold font-mono text-amber-600 dark:text-amber-400"><%= handover.serialNumber %></span>
+      </div>
+    </div>
+
+    <!-- Checkpoints -->
+    <div class="space-y-4">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider pb-2 border-b border-slate-100 dark:border-slate-700">
+        Konfirmimet Teknike dhe Ligjore
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.technicalInspection ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.technicalInspection ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Inspektimi Teknik Zyrtar</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.safetyCheck ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.safetyCheck ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Kontrolli i Sigurisë & Frenimit</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.documentationHanded ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.documentationHanded ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Dokumentacioni & Pasaporta Teknike</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.clientTrainingDone ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.clientTrainingDone ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Trajnimi i Stafit / Klientit</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.keysHanded ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.keysHanded ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Dorëzimi i Çelësave të Pajisjes</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <i data-lucide="<%= handover.accessActivated ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.accessActivated ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-medium text-slate-800 dark:text-slate-200">Aktivizimi i Qasjes & GSM</span>
+        </div>
+
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 md:col-span-2">
+          <i data-lucide="<%= handover.warrantyStarted ? 'check-circle' : 'x-circle' %>" class="w-5 h-5 <%= handover.warrantyStarted ? 'text-emerald-500' : 'text-slate-400' %>"></i>
+          <span class="font-bold text-amber-900 dark:text-amber-300">Periudha e Garancisë KRONEER është aktivizuar zyrtarisht</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <% if (handover.notes) { %>
+      <div>
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Shënime Teknike</h4>
+        <p class="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg"><%= handover.notes %></p>
+      </div>
+    <% } %>
+
+    <!-- Signatures Preview -->
+    <div class="pt-6 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-8">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Përfaqësuesi i KRONEER</p>
+        <p class="text-sm font-semibold text-slate-900 dark:text-white"><%= handover.repSigneeName %></p>
+        <div class="mt-2 h-24 border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center">
+          <% if (handover.repSignatureData) { %>
+            <img src="<%= handover.repSignatureData %>" alt="Nënshkrimi KRONEER" class="max-h-full">
+          <% } else { %>
+            <span class="text-xs text-slate-400 italic">Nënshkrim Digjital</span>
+          <% } %>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Pranoi Klienti / Investitori</p>
+        <p class="text-sm font-semibold text-slate-900 dark:text-white"><%= handover.clientSigneeName %></p>
+        <div class="mt-2 h-24 border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center">
+          <% if (handover.clientSignatureData) { %>
+            <img src="<%= handover.clientSignatureData %>" alt="Nënshkrimi Klientit" class="max-h-full">
+          <% } else { %>
+            <span class="text-xs text-slate-400 italic">Nënshkrim Digjital</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

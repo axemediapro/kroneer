@@ -1,0 +1,196 @@
+<div class="space-y-6" x-data="{ showStockModal: false, selectedPart: null, deltaQty: 1 }">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Pjesët Rezervë & Magazina Teknike</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Inventari i komponentëve, motorëve, sensorëve dhe pjesëve të këmbimit KRONEER</p>
+    </div>
+    <a href="/pjeset-rezerve/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+      Regjistro Pjesë të Re
+    </a>
+  </div>
+
+  <!-- KPI Metrics Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Artikuj Gjithsej në Stok</span>
+      <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><%= totalItems.toLocaleString() %> copë</div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vlera e Inventarit</span>
+      <div class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">€<%= totalInventoryValue.toLocaleString('de-DE') %></div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Stok i Ulët (Paralajmërim)</span>
+      <div class="text-2xl font-extrabold text-amber-600 mt-1"><%= lowStockCount %> artikuj</div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold text-rose-500 uppercase tracking-wider">Pa Stok (Mungesë)</span>
+      <div class="text-2xl font-extrabold text-rose-600 mt-1"><%= outOfStockCount %> artikuj</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+    <form action="/pjeset-rezerve" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Kategoria</label>
+        <select name="category" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+          <option value="">Të gjitha kategoritë</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gjendja e Stokut</label>
+        <select name="stockStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+          <option value="">Të gjitha gjendjet</option>
+          <option value="ok" <%= filters.stockStatus === 'ok' ? 'selected' : '' %>>Stok i mjaftueshëm</option>
+          <option value="low" <%= filters.stockStatus === 'low' ? 'selected' : '' %>>Stok i ulët</option>
+          <option value="out" <%= filters.stockStatus === 'out' ? 'selected' : '' %>>Pa stok</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Kërko Pjesë</label>
+        <div class="relative">
+          <input type="text" name="search" value="<%= filters.search %>" placeholder="Numri i pjesës, emri, modeli..." class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+        </div>
+      </div>
+
+      <div class="flex items-end space-x-2">
+        <button type="submit" class="w-full py-2 px-4 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white text-sm font-semibold rounded-lg transition">
+          Filtro
+        </button>
+        <% if (filters.category || filters.stockStatus || filters.search) { %>
+          <a href="/pjeset-rezerve" class="py-2 px-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg hover:bg-slate-300 transition">
+            Pastro
+          </a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Parts Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Kodi i Pjesës</th>
+            <th class="py-3.5 px-4">Emri i Pjesës</th>
+            <th class="py-3.5 px-4">Kategoria</th>
+            <th class="py-3.5 px-4">Kompatibiliteti</th>
+            <th class="py-3.5 px-4">Stoku / Minimal</th>
+            <th class="py-3.5 px-4">Çmimi Blerës</th>
+            <th class="py-3.5 px-4">Çmimi Shitës</th>
+            <th class="py-3.5 px-4">Gjendja</th>
+            <th class="py-3.5 px-4 text-right">Veprime</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+          <% if (parts.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center py-12 text-slate-400">
+                <i data-lucide="package-open" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600"></i>
+                Nuk u gjet asnjë pjesë rezervë në magazinë.
+              </td>
+            </tr>
+          <% } else { %>
+            <% parts.forEach(p => { %>
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition">
+                <td class="py-3.5 px-4 font-mono text-xs font-bold text-amber-700 dark:text-amber-400">
+                  <%= p.partNumber %>
+                </td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                  <%= p.name %>
+                  <% if (p.location) { %>
+                    <span class="block text-[11px] font-normal text-slate-400">Rafti: <%= p.location %></span>
+                  <% } %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                    <%= p.category %>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-xs text-slate-500 max-w-xs truncate">
+                  <%= p.compatibleElevators || 'Të gjithë modelet KRONEER' %>
+                </td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                  <%= p.stockQty %> <span class="text-xs font-normal text-slate-400">/ min <%= p.minStockQty %></span>
+                </td>
+                <td class="py-3.5 px-4 text-xs text-slate-500">
+                  €<%= (p.purchasePrice || 0).toFixed(2) %>
+                </td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                  €<%= (p.sellingPrice || 0).toFixed(2) %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <% if (p.stockQty === 0) { %>
+                    <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 border border-rose-300">
+                      PA STOK
+                    </span>
+                  <% } else if (p.stockQty <= p.minStockQty) { %>
+                    <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 border border-amber-300">
+                      STOK I ULËT
+                    </span>
+                  <% } else { %>
+                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                      Në Rregull
+                    </span>
+                  <% } %>
+                </td>
+                <td class="py-3.5 px-4 text-right">
+                  <button 
+                    @click="selectedPart = <%= JSON.stringify(p) %>; deltaQty = 1; showStockModal = true" 
+                    class="px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition">
+                    +/- Stok
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal: Adjust Stock -->
+  <div x-show="showStockModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div @click.outside="showStockModal = false" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-sm w-full space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">
+          Rregullo Stokun
+        </h3>
+        <button @click="showStockModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500" x-text="selectedPart ? `${selectedPart.name} (Aktual: ${selectedPart.stockQty} copë)` : ''"></p>
+
+      <form :action="selectedPart ? `/pjeset-rezerve/${selectedPart.id}/stok` : '#'" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ndryshimi i Sasisë (+ për hyrje, - për dalje)</label>
+          <input type="number" name="deltaQty" x-model="deltaQty" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white font-mono focus:outline-none">
+          <div class="flex space-x-2 mt-2">
+            <button type="button" @click="deltaQty = 1" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 rounded">+1</button>
+            <button type="button" @click="deltaQty = 5" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 rounded">+5</button>
+            <button type="button" @click="deltaQty = 10" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 rounded">+10</button>
+            <button type="button" @click="deltaQty = -1" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 rounded">-1</button>
+            <button type="button" @click="deltaQty = -5" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 rounded">-5</button>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+          <button type="button" @click="showStockModal = false" class="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg">Anulo</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg">Përditëso Stokun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

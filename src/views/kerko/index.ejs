@@ -1,0 +1,211 @@
+<div class="space-y-6">
+  <!-- Search Bar Header -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Kërkimi Global në KRONEER</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Kërkoni në të gjithë sistemin: Klientë, Projekte, Ashensorë, Numra Serik, Oferta, Fatura, Servis dhe Pjesë Rezervë</p>
+
+    <form action="/kerko" method="GET" class="flex gap-3">
+      <div class="relative flex-1">
+        <input type="text" name="q" value="<%= query %>" autofocus placeholder="Shkruani fjalëkyçin, p.sh. KR630-2026-00451, Emrin e Klientit, Faturën..." class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-base focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-3.5"></i>
+      </div>
+      <button type="submit" class="px-6 py-3 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white font-bold rounded-xl transition flex items-center shadow-sm">
+        Kërko
+      </button>
+    </form>
+  </div>
+
+  <% if (query) { %>
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white">
+        Rezultatet për "<span class="text-amber-600 dark:text-amber-400"><%= query %></span>"
+      </h2>
+      <span class="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md">
+        <%= totalResults %> rezultate të gjetura
+      </span>
+    </div>
+
+    <% if (totalResults === 0) { %>
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <i data-lucide="search-x" class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white">Nuk u gjet asnjë rezultat</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Provoni të kërkoni me një numër serik, kod fature ose emër kompanie tjetër.</p>
+      </div>
+    <% } else { %>
+      <div class="space-y-6">
+        <!-- 1. Klientët -->
+        <% if (results.customers && results.customers.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="users" class="w-4 h-4 mr-2 text-amber-500"></i> Klientët (<%= results.customers.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.customers.forEach(c => { %>
+                <a href="/klientet/<%= c.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="font-bold text-sm text-slate-900 dark:text-white"><%= c.companyName %></div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= c.contactPerson %> • <%= c.phone %> • <%= c.city || 'Kosovë' %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 2. Projektet -->
+        <% if (results.projects && results.projects.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="folder" class="w-4 h-4 mr-2 text-amber-500"></i> Projektet (<%= results.projects.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.projects.forEach(p => { %>
+                <a href="/projektet/<%= p.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white"><%= p.name %></span>
+                    <span class="text-xs font-mono font-bold text-amber-600"><%= p.number %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5">Klienti: <%= p.customer ? p.customer.companyName : '-' %> • Faza: <%= p.stage %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 3. Instalimet & Numrat Serik -->
+        <% if (results.installations && results.installations.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="wrench" class="w-4 h-4 mr-2 text-amber-500"></i> Ashensorët & Numrat Serik (<%= results.installations.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.installations.forEach(inst => { %>
+                <a href="/instalimet/<%= inst.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white"><%= inst.elevatorModel %></span>
+                    <span class="font-mono text-xs font-bold text-amber-600">SN: <%= inst.serialNumber %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5">Projekti: <%= inst.project ? inst.project.name : '-' %> • Progresi: <%= inst.progressPercent %>%</div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 4. Ofertat & Faturat -->
+        <% if ((results.quotations && results.quotations.length > 0) || (results.invoices && results.invoices.length > 0)) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="receipt" class="w-4 h-4 mr-2 text-amber-500"></i> Dokumentet Financiare & Ofertat
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% (results.quotations || []).forEach(q => { %>
+                <a href="/ofertat/<%= q.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Oferta <%= q.number %></span>
+                    <span class="font-bold text-xs text-amber-600">€<%= (q.total || 0).toLocaleString('de-DE') %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= q.customer ? q.customer.companyName : '-' %> • Statusi: <%= q.status %></div>
+                </a>
+              <% }) %>
+              <% (results.invoices || []).forEach(i => { %>
+                <a href="/faturat/<%= i.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Fatura <%= i.number %></span>
+                    <span class="font-bold text-xs text-emerald-600">€<%= (i.total || 0).toLocaleString('de-DE') %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= i.customer ? i.customer.companyName : '-' %> • Mbetur: €<%= (i.balanceDue || 0).toLocaleString('de-DE') %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 4.1 Kontratat -->
+        <% if (results.contracts && results.contracts.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="file-signature" class="w-4 h-4 mr-2 text-amber-500"></i> Kontratat (<%= results.contracts.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.contracts.forEach(c => { %>
+                <a href="/kontratat/<%= c.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Kontrata <%= c.number %></span>
+                    <span class="font-bold text-xs text-amber-600">€<%= (c.value || 0).toLocaleString('de-DE') %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= c.customer ? c.customer.companyName : '-' %> • Statusi: <%= c.status %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 4.2 Shpenzimet -->
+        <% if (results.expenses && results.expenses.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="wallet" class="w-4 h-4 mr-2 text-amber-500"></i> Shpenzimet (<%= results.expenses.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.expenses.forEach(e => { %>
+                <a href="/shpenzimet" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white"><%= e.number %></span>
+                    <span class="font-bold text-xs text-rose-500">€<%= (e.amount || 0).toLocaleString('de-DE') %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= e.title %> • <%= e.category %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- 4.3 Qendra e Dokumentave -->
+        <% if (results.documents && results.documents.length > 0) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="folder-open" class="w-4 h-4 mr-2 text-amber-500"></i> Qendra e Dokumentave (<%= results.documents.length %>)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% results.documents.forEach(d => { %>
+                <a href="/dokumentet" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="font-bold text-sm text-slate-900 dark:text-white"><%= d.title %></div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= d.documentType %> • <%= d.customer ? d.customer.companyName : 'Pa klient të lidhur' %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+
+        <!-- 5. Servisi & Pjesët Rezervë -->
+        <% if ((results.serviceTickets && results.serviceTickets.length > 0) || (results.spareParts && results.spareParts.length > 0)) { %>
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="tool" class="w-4 h-4 mr-2 text-amber-500"></i> Servisi & Pjesët Rezervë
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% (results.serviceTickets || []).forEach(t => { %>
+                <a href="/servisi" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Servis <%= t.number %></span>
+                    <span class="text-xs font-bold text-rose-500">[<%= t.priority %>]</span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= t.problemDescription %></div>
+                </a>
+              <% }) %>
+              <% (results.spareParts || []).forEach(p => { %>
+                <a href="/pjeset-rezerve" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white"><%= p.name %></span>
+                    <span class="text-xs font-mono font-bold text-amber-600"><%= p.partNumber %></span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5">Stoku: <%= p.stockQty %> copë • Çmimi: €<%= (p.sellingPrice || 0).toFixed(2) %></div>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+</div>

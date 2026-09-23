@@ -1,0 +1,93 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono">REGJISTRO PAGESË TË RE</h1>
+      <span class="font-mono text-sm font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= nextNumber %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Regjistrimi automatikisht përditëson faturën, llogarinë e klientit dhe dashboard-in</p>
+  </div>
+  <a href="/pagesat" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+    Anulo
+  </a>
+</div>
+
+<form action="/pagesat/krijo" method="POST" class="space-y-6">
+  
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+      Detajet e Transaksionit Financiar
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Fatura e Lidhur (Opsionale)</label>
+        <select name="invoiceId" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="">-- Pa Faturë Specifike --</option>
+          <% invoices.forEach(inv => { %>
+            <option value="<%= inv.id %>" <%= selectedInvoiceId === inv.id ? 'selected' : '' %>>
+              <%= inv.number %> (<%= inv.customer.companyName %>) - Borxhi: <%= formatCurrency(inv.balanceDue) %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div x-data="quickCustomerModal()">
+        <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <option value="">-- Zgjidh Klientin --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>" <%= selectedCustomerId === c.id ? 'selected' : '' %>>
+                <%= c.companyName %> (<%= c.code %>)
+              </option>
+            <% }); %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Shuma e Paguar (€) *</label>
+        <input type="number" name="amount" step="0.01" min="0.01" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono font-bold text-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Pagesës *</label>
+        <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Metoda e Pagesës *</label>
+        <select name="paymentMethod" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="Transfertë bankare">Transfertë bankare</option>
+          <option value="Para në dorë">Para në dorë</option>
+          <option value="Kartelë">Kartelë</option>
+          <option value="Tjetër">Tjetër</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Numri i Referencës / Transaksionit</label>
+        <input type="text" name="referenceNumber" placeholder="p.sh. BKT-TR-892019" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="block text-xs font-semibold text-slate-300 mb-1">Shënime & Përshkrim</label>
+      <textarea name="notes" rows="2" placeholder="Shënime mbi transaksionin..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400"></textarea>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3">
+    <a href="/pagesat" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+      Anulo
+    </a>
+    <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+      RUAJ PAGESËN
+    </button>
+  </div>
+
+</form>

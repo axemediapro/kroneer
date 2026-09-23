@@ -1,0 +1,273 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/mirembajtja" class="hover:text-amber-600 dark:hover:text-amber-400">Mirëmbajtja</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">Krijo Kontratë</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Krijo Kontratë të Re Mirëmbajtjeje</h1>
+      <p class="text-xs text-slate-400 mt-1">Gjeneroni kontratën e mirëmbajtjes me të gjitha nenet dhe tekstet e personalizueshme</p>
+    </div>
+    <a href="/mirembajtja" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <%
+    const compName = company.companyName || 'KRONEER';
+    const compAddr = company.address || 'Prishtinë';
+    const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+    const compTax = company.taxNumber || '330123456';
+    
+    const initialCustId = customers[0] ? customers[0].id : '';
+    const today = new Date();
+    const startDateDef = today.toISOString().split('T')[0];
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const endDateDef = nextYear.toISOString().split('T')[0];
+  %>
+
+  <form action="/mirembajtja/krijo" method="POST" id="maintenance-create-form" class="space-y-6" x-data="{
+    customerId: '<%= initialCustId %>',
+    customers: <%= JSON.stringify(customers.map(c => ({ id: c.id, name: c.companyName || `${c.firstName || ''} ${c.lastName || ''}`.trim(), city: c.city || 'Kosovë', address: c.address || '-', tax: c.taxNumber || c.businessNumber || '-', building: c.buildingName || 'Objekti i Porositësit' }))) %>,
+    elevators: <%= JSON.stringify(elevators.map(e => ({ id: e.id, model: e.model || e.name, type: e.type, capacity: e.capacityKg }))) %>,
+    elevatorId: '',
+    serialNumber: '',
+    frequency: 'Mujore',
+    priceAnnual: '',
+    startDate: '<%= startDateDef %>',
+    endDate: '<%= endDateDef %>',
+    
+    compName: '<%= compName.replace(/'/g, "\\'") %>',
+    compAddr: '<%= compAddr.replace(/'/g, "\\'") %>',
+    compCity: '<%= compCity.replace(/'/g, "\\'") %>',
+    compTax: '<%= compTax.replace(/'/g, "\\'") %>',
+    
+    contractTitle: 'KONTRATË PËR MIRËMBAJTJEN PERIODIKE DHE SERVISIMIN E LIFTEVE',
+    preamble: '',
+    art1Title: 'NENI 1: OBJEKTI I MIRËMBAJTJES',
+    art1Text: '',
+    art2Title: 'NENI 2: ÇMIMI DHE KUSHTET E PAGESËS',
+    art2Text: '',
+    art3Title: 'NENI 3: KOHËZGJATJA DHE FREKUENCA E VIZITAVE',
+    art3Text: '',
+    art4Title: 'NENI 4: DETYRIMET E KOMPANISË & SHËRBIMI 24/7',
+    art4Text: 'Ofruesi i shërbimit obligohet të kryejë kontrolle teknike periodike sipas standardit evropian EN 13015, të sigurojë gatishmëri emergjente 24 orë në 7 ditë të javës për zhbllokimin e pasagjerëve, dhe të përdorë pjesë këmbimi origjinale të certifikuara.',
+    art5Title: 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E POROSITËSIT',
+    art5Text: 'Porositësi merr përsipër të lejojë qasje të papenguar të teknikëve në ambientet e liftit, të mos lejojë ndërhyrje nga persona të paautorizuar, dhe të njoftojë menjëherë qendrën e shërbimit në rast të ndonjë parregullsie.',
+    art6Title: 'NENI 6: KUSHTET E VEÇANTA & ZGJIDHJA E MOSMARRËVESHJEVE',
+    art6Text: 'Çdo ndryshim apo ndërprerje e kontratës bëhet me njoftim me shkrim 30 ditë përpara. Mosmarrëveshjet do të zgjidhen me mirëkuptim, ose në Gjykatën kompetente në Prishtinë.',
+    closing: 'Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.',
+    
+    init() {
+      this.updateTexts();
+    },
+    
+    getSelectedCustomer() {
+      return this.customers.find(c => c.id == this.customerId) || { name: 'Klienti', city: 'Kosovë', address: '-', tax: '-', building: 'Objekti i Porositësit' };
+    },
+    
+    getSelectedElevator() {
+      return this.elevators.find(e => e.id == this.elevatorId) || { model: 'Sisteme Lifti KRONEER' };
+    },
+    
+    updateTexts() {
+      const cust = this.getSelectedCustomer();
+      const elev = this.getSelectedElevator();
+      const priceVal = parseFloat(this.priceAnnual || 0).toLocaleString('de-DE', {minimumFractionDigits: 2});
+      const sn = this.serialNumber || 'KR-SN-LIFT';
+      
+      this.preamble = `Kjo Kontratë lidhet ndërmjet ${this.compName} me seli në ${this.compAddr}, ${this.compCity}, NUI: ${this.compTax} (në vijim: \'Ofruesi i Shërbimit\'), dhe ${cust.name} me seli në ${cust.address}, ${cust.city}, NUI: ${cust.tax} (në vijim: \'Porositësi\').`;
+      this.art1Text = `Ofruesi i shërbimit merr përsipër mirëmbajtjen teknike preventive dhe korrektive të ashensorit ${elev.model} me numër serik ${sn}, i instaluar në objektin \'${cust.building}\', ${cust.city}.`;
+      this.art2Text = `Vlera vjetore e shërbimit të mirëmbajtjes është €${priceVal} (përfshirë TVSH). Pagesa do të kryhet në baza të rregullta sipas marrëveshjes.`;
+      this.art3Text = `Kontrata hyn në fuqi më ${this.startDate || 'sot'} dhe është e vlefshme deri më ${this.endDate || 'pas 1 viti'}. Frekuenca e vizitave të rregullta të servisimit do të jetë ${this.frequency}.`;
+    }
+  }">
+
+    <!-- 1. Parametrat e Mirëmbajtjes -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-6">
+      <h3 class="text-sm font-bold text-amber-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 pb-2">
+        1. Të Dhënat Kryesore të Kontratës së Mirëmbajtjes
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri i Kontratës</label>
+          <input type="text" name="number" value="<%= nextNumber %>" readonly class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 font-mono text-sm focus:outline-none cursor-not-allowed">
+        </div>
+
+        <div x-data="quickCustomerModal()">
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Klienti *</label>
+          <div class="flex items-center gap-2">
+            <select name="customerId" x-ref="customerSelect" x-model="customerId" @change="updateTexts()" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              <option value="">-- Zgjidh Klientin --</option>
+              <% customers.forEach(c => { %>
+                <option value="<%= c.id %>"><%= c.companyName %> (<%= c.city || 'Kosovë' %>)</option>
+              <% }) %>
+            </select>
+            <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+          </div>
+          <%- include('../partials/quick-customer-modal') %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri Serik i Liftit *</label>
+          <input type="text" name="serialNumber" x-model="serialNumber" @input="updateTexts()" required placeholder="p.sh. KR630-2026-00102" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Modeli i Ashensorit (Opsionale)</label>
+          <select name="elevatorId" x-model="elevatorId" @change="updateTexts()" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Zgjidh Modelin --</option>
+            <% elevators.forEach(e => { %>
+              <option value="<%= e.id %>"><%= e.model || e.name %> (<%= e.capacityKg %> KG)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Frekuenca e Servisimit</label>
+          <select name="frequency" x-model="frequency" @change="updateTexts()" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="Mujore" selected>Mujore (12 vizita në vit)</option>
+            <option value="Tremujore">Tremujore (4 vizita në vit)</option>
+            <option value="Gjashtëmujore">Gjashtëmujore (2 vizita në vit)</option>
+            <option value="Vjetore">Vjetore (1 inspektim i plotë në vit)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Çmimi Vjetor i Mirëmbajtjes (€) *</label>
+          <input type="number" step="0.01" name="priceAnnual" x-model="priceAnnual" @input="updateTexts()" required placeholder="p.sh. 1200.00" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Data e Fillimit</label>
+          <input type="date" name="startDate" x-model="startDate" @change="updateTexts()" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Data e Skadimit (Përfundimit)</label>
+          <input type="date" name="endDate" x-model="endDate" @change="updateTexts()" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Tekniku i Caktuar Përgjegjës</label>
+          <select name="technicianId" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Zgjidh Teknikun --</option>
+            <% technicians.forEach(t => { %>
+              <option value="<%= t.id %>"><%= t.fullName %> (<%= t.role %>)</option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Personalizimi i Tekstit të Kontratës dhe Neneve -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-amber-500 uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            2. Tekstet dhe Nenet e Kontratës së Mirëmbajtjes
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mund të modifikoni lirisht çdo nen, paragraf dhe kusht kontraktual</p>
+        </div>
+        <button type="button" @click="updateTexts()" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-amber-600 dark:text-amber-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Rifresko Nenet
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Titulli i Kontratës</label>
+          <input type="text" name="contractTitle" x-model="contractTitle" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold uppercase focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Preambula / Palët Kontraktuese</label>
+          <textarea name="preambleText" rows="3" x-model="preamble" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 1 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 1</label>
+          <input type="text" name="article1Title" x-model="art1Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 1 (Objekti):</label>
+          <textarea name="article1Text" rows="3" x-model="art1Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 2 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 2</label>
+          <input type="text" name="article2Title" x-model="art2Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 2 (Çmimi & Pagesa):</label>
+          <textarea name="article2Text" rows="3" x-model="art2Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 3 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 3</label>
+          <input type="text" name="article3Title" x-model="art3Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 3 (Kohëzgjatja & Frekuenca):</label>
+          <textarea name="article3Text" rows="3" x-model="art3Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 4 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 4</label>
+          <input type="text" name="article4Title" x-model="art4Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 4 (Detyrimet e Kompanisë & Shërbimi 24/7):</label>
+          <textarea name="article4Text" rows="3" x-model="art4Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 5 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 5</label>
+          <input type="text" name="article5Title" x-model="art5Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 5 (Detyrimet e Porositësit):</label>
+          <textarea name="article5Text" rows="3" x-model="art5Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <!-- NENI 6 -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+          <label class="font-bold text-slate-900 dark:text-white block">Titulli i Nenit 6</label>
+          <input type="text" name="article6Title" x-model="art6Title" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-amber-600 dark:text-amber-400 font-bold uppercase focus:outline-none">
+          <label class="block font-semibold text-slate-500 dark:text-slate-400 pt-1">Përmbajtja e Nenit 6 (Kushtet e Veçanta & Zgjidhja e Mosmarrëveshjeve):</label>
+          <textarea name="article6Text" rows="3" x-model="art6Text" class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Dispozita Përfundimtare</label>
+            <textarea name="closingTerms" rows="3" x-model="closing" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kushte të Veçanta të Mirëmbajtjes (Opsionale)</label>
+            <textarea name="specialTerms" rows="3" placeholder="Koha maksimale e reagimit në rast defekti (p.sh. 2 orë), përfshirja e vajit dhe konsumuesve..." class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white leading-relaxed focus:outline-none"></textarea>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Shënime të Brendshme (Nuk shfaqen në printim)</label>
+            <input type="text" name="notes" placeholder="Shënime për përdorim të brendshëm..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Butonat e Veprimit -->
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <a href="/mirembajtja" class="px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-6 py-2.5 text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-lg transition shadow-lg shadow-amber-500/20 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Kontratën e Mirëmbajtjes</span>
+      </button>
+    </div>
+  </form>
+</div>

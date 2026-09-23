@@ -1,0 +1,216 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono"><%= elevator.model %></h1>
+      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <%= elevator.code %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1"><%= elevator.type %> • Standardi Evropian EN 81-20/50</p>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <% if (currentUser && currentUser.role === 'ADMINISTRATOR') { %>
+      <a href="/lifts/<%= elevator.id %>/ndrysho" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs transition-all">
+        Ndrysho Modelin
+      </a>
+    <% } %>
+    <a href="/lifts/konfiguruesi?elevatorId=<%= elevator.id %>" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+      Konfiguro me këtë Model
+    </a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  
+  <!-- Tabela Teknike (2 Kolona) -->
+  <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+      Fleta Teknike e Specifikimeve (Technical Datasheet)
+    </h3>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-xs">
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Kodi i Modelit:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.code %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Lloji i Liftit:</span>
+        <span class="font-bold text-slate-200"><%= elevator.type %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Kapaciteti në KG:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.capacityKg %> KG</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Numri i Personave:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.personsCount %> Persona</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Shpejtësia Nominale:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.speed %> m/s</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Sistemi i Lëvizjes:</span>
+        <span class="font-bold text-slate-200"><%= elevator.driveSystem %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Lloji i Motorit:</span>
+        <span class="font-bold text-slate-200"><%= elevator.motorType %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Fuqia e Motorit:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.motorPower %> kW</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Tipi i Dyerve:</span>
+        <span class="font-bold text-slate-200"><%= elevator.doorType %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Dimensionet e Kabinës:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.cabinDimensions || '1100 x 1400 x 2200 mm' %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Dimensionet e Boshtit:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.shaftDimensions || '1650 x 1750 mm' %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Thellësia e Gropës (Pit):</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.pitDepth %> mm</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Lartësia e Sipërme (Headroom):</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.headroomHeight %> mm</span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Furnizimi Elektrik:</span>
+        <span class="font-mono font-bold text-slate-200"><%= elevator.powerSupply %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Materiali i Kabinës:</span>
+        <span class="font-bold text-slate-200"><%= elevator.cabinMaterial %></span>
+      </div>
+      <div class="flex justify-between border-b border-slate-800/60 pb-2">
+        <span class="text-slate-400">Garancia Inxhinierike:</span>
+        <span class="font-mono font-bold text-emerald-400"><%= elevator.warrantyMonths %> Muaj</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Çmimi dhe Përmbledhja (1 Kolonë) -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+    <div>
+      <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">ÇMIMI BAZË INXHINIERIK</span>
+      <div class="text-3xl font-black text-amber-400 font-mono mb-4"><%= formatCurrency(elevator.basePrice) %></div>
+      <p class="text-xs text-slate-400 leading-relaxed mb-5">
+        Çmimi përfshin setin e plotë të makinerisë, pajisjet e kontrollit, kabinën inoksi, shinat dhe sistemin e plotë të sigurisë EN 81-20.
+      </p>
+
+      <!-- QR Kodi & Linku Publik i Gjeneruar -->
+      <div x-data="{ copied: false }" class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3 mb-5">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            QR KODI (QASJE PUBLIKE)
+          </span>
+          <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            Aktiv
+          </span>
+        </div>
+
+        <!-- Pamja e QR Kodit -->
+        <div class="flex items-center gap-3.5">
+          <a href="<%= publicUrl %>" target="_blank" title="Hap pamjen publike të liftit" class="p-1.5 bg-white rounded-xl shadow-md flex-shrink-0 hover:ring-2 hover:ring-amber-400 transition-all block">
+            <img src="<%= qrCodeDataUrl %>" alt="QR Code <%= elevator.code %>" class="w-24 h-24 block">
+          </a>
+          <div class="text-xs space-y-1">
+            <p class="font-bold text-slate-200">Fletë Teknike Mobile</p>
+            <p class="text-[11px] text-slate-400 leading-tight">Skanoni me kamerën e celularit për ta hapur direkt pa nevojë për llogari.</p>
+            <a href="<%= publicUrl %>" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 font-semibold mt-1 transition-colors">
+              <span>Hap faqen publike</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Linku i Gjeneruar për Public View poshtë QR Code -->
+        <div class="space-y-1.5 pt-2 border-t border-slate-800/60">
+          <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+            Linku i gjeneruar për Public View:
+          </label>
+          <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg p-1">
+            <input type="text" readonly value="<%= publicUrl %>" class="w-full px-2 py-1 bg-transparent text-[11px] font-mono text-slate-300 focus:outline-none select-all truncate" id="public-link-input">
+            <button type="button" @click="navigator.clipboard.writeText('<%= publicUrl %>'); copied = true; setTimeout(() => copied = false, 2500)" class="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[10px] border border-amber-500/30 transition-all flex items-center gap-1 flex-shrink-0" :class="{ 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30': copied }">
+              <span x-show="!copied">Kopjo</span>
+              <span x-show="copied" x-cloak class="flex items-center gap-0.5">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                U kopjua!
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-3 pt-4 border-t border-slate-800">
+      <a href="/lifts/konfiguruesi?elevatorId=<%= elevator.id %>" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs text-center block shadow-lg shadow-amber-500/20 transition-all">
+        KONFIGURO & PËRLLOGARIT ÇMIMIN
+      </a>
+      <a href="/ofertat/krijo" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs text-center block border border-slate-700 transition-all">
+        Krijo Ofertë të Personalizuar
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Galeria e Fotove & Videove të Liftit -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Galeria e Fotove & Videove</h3>
+    <span class="text-[11px] text-slate-500">Shfaqet edhe në pamjen publike (QR / Link)</span>
+  </div>
+
+  <% if (currentUser && currentUser.role === 'ADMINISTRATOR') { %>
+    <form action="/lifts/<%= elevator.id %>/media" method="POST" enctype="multipart/form-data" class="mb-5 flex flex-col sm:flex-row items-stretch sm:items-end gap-3 p-4 rounded-xl bg-slate-950/70 border border-slate-800">
+      <div class="flex-1">
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Ngarko Foto ose Video (nga kompjuteri)</label>
+        <input type="file" name="media" accept="image/*,video/*" required class="w-full text-xs text-slate-300 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 file:cursor-pointer">
+      </div>
+      <div class="flex-1">
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Titulli (opsional)</label>
+        <input type="text" name="caption" placeholder="p.sh. Kabina nga brenda" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+      <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all whitespace-nowrap">
+        Shto në Galeri
+      </button>
+    </form>
+  <% } %>
+
+  <% if (elevator.media && elevator.media.length > 0) { %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <% elevator.media.forEach(m => { %>
+        <div class="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+          <% if (m.type === 'video') { %>
+            <video src="<%= m.url %>" class="w-full h-32 object-cover" controls muted></video>
+          <% } else { %>
+            <img src="<%= m.url %>" alt="<%= m.caption || elevator.model %>" class="w-full h-32 object-cover">
+          <% } %>
+          <% if (m.caption) { %>
+            <p class="px-2 py-1 text-[10px] text-slate-300 bg-slate-950/80 truncate"><%= m.caption %></p>
+          <% } %>
+          <% if (currentUser && currentUser.role === 'ADMINISTRATOR') { %>
+            <form action="/lifts/<%= elevator.id %>/media/<%= m.id %>/fshi" method="POST" onsubmit="return confirm('Ta fshij këtë media nga galeria?');" class="absolute top-1.5 right-1.5">
+              <button type="submit" title="Fshi" class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-950/80 hover:bg-rose-500/80 text-slate-300 hover:text-white transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </form>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <p class="text-xs text-slate-500 text-center py-6">Nuk ka ende foto apo video në galerinë e këtij modeli.</p>
+  <% } %>
+</div>
+

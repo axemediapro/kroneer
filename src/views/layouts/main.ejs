@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="sq" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'KRONEER - Sistem për Menaxhimin e Lifteve' %></title>
+  
+  <!-- Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <!-- Alpine.js & Chart.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebar-backdrop" class="hidden fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm lg:hidden"></div>
+
+  <!-- Main Sidebar (Left) -->
+  <%- include('../partials/sidebar') %>
+
+  <!-- Main Content Wrapper (Right of Sidebar) -->
+  <div class="flex-1 flex flex-col lg:pl-64 min-w-0">
+    
+    <!-- Topbar Header -->
+    <%- include('../partials/topbar') %>
+
+    <!-- Page Body Container -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+      <%- include('../partials/alerts') %>
+      <%- body %>
+    </main>
+
+    <!-- Footer -->
+    <%- include('../partials/footer') %>
+  </div>
+
+  <!-- Modal global i Pamjes së Shpejtë (Quick View) -->
+  <%- include('../partials/quick-view-modal') %>
+
+  <!-- Global Application Scripts -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

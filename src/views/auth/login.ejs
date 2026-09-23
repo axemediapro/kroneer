@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sq" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyrja në Sistem - KRONEER SISTEME LIFTSH</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- Industrial Engineering Background Elements -->
+  <div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-amber-500 rounded-full blur-[140px]"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600 rounded-full blur-[140px]"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:24px_24px] opacity-25"></div>
+  </div>
+
+  <!-- Elevator Shaft Silhouette Graphic -->
+  <div class="absolute right-12 bottom-0 top-0 w-72 hidden xl:flex flex-col justify-between border-x border-slate-800/40 opacity-15 pointer-events-none p-4">
+    <div class="border-b border-amber-500/40 pb-2 text-[10px] font-mono text-amber-400">SHAFT ELEVATION A-1</div>
+    <div class="space-y-12">
+      <div class="h-24 border border-dashed border-amber-500/40 rounded flex items-center justify-center text-[10px] font-mono text-slate-400">CABIN POSITION (FL 08)</div>
+      <div class="h-24 border border-slate-700/40 rounded flex items-center justify-center text-[10px] font-mono text-slate-500">COUNTERWEIGHT (FL 02)</div>
+    </div>
+    <div class="border-t border-slate-800 pt-2 text-[10px] font-mono text-slate-500">PIT DEPTH 1200mm</div>
+  </div>
+
+  <div class="w-full max-w-md z-10">
+    
+    <!-- Brand Header -->
+    <div class="text-center mb-6">
+      <% const loginLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : (typeof company !== 'undefined' && company && company.logoUrl ? company.logoUrl : null); %>
+      <% if (loginLogo) { %>
+        <div class="h-12 max-w-[220px] mx-auto flex items-center justify-center mb-3">
+          <img src="<%= loginLogo %>" alt="<%= company.companyName %>" class="max-h-12 w-auto max-w-full object-contain filter drop-shadow-xl">
+        </div>
+      <% } else { %>
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 text-slate-950 font-black text-2xl shadow-xl shadow-amber-500/20 mb-3 font-mono tracking-wider border border-amber-300">
+          K
+        </div>
+        <h1 class="text-2xl font-black tracking-widest text-slate-100 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h1>
+        <p class="text-[11px] font-bold uppercase tracking-widest text-amber-400 mt-0.5"><%= typeof company !== 'undefined' && company ? company.tagline : 'SISTEM PËR MENAXHIMIN E LIFTEVE' %></p>
+      <% } %>
+      <p class="text-xs text-slate-400 mt-1">ERP • CRM • Shitje • Projekte • Mirëmbajtje</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
+      
+      <!-- Flash Alert Errors -->
+      <% if (flashError && flashError.length > 0) { %>
+        <div class="mb-5 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span><%= flashError[0] %></span>
+        </div>
+      <% } %>
+
+      <% if (flashSuccess && flashSuccess.length > 0) { %>
+        <div class="mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span><%= flashSuccess[0] %></span>
+        </div>
+      <% } %>
+
+      <form action="/kycu" method="POST" class="space-y-5">
+        
+        <div>
+          <label for="username" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            Emri i Përdoruesit ose Email
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </div>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              required 
+              value="admin"
+              placeholder="Shkruani emrin e përdoruesit"
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-medium"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            Fjalëkalimi
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              required 
+              value="admin123"
+              placeholder="••••••••"
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-medium"
+            >
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300">
+            <input type="checkbox" name="remember" checked class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-amber-500 focus:ring-0 focus:ring-offset-0">
+            <span>Më mbaj të kyçur</span>
+          </label>
+          <span class="text-slate-500">Qasje e Sigurt SSL 256-bit</span>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm tracking-wider uppercase transition-all duration-150 shadow-lg shadow-amber-500/25 active:scale-[0.99] flex items-center justify-center gap-2"
+        >
+          <span>HYR NË SISTEM</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+
+      </form>
+
+      <!-- Demo Credentials Helper Box -->
+      <div class="mt-6 pt-5 border-t border-slate-800/80">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-amber-400/80 mb-2">Të dhënat për demonstrim (Demo):</p>
+        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-slate-400">
+          <div>
+            <span class="text-slate-500 block text-[10px]">Përdoruesi:</span>
+            <span class="font-mono font-bold text-slate-200">admin</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Fjalëkalimi:</span>
+            <span class="font-mono font-bold text-slate-200">admin123</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Security Note -->
+    <div class="text-center mt-6 text-xs text-slate-500">
+      KRONEER &copy; 2026 • Të gjitha të drejtat e rezervuara.
+    </div>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<div class="space-y-6">
+  <!-- Top Breadcrumb & Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/instalimet" class="hover:text-amber-600 dark:hover:text-amber-400">Qendra e Instalimeve</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">SN: <%= installation.serialNumber %></span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+        <%= installation.elevatorModel %>
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        Projekti: <a href="/projektet/<%= installation.projectId %>" class="font-medium text-amber-600 hover:underline"><%= installation.project.name %></a> 
+        • Klienti: <%= installation.project.customer ? installation.project.customer.companyName : '-' %>
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <div x-data="serialCodeModal()" class="relative">
+        <button type="button" @click="open('<%= installation.serialNumber %>', '<%= qrCodeDataUrl %>')" title="Shfaq QR Code / Barkod të Numrit Serik" class="p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition">
+          <i data-lucide="qr-code" class="w-4 h-4"></i>
+        </button>
+        <%- include('../partials/serial-code-modal') %>
+      </div>
+      <% if (installation.progressPercent === 100) { %>
+        <a href="/dorezimi/krijo?projectId=<%= installation.projectId %>&installationId=<%= installation.id %>" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+          <i data-lucide="file-check" class="w-4 h-4 mr-2"></i>
+          Krijo Procesverbal Dorëzimi
+        </a>
+      <% } %>
+      <a href="/instalimet" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+        Kthehu
+      </a>
+    </div>
+  </div>
+
+  <!-- Progress Card -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gjendja e Montimit</span>
+        <div class="flex items-center space-x-3 mt-1">
+          <span class="text-3xl font-extrabold text-slate-900 dark:text-white"><%= installation.progressPercent %>%</span>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full <%= 
+            installation.status === 'Përfunduar' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' :
+            installation.status === 'Në Testim' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400' :
+            installation.status === 'Në Instalim' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400' :
+            'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
+          %>">
+            <%= installation.status %>
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs text-slate-500">
+        <div>
+          <span class="block text-slate-400">Ekipi:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200"><%= installation.teamLead %></span>
+        </div>
+        <div>
+          <span class="block text-slate-400">Data e Fillimit:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200"><%= new Date(installation.startDate).toLocaleDateString('sq-AL') %></span>
+        </div>
+        <div>
+          <span class="block text-slate-400">Afati i Synuar:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200"><%= installation.targetDate ? new Date(installation.targetDate).toLocaleDateString('sq-AL') : 'I hapur' %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-slate-100 dark:bg-slate-700 h-3.5 rounded-full overflow-hidden">
+      <div class="h-full rounded-full transition-all duration-500 <%= installation.progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-amber-500 to-amber-600' %>" style="width: <%= installation.progressPercent %>%"></div>
+    </div>
+  </div>
+
+  <!-- 13-Point Engineering Checklist -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+          <i data-lucide="clipboard-check" class="w-5 h-5 mr-2 text-amber-500"></i>
+          Lista e Kontrollit Inxhinierik (13 Hapa Standardë KRONEER)
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Klikoni mbi secilën pikë për ta shënuar si të përfunduar ose të papërfunduar. Progresi llogaritet automatikisht në kohë reale.
+        </p>
+      </div>
+      <span class="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md">
+        <%= installation.checklistItems.filter(i => i.isCompleted).length %> nga <%= installation.checklistItems.length %> të Përfunduara
+      </span>
+    </div>
+
+    <div class="divide-y divide-slate-100 dark:divide-slate-700/60">
+      <% installation.checklistItems.forEach((item, index) => { %>
+        <div class="p-4 flex items-start sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
+          <div class="flex items-start sm:items-center space-x-3.5">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold <%= item.isCompleted ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' %>">
+              <%= index + 1 %>
+            </span>
+            <div>
+              <p class="text-sm font-semibold <%= item.isCompleted ? 'text-slate-900 dark:text-white line-through opacity-80' : 'text-slate-900 dark:text-white' %>">
+                <%= item.itemTitle %>
+              </p>
+              <% if (item.isCompleted && item.completedAt) { %>
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center">
+                  <i data-lucide="check" class="w-3.5 h-3.5 mr-1"></i>
+                  Përfunduar më <%= new Date(item.completedAt).toLocaleString('sq-AL') %> <%= item.completedBy ? `nga ${item.completedBy}` : '' %>
+                </p>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Form Toggle Button -->
+          <form action="/instalimet/<%= installation.id %>/checklist-toggle" method="POST">
+            <input type="hidden" name="checklistItemId" value="<%= item.id %>">
+            <button type="submit" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition flex items-center <%= item.isCompleted ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600' %>">
+              <% if (item.isCompleted) { %>
+                <i data-lucide="check-circle" class="w-4 h-4 mr-1.5 text-emerald-600 dark:text-emerald-400"></i> Përfunduar
+              <% } else { %>
+                <i data-lucide="circle" class="w-4 h-4 mr-1.5 text-slate-400"></i> Shëno si të Përfunduar
+              <% } %>
+            </button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Technical Notes -->
+  <% if (installation.notes) { %>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">Shënime Teknike të Instalimit</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed">
+        <%= installation.notes %>
+      </p>
+    </div>
+  <% } %>
+</div>

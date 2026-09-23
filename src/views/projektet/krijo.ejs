@@ -1,0 +1,96 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/projektet" class="hover:text-amber-600 dark:hover:text-amber-400">Projektet</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">Hap Projekt të Ri</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Hap Projekt të Ri Inxhinierik</h1>
+    </div>
+    <a href="/projektet" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form action="/projektet/krijo" method="POST" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri i Projektit</label>
+        <input type="text" name="number" value="<%= nextNumber %>" readonly class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 font-mono text-sm focus:outline-none cursor-not-allowed">
+        <p class="text-xs text-slate-500 mt-1">Gjenerohet automatikisht nga sistemi KRONEER</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Emri i Projektit / Ndërtesës *</label>
+        <input type="text" name="name" required placeholder="p.sh. Kompleksi Rezidencial 'Dardania' Blloku B" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div x-data="quickCustomerModal()">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Klienti / Investitori *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Zgjidh Klientin --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.companyName %> (<%= c.city || 'Kosovë' %>)</option>
+            <% }) %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Faza Fillestare</label>
+        <select name="stage" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="Planifikim" selected>Planifikim</option>
+          <option value="Inxhinieri">Inxhinieri</option>
+          <option value="Prodhim">Prodhim</option>
+          <option value="Transport">Transport</option>
+          <option value="Instalim">Instalim</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri i Lifteve</label>
+        <input type="number" name="elevatorCount" min="1" value="1" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri i Kateve / Ndalesave</label>
+        <input type="number" name="floorsCount" min="1" value="8" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Vlera e Projektit (€)</label>
+        <input type="number" step="0.01" name="value" placeholder="45000" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Data e Fillimit</label>
+        <input type="date" name="startDate" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Afati i Synuar i Përfundimit</label>
+        <input type="date" name="targetCompletionDate" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Shënime & Specifikime Teknike</label>
+        <textarea name="notes" rows="4" placeholder="Shënime për boshtin e ashensorit, kushtet e objektit, kërkesat e arkitektit..." class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+      </div>
+    </div>
+
+    <div class="pt-6 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <a href="/projektet" class="px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 rounded-lg transition shadow-sm flex items-center">
+        <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+        Hap Projektin
+      </button>
+    </div>
+  </form>
+</div>

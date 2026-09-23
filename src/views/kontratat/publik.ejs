@@ -1,0 +1,262 @@
+<%
+  const clientName = contract.customer.companyName || `${contract.customer.firstName || ''} ${contract.customer.lastName || ''}`.trim() || 'Klienti';
+  const elevName = contract.elevator ? contract.elevator.model : (contract.quotation && contract.quotation.items && contract.quotation.items[0] ? contract.quotation.items[0].name : 'Sisteme Lifti KRONEER');
+  const bldName = contract.customer.buildingName || 'Objekti i Porositësit';
+  const cAddress = contract.customer.address || '-';
+  const cCity = contract.customer.city || 'Kosovë';
+  const cTax = contract.customer.taxNumber || contract.customer.businessNumber || '-';
+  const compName = company.companyName || 'KRONEER';
+  const compAddr = company.address || 'Prishtinë';
+  const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+  const compTax = company.taxNumber || '330123456';
+  
+  const defaultPreamble = `Kjo Kontratë lidhet ndërmjet ${compName} me seli në ${compAddr}, ${compCity}, NUI: ${compTax} (në vijim: "Shitësi / Kryesi i Punëve"), dhe ${clientName} me seli në ${cAddress}, ${cCity}, NUI: ${cTax} (në vijim: "Blerësi / Porositësi").`;
+  const defaultArt1 = `Shitësi merr përsipër furnizimin me pajisje, transportin, montimin profesional, testimin dinamik dhe dorëzimin e plotë funksional të sistemit të liftit: ${elevName} për objektin "${bldName}".`;
+  const defaultArt2 = `Vlera totale e dakorduar kontraktuale është €${contract.value.toLocaleString('de-DE', {minimumFractionDigits: 2})} (përfshirë TVSH 18%). Kushtet e pagesës janë: ${contract.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
+  const dDate = contract.deliveryDate ? new Date(contract.deliveryDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  const iDate = contract.installationDate ? new Date(contract.installationDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  const defaultArt3 = `Afati i dorëzimit të pajisjeve në kantier është deri më ${dDate}. Përfundimi i montimit dhe testimit parashikohet më ${iDate}. Periudha e Garancisë Inxhinierike është ${contract.warrantyMonths || 24} Muaj nga dita e nënshkrimit të Procesverbalit të Dorëzimit Teknik.`;
+  const defaultArt4 = contract.maintenanceTerms || `Mirëmbajtje falas gjatë periudhës së garancisë sipas standardit evropian EN 13015 me shërbim emergjence 24/7 dhe kontrolle periodike mujore.`;
+  const defaultArt5 = `1. Shitësi obligohet të zbatojë me përpikmëri standardet evropiane të sigurisë EN 81-20 dhe EN 81-50 gjatë të gjitha fazave të punimeve.\n2. Porositësi obligohet të sigurojë hapësirën e pastër të pusit të liftit sipas specifikimeve teknike, furnizim të pandërprerë me energji elektrike 380V/50Hz në vendndodhjen teknike, dhe qasje të papenguar për ekipin montues.`;
+  const defaultArt6 = `Çdo ndryshim apo plotësim i kësaj kontrate do të jetë i vlefshëm vetëm me shkrim me pëlqimin e të dyja palëve. Mosmarrëveshjet eventuale do të zgjidhen me mirëkuptim, ose në mungesë marrëveshjeje nga Gjykata kompetente në Prishtinë.`;
+  const defaultClosing = `Kjo kontratë hartohet dhe nënshkruhet në kopje origjinale me fuqi të plotë juridike, e verifikuar digjitalisht përmes platformës KRONEER ERP.`;
+%>
+
+<!-- Header & Shiriti i Verifikimit Publik -->
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        DOKUMENT I VERIFIKUAR DIGJITALISHT
+      </span>
+      <span class="text-xs text-slate-500">•</span>
+      <span class="text-xs text-slate-400 font-mono">EN 81-20/50</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight"><%= contract.number %></h1>
+      <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        Statusi: <%= contract.status %>
+      </span>
+    </div>
+    <p class="text-xs sm:text-sm text-slate-400 mt-1 flex flex-wrap items-center gap-2">
+      <span>Porositësi: <strong class="text-slate-200"><%= clientName %></strong></span>
+      <span>•</span>
+      <span>Objekti: <span class="text-amber-400"><%= bldName %></span></span>
+      <span>•</span>
+      <span>Data: <span class="text-slate-300"><%= formatDate(contract.createdAt) %></span></span>
+    </p>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2.5">
+    <button type="button" onclick="window.print()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-2 shadow transition-all">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+      <span>Printo / Ruaj PDF</span>
+    </button>
+    <a href="tel:<%= company.phone || '+38338500600' %>" class="no-print px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+      <span>Kontakto Zyrat</span>
+    </a>
+  </div>
+</div>
+
+<!-- Banner i Verifikimit të Sigurisë -->
+<div class="mb-8 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-emerald-500/30 shadow-xl flex items-center justify-between gap-4 flex-wrap">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center flex-shrink-0">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-slate-100">Verifikim Zyrtar i Nënshkrimit & Autenticitetit</h3>
+      <p class="text-xs text-slate-400">Ky dokument është gjeneruar me enkriptim të lartë dhe verifikohet direkt nga regjistri zyrtar i <%= compName %>.</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-2 font-mono text-xs text-slate-400 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <span>Aktiv & I Vlefshëm</span>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  
+  <!-- Kolona Kryesore me Nenet e Kontratës -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- Përmbledhja Inxhinierike & Financiare -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl text-xs space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Të Dhënat Kryesore të Marrëveshjes
+        </h3>
+        <span class="text-[11px] text-slate-400 font-mono">KRONEER EN81-20/50</span>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+          <span class="text-slate-500 block text-[11px] mb-1">Vlera e Dakorduar:</span>
+          <span class="text-lg font-black text-amber-400 font-mono"><%= formatCurrency(contract.value) %></span>
+        </div>
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+          <span class="text-slate-500 block text-[11px] mb-1">Garancia Teknike:</span>
+          <span class="text-lg font-bold text-emerald-400 font-mono"><%= contract.warrantyMonths %> Muaj</span>
+        </div>
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+          <span class="text-slate-500 block text-[11px] mb-1">Dorëzimi në Kantier:</span>
+          <span class="font-bold text-slate-200"><%= formatDate(contract.deliveryDate) %></span>
+        </div>
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+          <span class="text-slate-500 block text-[11px] mb-1">Montimi & Kolaudimi:</span>
+          <span class="font-bold text-slate-200"><%= formatDate(contract.installationDate) %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Përmbajtja Tekstuale Ligjore & Teknike e Kontratës -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl text-xs space-y-6">
+      
+      <div class="border-b border-slate-800 pb-4 text-center">
+        <h2 class="text-base sm:text-lg font-black text-slate-100 uppercase tracking-wider font-mono">
+          <%= contract.contractTitle || 'KONTRATË PËR FURNIZIMIN, MONTIMIN DHE MIRËMBAJTJEN E SISTEMEVE TË LIFTEVE' %>
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Numri i Regjistrit Kontraktual: <span class="font-mono text-amber-400 font-bold"><%= contract.number %></span></p>
+      </div>
+
+      <!-- Preambula -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Preambula / Palët Kontraktuese:</span>
+        <p class="text-slate-300 leading-relaxed"><%= contract.preambleText || defaultPreamble %></p>
+      </div>
+
+      <!-- NENI 1 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article1Title || 'NENI 1: OBJEKTI I KONTRATËS' %></h4>
+        <p class="text-slate-300 leading-relaxed"><%= contract.article1Text || defaultArt1 %></p>
+      </div>
+
+      <!-- NENI 2 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article2Title || 'NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS' %></h4>
+        <p class="text-slate-300 leading-relaxed"><%= contract.article2Text || defaultArt2 %></p>
+      </div>
+
+      <!-- NENI 3 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article3Title || 'NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA' %></h4>
+        <p class="text-slate-300 leading-relaxed"><%= contract.article3Text || defaultArt3 %></p>
+      </div>
+
+      <!-- NENI 4 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article4Title || 'NENI 4: MIRËMBAJTJA & SHËRBIMI' %></h4>
+        <p class="text-slate-300 leading-relaxed"><%= contract.article4Text || defaultArt4 %></p>
+      </div>
+
+      <!-- NENI 5 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE' %></h4>
+        <p class="text-slate-300 leading-relaxed whitespace-pre-line font-mono text-[11px]"><%= contract.article5Text || defaultArt5 %></p>
+      </div>
+
+      <!-- NENI 6 -->
+      <div class="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5">
+        <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wide"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE' %></h4>
+        <p class="text-slate-300 leading-relaxed"><%= contract.article6Text || defaultArt6 %></p>
+      </div>
+
+      <% if (contract.specialTerms) { %>
+        <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-1.5">
+          <h4 class="font-bold text-amber-300 uppercase text-xs tracking-wide">Klauzola Speciale Shtesë</h4>
+          <p class="text-slate-200 leading-relaxed whitespace-pre-line"><%= contract.specialTerms %></p>
+        </div>
+      <% } %>
+
+      <!-- Dispozitat Përfundimtare -->
+      <div class="p-4 bg-slate-950/40 border border-slate-800/60 rounded-xl space-y-1">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dispozitat Përmbyllëse:</span>
+        <p class="text-slate-400 italic text-[11px]"><%= contract.closingTerms || defaultClosing %></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Kolona Djathtas: QR Code, Të Dhënat e Palëve & Specifikimet -->
+  <div class="space-y-6">
+    
+    <!-- Kartela e QR Kodit të Verifikimit -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl text-center space-y-4">
+      <div class="flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+        <span class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+          QR KODI I VERIFIKIMIT
+        </span>
+      </div>
+
+      <div class="flex justify-center">
+        <div class="p-3 bg-white rounded-2xl shadow-xl inline-block border-2 border-slate-800">
+          <img src="<%= qrCodeDataUrl %>" alt="QR Code <%= contract.number %>" class="w-36 h-36 block">
+        </div>
+      </div>
+
+      <p class="text-[11px] text-slate-400 leading-relaxed px-2">
+        Skanoni këtë QR Code për të verifikuar në çdo moment autenticitetin e kësaj kontrate me link të sigurt & të enkriptuar.
+      </p>
+
+      <div class="pt-2 border-t border-slate-800/80">
+        <button type="button" onclick="navigator.clipboard.writeText(window.location.href); alert('Linku i verifikuar u kopjua në clipboard!');" class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <span>Kopjo Linkun e Sigurt</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Të Dhënat e Palëve Kontraktuese -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl text-xs space-y-4">
+      <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider border-b border-slate-800 pb-2">
+        Palët Kontraktuese
+      </h3>
+
+      <!-- Blerësi -->
+      <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
+        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Blerësi / Porositësi:</span>
+        <div class="font-bold text-slate-100 text-sm"><%= clientName %></div>
+        <div class="text-slate-400">Objekti: <strong class="text-slate-200"><%= bldName %></strong></div>
+        <div class="text-slate-400">Adresa: <span class="text-slate-300"><%= cAddress %>, <%= cCity %></span></div>
+        <div class="text-slate-400">NUI / Nr. Fiskal: <span class="font-mono text-slate-200"><%= cTax %></span></div>
+        <% if (contract.customer.phone) { %>
+          <div class="text-slate-400">Tel: <span class="font-mono text-slate-200"><%= contract.customer.phone %></span></div>
+        <% } %>
+      </div>
+
+      <!-- Shitësi -->
+      <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
+        <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Shitësi / Kryesi i Punëve:</span>
+        <div class="font-bold text-slate-100 text-sm"><%= compName %></div>
+        <div class="text-slate-400">Selia: <span class="text-slate-300"><%= compAddr %>, <%= compCity %></span></div>
+        <div class="text-slate-400">NUI: <span class="font-mono text-slate-200"><%= compTax %></span></div>
+        <div class="text-slate-400">Banka: <span class="text-slate-300"><%= company.bankName || 'BKT' %></span></div>
+        <div class="text-slate-400">IBAN: <span class="font-mono text-slate-200 text-[11px]"><%= company.iban || '-' %></span></div>
+      </div>
+    </div>
+
+    <!-- Modeli i Liftit nëse ekziston -->
+    <% if (contract.elevator) { %>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl text-xs space-y-3">
+        <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider border-b border-slate-800 pb-2">
+          Specifikimet e Pajisjes
+        </h3>
+        <div class="font-bold text-slate-100 text-sm text-amber-400"><%= contract.elevator.model %></div>
+        <div class="grid grid-cols-2 gap-2 text-slate-400">
+          <div>Tipi: <strong class="text-slate-200"><%= contract.elevator.type %></strong></div>
+          <div>Kapaciteti: <strong class="text-slate-200"><%= contract.elevator.capacityKg %> kg</strong></div>
+          <div>Shpejtësia: <strong class="text-slate-200"><%= contract.elevator.speed %> m/s</strong></div>
+          <div>Stacionet: <strong class="text-slate-200"><%= contract.elevator.stopsCount %></strong></div>
+          <div class="col-span-2">Sistemi: <strong class="text-slate-200"><%= contract.elevator.driveSystem %></strong></div>
+        </div>
+      </div>
+    <% } %>
+
+  </div>
+
+</div>

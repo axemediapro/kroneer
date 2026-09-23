@@ -1,0 +1,208 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono">NDRYSHO FATURËN</h1>
+      <span class="font-mono text-sm font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= invoice.number %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Përditësoni të dhënat, statusin dhe artikujt e faturës</p>
+  </div>
+  <a href="/faturat/<%= invoice.id %>" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+    Anulo
+  </a>
+</div>
+
+<form action="/faturat/<%= invoice.id %>/ndrysho" method="POST" id="invoice-edit-form" class="space-y-6">
+  
+  <!-- 1. Informacioni Bazë i Faturës -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+      1. Të Dhënat e Faturimit
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+      <div x-data="quickCustomerModal()">
+        <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>" <%= invoice.customerId === c.id ? 'selected' : '' %>>
+                <%= c.companyName %> (<%= c.code %>)
+              </option>
+            <% }); %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Statusi *</label>
+        <select name="status" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+          <% statuses.forEach(st => { %>
+            <option value="<%= st %>" <%= invoice.status === st ? 'selected' : '' %>><%= st %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Faturimit *</label>
+        <input type="date" name="date" value="<%= new Date(invoice.date).toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Pagesës (Afati)</label>
+        <input type="date" name="dueDate" value="<%= invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Artikujt e Faturës me Alpine.js -->
+  <%
+    const initialInvoiceItems = (invoice.items && invoice.items.length > 0)
+      ? invoice.items.map(it => ({
+          name: it.name || '',
+          description: it.description || '',
+          quantity: it.quantity || 1,
+          unitPrice: it.unitPrice || 0,
+          discount: it.discount || 0
+        }))
+      : [{ name: 'Shërbim / Pajisje KRONEER', description: '', quantity: 1, unitPrice: 1000, discount: 0 }];
+  %>
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl" x-data="{
+    items: <%= JSON.stringify(initialInvoiceItems) %>,
+    addItem() {
+      this.items.push({
+        name: '',
+        description: '',
+        quantity: 1,
+        unitPrice: 0,
+        discount: 0
+      });
+    },
+    removeItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1);
+      } else {
+        alert('Fatura duhet të përmbajë të paktën një artikull.');
+      }
+    },
+    subtotal() {
+      return this.items.reduce((s, it) => s + (parseFloat(it.quantity || 0) * parseFloat(it.unitPrice || 0)), 0);
+    },
+    totalDiscount() {
+      return this.items.reduce((s, it) => s + parseFloat(it.discount || 0), 0);
+    },
+    netSubtotal() {
+      return Math.max(0, this.subtotal() - this.totalDiscount());
+    },
+    vat() {
+      return Math.round(this.netSubtotal() * 0.18 * 100) / 100;
+    },
+    total() {
+      return this.netSubtotal() + this.vat();
+    }
+  }">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">2. Artikujt e Faturës</h3>
+      <button type="button" @click="addItem()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Shto Artikull
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 text-slate-400 uppercase font-bold text-[10px]">
+          <tr>
+            <th class="p-3 w-1/2">Artikulli / Përshkrimi</th>
+            <th class="p-3 text-center">Sasia</th>
+            <th class="p-3 text-right">Çmimi Pa TVSH (€)</th>
+            <th class="p-3 text-right">Zbritja (€)</th>
+            <th class="p-3 text-right">Totali (€)</th>
+            <th class="p-3 text-center"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <template x-for="(item, index) in items" :key="index">
+            <tr>
+              <td class="p-2 space-y-1">
+                <input type="text" x-model="item.name" required placeholder="Emri i artikullit / shërbimit" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none">
+                <input type="text" x-model="item.description" placeholder="Përshkrim opsional..." class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
+              </td>
+              <td class="p-2 text-center">
+                <input type="number" x-model.number="item.quantity" min="1" step="1" class="w-16 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-center focus:outline-none">
+              </td>
+              <td class="p-2 text-right">
+                <input type="number" x-model.number="item.unitPrice" min="0" step="10" class="w-24 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-right focus:outline-none">
+              </td>
+              <td class="p-2 text-right">
+                <input type="number" x-model.number="item.discount" min="0" step="10" class="w-20 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-emerald-400 text-right focus:outline-none">
+              </td>
+              <td class="p-2 font-mono font-bold text-slate-100 text-right" x-text="'€' + Math.max(0, (item.quantity * item.unitPrice) - item.discount).toLocaleString('de-DE', {minimumFractionDigits: 2})"></td>
+              <td class="p-2 text-center">
+                <button type="button" @click="removeItem(index)" class="text-slate-500 hover:text-rose-400 p-1 font-bold text-base">
+                  &times;
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Përmbledhja Financiare -->
+    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+      <div class="w-72 space-y-2 text-xs">
+        <div class="flex justify-between text-slate-400">
+          <span>Nëntotali neto:</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + netSubtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>TVSH (18%):</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + vat().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="pt-2 border-t-2 border-amber-500/40 flex justify-between items-center">
+          <span class="font-black text-slate-100 text-sm">TOTALI:</span>
+          <span class="text-xl font-black text-amber-400 font-mono" x-text="'€' + total().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <% if (invoice.paidAmount > 0) { %>
+          <div class="flex justify-between text-emerald-400 pt-1">
+            <span>Paguar deri tani:</span>
+            <span class="font-mono font-bold">€<%= invoice.paidAmount.toLocaleString('de-DE', {minimumFractionDigits: 2}) %></span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <input type="hidden" name="items" :value="JSON.stringify(items)">
+  </div>
+
+  <!-- 3. Shënime dhe Kushte -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-2">
+      3. Shënime dhe Informacione Bankare
+    </h3>
+    <textarea name="notes" rows="3" placeholder="Instruksione pagese, detaje mbi faturimin..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400"><%= invoice.notes || '' %></textarea>
+  </div>
+
+  <!-- Butonat e Veprimit -->
+  <div class="flex items-center justify-between pt-4">
+    <button type="button" onclick="if(confirm('A jeni të sigurt që dëshironi ta fshini këtë faturë? Ky veprim nuk mund të kthehet.')) { document.getElementById('delete-invoice-form').submit(); }" class="px-5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Fshi Faturën
+    </button>
+    <div class="flex items-center gap-3">
+      <a href="/faturat/<%= invoice.id %>" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+        Anulo
+      </a>
+      <button type="submit" class="px-7 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+        RUAJ NDRYSHIMET
+      </button>
+    </div>
+  </div>
+
+</form>
+
+<form id="delete-invoice-form" action="/faturat/<%= invoice.id %>/fshi" method="POST" class="hidden"></form>

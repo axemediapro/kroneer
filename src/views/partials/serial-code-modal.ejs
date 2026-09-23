@@ -1,0 +1,32 @@
+<!-- MODAL: QR Code / Barkod i Numrit Serik -->
+<div x-show="isOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+  <div @click.outside="close()" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-xs w-full space-y-4 text-center">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white">Kodi i Numrit Serik</h3>
+      <button type="button" @click="close()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Ndërrimi QR / Barkod -->
+    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+      <button type="button" @click="setType('qr')" :class="codeType === 'qr' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-500 dark:text-slate-400'" class="py-1.5 rounded-md font-bold text-xs transition-all">QR Code</button>
+      <button type="button" @click="setType('barcode')" :class="codeType === 'barcode' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-500 dark:text-slate-400'" class="py-1.5 rounded-md font-bold text-xs transition-all">Barkod</button>
+    </div>
+
+    <div x-show="codeType === 'qr'">
+      <img :src="qrImg" alt="QR Code" class="w-48 h-48 mx-auto border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-white">
+    </div>
+    <div x-show="codeType === 'barcode'" class="bg-white rounded-lg p-2 border border-slate-200 dark:border-slate-700">
+      <canvas x-ref="barcodeCanvas" class="max-w-full"></canvas>
+    </div>
+
+    <p class="font-mono text-sm font-bold text-amber-600 dark:text-amber-400" x-text="serial"></p>
+
+    <div class="flex items-center gap-2">
+      <a x-show="codeType === 'qr'" :href="qrImg" :download="serial + '-qr.png'" class="flex-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition">Shkarko</a>
+      <button type="button" x-show="codeType === 'barcode'" @click="downloadBarcode()" class="flex-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition">Shkarko</button>
+      <button type="button" @click="printCode()" class="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">Printo</button>
+    </div>
+  </div>
+</div>

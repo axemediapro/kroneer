@@ -1,0 +1,84 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/servisi" class="hover:text-amber-600 dark:hover:text-amber-400">Servisi</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">Krijo Tiketë</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Hap Kërkesë të Re për Servis</h1>
+    </div>
+    <a href="/servisi" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form action="/servisi/krijo" method="POST" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri i Tiketës</label>
+        <input type="text" name="number" value="<%= nextNumber %>" readonly class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 font-mono text-sm focus:outline-none cursor-not-allowed">
+      </div>
+
+      <div x-data="quickCustomerModal()">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Zgjidh Klientin --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.companyName %> (<%= c.city || 'Kosovë' %>)</option>
+            <% }) %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri Serik i Ashensorit</label>
+        <input type="text" name="serialNumber" placeholder="p.sh. KR630-2026-00102" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Prioriteti i Defektit *</label>
+        <select name="priority" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="Normal" selected>Normal (Reagim brenda 24 orëve)</option>
+          <option value="I lartë">I lartë (Reagim brenda 4 orëve)</option>
+          <option value="Kritik">Kritik / Emergjencë (Njerëz të bllokuar / Ndalim total)</option>
+          <option value="I ulët">I ulët (Kërkesë estetike / zhurmë e vogël)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Cakto Teknikun</label>
+        <select name="technicianId" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">-- Pa caktuar (Hapur) --</option>
+          <% technicians.forEach(t => { %>
+            <option value="<%= t.id %>"><%= t.fullName %> (<%= t.role %>)</option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Data e Planifikuar e Ndërhyrjes</label>
+        <input type="datetime-local" name="scheduledDate" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Përshkrimi i Problemit / Defektit *</label>
+        <textarea name="problemDescription" rows="4" required placeholder="Përshkruani me detaje çfarë defekti ka ndodhur, cili kat, nëse ka kode gabimi në ekran..." class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <a href="/servisi" class="px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 rounded-lg transition shadow-sm flex items-center">
+        <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+        Regjistro Kërkesën
+      </button>
+    </div>
+  </form>
+</div>

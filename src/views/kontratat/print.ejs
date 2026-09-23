@@ -1,0 +1,147 @@
+<%
+  const clientName = contract.customer.companyName || `${contract.customer.firstName || ''} ${contract.customer.lastName || ''}`.trim() || 'Klienti';
+  const elevName = contract.elevator ? contract.elevator.model : (contract.quotation && contract.quotation.items && contract.quotation.items[0] ? contract.quotation.items[0].name : 'Sisteme Lifti KRONEER');
+  const bldName = contract.customer.buildingName || 'Objekti i Porositësit';
+  const cAddress = contract.customer.address || '-';
+  const cCity = contract.customer.city || 'Kosovë';
+  const cTax = contract.customer.taxNumber || contract.customer.businessNumber || '-';
+  const compName = company.companyName || 'KRONEER';
+  const compAddr = company.address || 'Prishtinë';
+  const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+  const compTax = company.taxNumber || '330123456';
+  
+  const defaultPreamble = `Kjo Kontratë lidhet ndërmjet ${compName} me seli në ${compAddr}, ${compCity}, NUI: ${compTax} (në vijim: "Shitësi / Kryesi i Punëve"), dhe ${clientName} me seli në ${cAddress}, ${cCity}, NUI: ${cTax} (në vijim: "Blerësi / Porositësi").`;
+  const defaultArt1 = `Shitësi merr përsipër furnizimin me pajisje, transportin, montimin profesional, testimin dinamik dhe dorëzimin e plotë funksional të sistemit të liftit: ${elevName} për objektin "${bldName}".`;
+  const defaultArt2 = `Vlera totale e dakorduar kontraktuale është €${contract.value.toLocaleString('de-DE', {minimumFractionDigits: 2})} (përfshirë TVSH 18%). Kushtet e pagesës janë: ${contract.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
+  const dDate = contract.deliveryDate ? new Date(contract.deliveryDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  const iDate = contract.installationDate ? new Date(contract.installationDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  const defaultArt3 = `Afati i dorëzimit të pajisjeve në kantier është deri më ${dDate}. Përfundimi i montimit dhe testimit parashikohet më ${iDate}. Periudha e Garancisë Inxhinierike është ${contract.warrantyMonths || 24} Muaj nga dita e nënshkrimit të Procesverbalit të Dorëzimit Teknik.`;
+  const defaultArt4 = contract.maintenanceTerms || `Mirëmbajtje falas gjatë periudhës së garancisë sipas standardit evropian EN 13015 me shërbim emergjence 24/7 dhe kontrolle periodike mujore.`;
+  const defaultArt5 = `1. Shitësi obligohet të zbatojë me përpikmëri standardet evropiane të sigurisë EN 81-20 dhe EN 81-50 gjatë të gjitha fazave të punimeve.\n2. Porositësi obligohet të sigurojë hapësirën e pastër të pusit të liftit sipas specifikimeve teknike, furnizim të pandërprerë me energji elektrike 380V/50Hz në vendndodhjen teknike, dhe qasje të papenguar për ekipin montues.`;
+  const defaultArt6 = `Çdo ndryshim apo plotësim i kësaj kontrate do të jetë i vlefshëm vetëm me shkrim me pëlqimin e të dyja palëve. Mosmarrëveshjet eventuale do të zgjidhen me mirëkuptim, ose në mungesë marrëveshjeje nga Gjykata kompetente në Prishtinë.`;
+  const defaultClosing = `Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.`;
+%>
+
+<!-- Koka Zyrtare e Kontratës -->
+<div class="avoid-break flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="h-11 max-w-[220px] flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company.companyName %>" class="max-h-11 w-auto max-w-full object-contain">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= compName %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline || 'SISTEME LIFTSH' %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600">
+      <%= compAddr %>, <%= compCity %> • NUI: <%= compTax %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <% if (typeof qrCodeDataUrl !== 'undefined' && qrCodeDataUrl) { %>
+      <div class="text-center">
+        <div class="p-1 bg-white border border-slate-900 rounded inline-block">
+          <img src="<%= qrCodeDataUrl %>" alt="QR Code Verifikimi" class="w-14 h-14 block">
+        </div>
+        <div class="text-[8px] font-mono text-slate-700 font-bold uppercase mt-0.5">Verifikimi Online</div>
+      </div>
+    <% } %>
+    <div class="text-right">
+      <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+        KONTRATË ZYRTARE SHITJEJE & MONTIMI
+      </span>
+      <div class="text-lg font-black font-mono text-slate-950"><%= contract.number %></div>
+      <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(contract.createdAt) %></strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="text-center font-bold uppercase tracking-wider text-sm mb-4 border-b border-slate-300 pb-1.5 text-slate-950">
+  <%= contract.contractTitle || 'KONTRATË PËR FURNIZIMIN, MONTIMIN DHE MIRËMBAJTJEN E SISTEMEVE TË LIFTEVE' %>
+</div>
+
+<div class="space-y-2.5 text-[11px] leading-snug text-slate-800 mb-5">
+  
+  <!-- Preambula -->
+  <p class="leading-snug">
+    <%= contract.preambleText || defaultPreamble %>
+  </p>
+
+  <!-- Neni 1 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article1Title || 'NENI 1: OBJEKTI I KONTRATËS' %></h4>
+  <p class="leading-snug">
+    <%= contract.article1Text || defaultArt1 %>
+  </p>
+
+  <!-- Neni 2 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article2Title || 'NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS' %></h4>
+  <p class="leading-snug">
+    <%= contract.article2Text || defaultArt2 %>
+  </p>
+
+  <!-- Neni 3 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article3Title || 'NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA' %></h4>
+  <p class="leading-snug">
+    <%= contract.article3Text || defaultArt3 %>
+  </p>
+
+  <!-- Neni 4 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article4Title || 'NENI 4: MIRËMBAJTJA & SHËRBIMI' %></h4>
+  <p class="leading-snug">
+    <%= contract.article4Text || defaultArt4 %>
+  </p>
+
+  <!-- Neni 5 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE' %></h4>
+  <p class="leading-snug whitespace-pre-line">
+    <%= contract.article5Text || defaultArt5 %>
+  </p>
+
+  <!-- Neni 6 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE' %></h4>
+  <p class="leading-snug">
+    <%= contract.article6Text || defaultArt6 %>
+  </p>
+
+  <!-- Klauzola Speciale -->
+  <% if (contract.specialTerms) { %>
+    <h4 class="font-bold text-slate-950 uppercase pt-1">KLAUZOLA SPECIALE TË DAKORDUARA</h4>
+    <p class="leading-snug whitespace-pre-line bg-slate-50 p-2.5 rounded border border-slate-200">
+      <%= contract.specialTerms %>
+    </p>
+  <% } %>
+
+  <!-- Dispozita Përfundimtare -->
+  <p class="pt-1 italic text-slate-600">
+    <%= contract.closingTerms || defaultClosing %>
+  </p>
+
+</div>
+
+<!-- Nënshkrimet Zyrtare -->
+<div class="avoid-break pt-8 border-t border-slate-300 text-xs">
+  <div class="grid grid-cols-2 gap-12">
+    <div class="text-center">
+      <p class="font-bold text-slate-900 mb-12">Për Shitësin (<%= compName %>):</p>
+      <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+        <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <p class="font-bold text-slate-900 mb-12">Për Blerësin (<%= clientName %>):</p>
+      <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+        <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
+      </div>
+    </div>
+  </div>
+</div>

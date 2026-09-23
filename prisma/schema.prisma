@@ -1,0 +1,738 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  passwordHash String
+  fullName     String
+  email        String    @unique
+  role         String    @default("SHITJE") // ADMINISTRATOR, SHITJE, FINANCE, MENAXHER_PROJEKTI, TEKNIK
+  avatar       String?
+  phone        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  quotations          Quotation[]
+  assignedTickets     ServiceTicket[]
+  assignedInstallations Installation[]
+  assignedVisits      MaintenanceVisit[]
+  activities          Activity[]
+  notifications       Notification[]
+  maintenanceContracts MaintenanceContract[]
+  expenses            Expense[]
+}
+
+model Customer {
+  id              Int       @id @default(autoincrement())
+  code            String    @unique // KR-CUST-0001
+  type            String    @default("Kompani") // Person fizik, Kompani, Ndërtues, Kontraktor, Arkitekt, Zhvillues, Institucion, Menaxher prone
+  companyName     String?
+  firstName       String?
+  lastName        String?
+  taxNumber       String?
+  businessNumber  String?
+  contactPerson   String?
+  phone           String?
+  email           String?
+  website         String?
+  country         String    @default("Kosovë")
+  city            String?
+  address         String?
+  postalCode      String?
+  notes           String?
+  discountGroup   String?   @default("Standard") // Standard, Bronz, Argjend, Ar, VIP/Partner
+  discountPercent Float?    @default(0)
+  
+  // Detajet e Objektit
+  buildingName    String?
+  buildingAddress String?
+  floorsCount     Int?      @default(0)
+  elevatorsCount  Int?      @default(0)
+  architect       String?
+  builderCompany  String?
+  mainContractor  String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  contacts             Contact[]
+  opportunities        Opportunity[]
+  quotations           Quotation[]
+  contracts            Contract[]
+  proformas            Proforma[]
+  invoices             Invoice[]
+  payments             Payment[]
+  projects             Project[]
+  handovers            Handover[]
+  maintenanceContracts MaintenanceContract[]
+  serviceTickets       ServiceTicket[]
+  documents            Document[]
+}
+
+model Contact {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  firstName   String
+  lastName    String
+  role        String?
+  phone       String?
+  email       String?
+  isPrimary   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Opportunity {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  title       String
+  value       Float     @default(0)
+  stage       String    @default("Kontakt") // Kontakt, Kualifikim, Ofertë, Negociatë, E Fituar, E Humbur
+  probability Int       @default(50) // 0-100%
+  closeDate   DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Elevator {
+  id               Int       @id @default(autoincrement())
+  code             String    @unique // KR-ELEV-630, etc.
+  model            String
+  type             String    // Lift pasagjerësh, Lift shtëpiak, Lift panoramik, Lift mallrash, Lift spitalor, Lift shërbimi, Lift automobilash, Platformë ngritëse
+  description      String?
+  capacityKg       Int       @default(630)
+  personsCount     Int       @default(8)
+  speed            Float     @default(1.0) // m/s
+  floorsCount      Int       @default(5)
+  stopsCount       Int       @default(5)
+  motorType        String    @default("Gearless")
+  driveSystem      String    @default("MRL") // MRL, Me dhomë makinerie, Gearless, Me reduktor
+  doorType         String    @default("Automatike Qendrore") // Automatike, Manuale, Teleskopike, Hapje qendrore, Rezistente ndaj zjarrit
+  cabinDimensions  String?   // p.sh. 1100 x 1400 x 2200 mm
+  shaftDimensions  String?   // p.sh. 1650 x 1750 mm
+  pitDepth         Int       @default(1200) // mm
+  headroomHeight   Int       @default(3600) // mm
+  powerSupply      String    @default("380V / 3 Faza / 50Hz")
+  motorPower       Float     @default(5.5) // kW
+  cabinMaterial    String    @default("Inox Saten AISI 304")
+  lighting         String    @default("LED me fikje automatike")
+  controlSystem    String    @default("Mikroprocesor VVF Inverter")
+  safetySystem     String    @default("EN81-20/50 e plotë")
+  warrantyMonths   Int       @default(24)
+  basePrice        Float     @default(20000)
+  vatRate          Float     @default(18)
+  status           String    @default("Aktiv") // Aktiv, Joaktiv
+  imageUrl         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  configurations   ElevatorConfiguration[]
+  contracts        Contract[]
+  maintenanceContracts MaintenanceContract[]
+  serviceTickets   ServiceTicket[]
+  media            ElevatorMedia[]
+}
+
+model ElevatorMedia {
+  id          Int      @id @default(autoincrement())
+  elevatorId  Int
+  type        String   @default("image") // image, video
+  url         String
+  caption     String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  elevator    Elevator @relation(fields: [elevatorId], references: [id], onDelete: Cascade)
+}
+
+model ElevatorOption {
+  id          Int       @id @default(autoincrement())
+  name        String
+  category    String    // Interier, Drita, Siguri, Komunikim, Instalim, Shpejtësi
+  code        String    @unique
+  price       Float     @default(0)
+  description String?
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ElevatorConfiguration {
+  id                  Int       @id @default(autoincrement())
+  quotationId         Int?
+  elevatorId          Int?
+  
+  // Konfigurimi i parametrave
+  elevatorType        String?
+  capacityKg          Int       @default(630)
+  speed               Float     @default(1.0)
+  floorsCount         Int       @default(5)
+  stopsCount          Int       @default(5)
+  travelHeight        Float     @default(15.0)
+  shaftWidth          Int       @default(1650)
+  shaftDepth          Int       @default(1750)
+  pitDepth            Int       @default(1200)
+  headroomHeight      Int       @default(3600)
+  
+  driveSystem         String    @default("MRL")
+  doorType            String    @default("Automatike Qendrore")
+  cabinFinish         String    @default("Inoks")
+  floorFinish         String    @default("Granit")
+  ceilingFinish       String    @default("LED Spote")
+  wallFinish          String    @default("Inox Saten")
+  lighting            String    @default("LED")
+  mirror              String    @default("Gjysmë pasqyrë")
+  handrail            String    @default("Inoks i rrumbullakët")
+  
+  selectedOptionsJson String?   // JSON me listën e opsioneve shtesë
+  
+  basePrice           Float     @default(0)
+  optionsPrice        Float     @default(0)
+  installationPrice   Float     @default(0)
+  transportPrice      Float     @default(0)
+  discount            Float     @default(0)
+  subtotal            Float     @default(0)
+  vatAmount           Float     @default(0)
+  calculatedPrice     Float     @default(0)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  quotation           Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  elevator            Elevator?  @relation(fields: [elevatorId], references: [id], onDelete: SetNull)
+}
+
+model Component {
+  id          Int       @id @default(autoincrement())
+  name        String
+  category    String    // Motor, Kontrollor, Kabinë, Dyer, Shina, Siguri, Elektrike
+  code        String    @unique
+  price       Float     @default(0)
+  stock       Int       @default(0)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SparePart {
+  id                  Int       @id @default(autoincrement())
+  partNumber          String    @unique
+  name                String
+  category            String    // Mekanike, Elektrike, Hidraulike, Elektronike, Dyer, Siguri
+  compatibleElevators String?   // Modelet e përputhshme
+  stockQty            Int       @default(0)
+  minStockQty         Int       @default(5)
+  purchasePrice       Float     @default(0)
+  sellingPrice        Float     @default(0)
+  supplier            String?
+  location            String?   // Magazina A-1, Rafti 3
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model Quotation {
+  id                Int       @id @default(autoincrement())
+  number            String    @unique // KR-O-2026-0001
+  date              DateTime  @default(now())
+  validUntil        DateTime?
+  customerId        Int
+  projectId         Int?
+  salesRepId        Int?
+  currency          String    @default("EUR")
+  paymentTerms      String    @default("30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit")
+  deliveryWeeks     Int       @default(6)
+  installationWeeks Int       @default(3)
+  warrantyMonths    Int       @default(24)
+  notes             String?
+  
+  subtotal          Float     @default(0)
+  discount          Float     @default(0)
+  vatRate           Float     @default(18)
+  vatAmount         Float     @default(0)
+  total             Float     @default(0)
+  status            String    @default("Draft") // Draft, Dërguar, Shikuar, Në negociatë, Pranuar, Refuzuar, Skaduar
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  salesRep          User?       @relation(fields: [salesRepId], references: [id], onDelete: SetNull)
+  items             QuotationItem[]
+  configurations    ElevatorConfiguration[]
+  contracts         Contract[]
+  proformas         Proforma[]
+  invoices          Invoice[]
+  documents         Document[]
+}
+
+model QuotationItem {
+  id          Int       @id @default(autoincrement())
+  quotationId Int
+  itemType    String    @default("Lift") // Lift, Komponent, Shërbim, Transport, Instalim, Mirëmbajtje, Artikull i personalizuar
+  name        String
+  description String?
+  quantity    Float     @default(1)
+  unit        String    @default("copë")
+  unitPrice   Float     @default(0)
+  discount    Float     @default(0)
+  vatRate     Float     @default(18)
+  total       Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id               Int       @id @default(autoincrement())
+  number           String    @unique // KR-K-2026-0001
+  quotationId      Int?
+  customerId       Int
+  projectId        Int?
+  elevatorId       Int?
+  value            Float     @default(0)
+  
+  // Tekstet e titullit dhe preambulës
+  contractTitle    String?   // p.sh. "KONTRATË PËR FURNIZIMIN, MONTIMIN DHE MIRËMBAJTJEN E SISTEMEVE TË LIFTEVE"
+  preambleText     String?   // Teksti hyrës i palëve
+  
+  // Tekstet e neneve të personalizueshme
+  article1Title    String?   @default("NENI 1: OBJEKTI I KONTRATËS")
+  article1Text     String?   // Objekti & Përshkrimi i Punëve
+  
+  article2Title    String?   @default("NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS")
+  article2Text     String?   // Teksti i pagesës / kushtet
+  paymentTerms     String?   // Kushtet e shkurtra të pagesës
+  
+  article3Title    String?   @default("NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA")
+  article3Text     String?   // Afatet e dorëzimit dhe garancisë
+  deliveryDate     DateTime?
+  installationDate DateTime?
+  warrantyMonths   Int       @default(24)
+  
+  article4Title    String?   @default("NENI 4: MIRËMBAJTJA & SHËRBIMI")
+  article4Text     String?   // Kushtet e mirëmbajtjes
+  maintenanceTerms String?
+  
+  article5Title    String?   @default("NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE")
+  article5Text     String?   // Detyrimet e blerësit dhe shitësit
+  
+  article6Title    String?   @default("NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE")
+  article6Text     String?   // Kushtet speciale, mosmarrëveshjet, ligji
+  specialTerms     String?
+  
+  closingTerms     String?   // Teksti përmbyllës para nënshkrimeve
+  notes            String?
+  
+  status           String    @default("Aktive") // Aktive, E Nëshkruar, E Përfunduar, Anuluar
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  quotation        Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  customer         Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  elevator         Elevator?  @relation(fields: [elevatorId], references: [id], onDelete: SetNull)
+  projects         Project[]
+  proformas        Proforma[]
+  invoices         Invoice[]
+  documents        Document[]
+}
+
+model Proforma {
+  id          Int       @id @default(autoincrement())
+  number      String    @unique // KR-PF-2026-0001
+  quotationId Int?
+  contractId  Int?
+  customerId  Int
+  date        DateTime  @default(now())
+  dueDate     DateTime?
+  subtotal    Float     @default(0)
+  vatAmount   Float     @default(0)
+  totalAmount Float     @default(0)
+  paidAmount  Float     @default(0)
+  status      String    @default("Në Pritje") // Në Pritje, Pjesërisht e paguar, Paguar, Anuluar
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  quotation   Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  contract    Contract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  customer    Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items       ProformaItem[]
+}
+
+model ProformaItem {
+  id          Int       @id @default(autoincrement())
+  proformaId  Int
+  percentage  Float     @default(0) // 30, 40, 20, 10
+  description String    // p.sh. "30% PARAPAGIM"
+  amount      Float     @default(0)
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  proforma    Proforma  @relation(fields: [proformaId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id          Int       @id @default(autoincrement())
+  number      String    @unique // KR-F-2026-0001
+  quotationId Int?
+  contractId  Int?
+  customerId  Int
+  date        DateTime  @default(now())
+  dueDate     DateTime?
+  subtotal    Float     @default(0)
+  discount    Float     @default(0)
+  vatRate     Float     @default(18)
+  vatAmount   Float     @default(0)
+  total       Float     @default(0)
+  paidAmount  Float     @default(0)
+  balanceDue  Float     @default(0)
+  status      String    @default("Draft") // Draft, Dërguar, Pjesërisht e paguar, Paguar, E vonuar, Anuluar
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  quotation   Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  contract    Contract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  customer    Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items       InvoiceItem[]
+  payments    Payment[]
+  documents   Document[]
+}
+
+model InvoiceItem {
+  id          Int       @id @default(autoincrement())
+  invoiceId   Int
+  name        String
+  description String?
+  quantity    Float     @default(1)
+  unitPrice   Float     @default(0)
+  discount    Float     @default(0)
+  vatRate     Float     @default(18)
+  total       Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              Int       @id @default(autoincrement())
+  number          String    @unique // KR-PAG-2026-0001
+  invoiceId       Int?
+  customerId      Int
+  projectId       Int?
+  amount          Float     @default(0)
+  date            DateTime  @default(now())
+  paymentMethod   String    @default("Transfertë bankare") // Transfertë bankare, Para në dorë, Kartelë, Tjetër
+  referenceNumber String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}
+
+model Project {
+  id                   Int       @id @default(autoincrement())
+  number               String    @unique // KR-PRJ-2026-0012
+  name                 String
+  customerId           Int
+  contractId           Int?
+  elevatorCount        Int       @default(1)
+  floorsCount          Int       @default(5)
+  value                Float     @default(0)
+  stage                String    @default("Planifikim") // Planifikim, Inxhinieri, Prodhim, Transport, Instalim, Testim, Inspektim, Dorëzim, Përfunduar
+  startDate            DateTime  @default(now())
+  targetCompletionDate DateTime?
+  completedDate        DateTime?
+  notes                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  customer             Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  contract             Contract?      @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  installations        Installation[]
+  handovers            Handover[]
+  payments             Payment[]
+  documents            Document[]
+  expenses             Expense[]
+}
+
+model Installation {
+  id              Int       @id @default(autoincrement())
+  projectId       Int
+  elevatorModel   String
+  serialNumber    String    @unique // KR-SN-2026-XXXX
+  teamLead        String?
+  technicianId    Int?
+  startDate       DateTime?
+  targetDate      DateTime?
+  completionDate  DateTime?
+  progressPercent Int       @default(0)
+  status          String    @default("Në Pritje") // Në Pritje, Në Instalim, Në Testim, Përfunduar
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technician      User?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  checklistItems  InstallationChecklist[]
+}
+
+model InstallationChecklist {
+  id             Int       @id @default(autoincrement())
+  installationId Int
+  itemKey        String
+  itemTitle      String
+  isCompleted    Boolean   @default(false)
+  completedAt    DateTime?
+  completedBy    String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  installation   Installation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+}
+
+model Handover {
+  id                   Int       @id @default(autoincrement())
+  projectId            Int
+  customerId           Int
+  elevatorModel        String
+  serialNumber         String
+  installationDate     DateTime?
+  handoverDate         DateTime  @default(now())
+  
+  // Kontrollet e sigurisë dhe verifikimit
+  technicalInspection  Boolean   @default(true)
+  safetyCheck          Boolean   @default(true)
+  documentationHanded  Boolean   @default(true)
+  clientTrainingDone   Boolean   @default(true)
+  keysHanded           Boolean   @default(true)
+  accessActivated      Boolean   @default(true)
+  warrantyStarted      Boolean   @default(true)
+  
+  // Nënshkrimet
+  clientSigneeName     String?
+  clientSignatureData  String?   // Base64 Signature Data
+  repSigneeName        String?
+  repSignatureData     String?   // Base64 Signature Data
+  
+  notes                String?
+  status               String    @default("Dorëzuar me Sukses") // Dorëzuar me Sukses, Me Vërejtje, Në Pritje
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  project              Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  customer             Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model MaintenanceContract {
+  id             Int       @id @default(autoincrement())
+  number         String    @unique // KR-MNT-2026-0001
+  customerId     Int
+  elevatorId     Int?
+  serialNumber   String
+  startDate      DateTime  @default(now())
+  endDate        DateTime
+  frequency      String    @default("Mujore") // Mujore, Tremujore, Gjashtëmujore, Vjetore
+  priceAnnual    Float     @default(0)
+  technicianId   Int?
+  
+  // Tekstet e personalizueshme të Kontratës së Mirëmbajtjes
+  contractTitle  String?   @default("KONTRATË PËR MIRËMBAJTJEN PERIODIKE DHE SERVISIMIN E LIFTEVE")
+  preambleText   String?
+  article1Title  String?   @default("NENI 1: OBJEKTI I MIRËMBAJTJES")
+  article1Text   String?
+  article2Title  String?   @default("NENI 2: ÇMIMI DHE KUSHTET E PAGESËS")
+  article2Text   String?
+  article3Title  String?   @default("NENI 3: KOHËZGJATJA DHE FREKUENCA E VIZITAVE")
+  article3Text   String?
+  article4Title  String?   @default("NENI 4: DETYRIMET E KOMPANISË & SHËRBIMI 24/7")
+  article4Text   String?
+  article5Title  String?   @default("NENI 5: DETYRIMET DHE PËRGJEGJËSITË E POROSITËSIT")
+  article5Text   String?
+  article6Title  String?   @default("NENI 6: KUSHTET E VEÇANTA & ZGJIDHJA E MOSMARRËVESHJEVE")
+  article6Text   String?
+  closingTerms   String?
+  specialTerms   String?
+  
+  status         String    @default("Aktive") // Aktive, Skadon së shpejti, E skaduar, Anuluar
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  customer       Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  elevator       Elevator? @relation(fields: [elevatorId], references: [id], onDelete: SetNull)
+  technician     User?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  visits         MaintenanceVisit[]
+}
+
+model MaintenanceVisit {
+  id             Int       @id @default(autoincrement())
+  contractId     Int
+  technicianId   Int?
+  visitDate      DateTime  @default(now())
+  completedDate  DateTime?
+  status         String    @default("E Planifikuar") // E Planifikuar, E Përfunduar, E Anuluar
+  findings       String?
+  actionsTaken   String?
+  clientSigned   Boolean   @default(false)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  contract       MaintenanceContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  technician     User?               @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+}
+
+model ServiceTicket {
+  id                 Int       @id @default(autoincrement())
+  number             String    @unique // KR-SRV-2026-00452
+  customerId         Int
+  elevatorId         Int?
+  serialNumber       String?
+  problemDescription String
+  priority           String    @default("Normal") // I ulët, Normal, I lartë, Kritik
+  technicianId       Int?
+  status             String    @default("Hapur") // Hapur, Caktuar, Në proces, Në pritje, Zgjidhur, Mbyllur
+  reportedDate       DateTime  @default(now())
+  scheduledDate      DateTime?
+  resolvedDate       DateTime?
+  resolutionNotes    String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  customer           Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  elevator           Elevator? @relation(fields: [elevatorId], references: [id], onDelete: SetNull)
+  technician         User?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+}
+
+model Document {
+  id           Int       @id @default(autoincrement())
+  title        String
+  documentType String    // Oferta, Kontrata, Profatura, Fatura, Certifikata, Vizatime teknike, Garancia, Inspektimi, Dorëzimi, Mirëmbajtja
+  fileUrl      String
+  fileType     String    @default("PDF")
+  fileSize     String?
+  customerId   Int?
+  projectId    Int?
+  quotationId  Int?
+  invoiceId    Int?
+  contractId   Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  customer     Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  project      Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  quotation    Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  invoice      Invoice?   @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  contract     Contract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+}
+
+model Activity {
+  id          Int       @id @default(autoincrement())
+  userId      Int?
+  userName    String    @default("Sistemi")
+  actionType  String    // Krijuar, Ndryshuar, Fshirë, Pranuar, Paguar, Dërguar, Dorëzuar
+  entityType  String    // Klient, Ofertë, Kontratë, Faturë, Pagesë, Projekt, Instalim, Servis
+  entityId    Int?
+  description String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int?
+  title     String
+  message   String
+  type      String    @default("info") // info, warning, success, error
+  isRead    Boolean   @default(false)
+  linkUrl   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model CompanySettings {
+  id             Int      @id @default(autoincrement())
+  companyName    String   @default("KRONEER")
+  tagline        String   @default("SISTEME LIFTSH")
+  logoUrl        String?
+  logoSvg        String?
+  logoDarkBgUrl  String?
+  logoDarkBgSvg  String?
+  address        String   @default("Rruga Dëshmorët e Kombit, Nr. 45")
+  city           String   @default("Prishtinë")
+  country        String   @default("Kosovë")
+  taxNumber      String   @default("330123456")
+  businessNumber String   @default("70123456")
+  phone          String   @default("+383 38 500 600")
+  email          String   @default("info@kroneer-lifts.com")
+  website        String   @default("www.kroneer-lifts.com")
+  bankName       String   @default("Banka Kombëtare Tregtare (BKT)")
+  iban           String   @default("XK05 1901 0000 1234 5678")
+  swift          String   @default("BKTKXKPR")
+  currency       String   @default("EUR")
+  vatRate        Float    @default(18)
+  
+  // Prefiksat e numërimit automatik
+  quotePrefix    String   @default("KR-O")
+  contractPrefix String   @default("KR-K")
+  proformaPrefix String   @default("KR-PF")
+  invoicePrefix  String   @default("KR-F")
+  projectPrefix  String   @default("KR-PRJ")
+  servicePrefix  String   @default("KR-SRV")
+  paymentPrefix  String   @default("KR-PAG")
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Expense {
+  id              Int       @id @default(autoincrement())
+  number          String    @unique // KR-SHP-2026-0001
+  title           String
+  category        String    // Materiale & Pjesë, Rroga & Mëditje, Transport & Karburant, Nënkontraktorë, Vegla & Pajisje, Qira & Shërbime, Të tjera
+  amount          Float     @default(0)
+  currency        String    @default("EUR")
+  date            DateTime  @default(now())
+  paymentMethod   String    @default("Transfertë bankare") // Transfertë bankare, Para në dorë, Kartelë
+  supplier        String?   // Furnitori / Përfituesi
+  referenceNumber String?   // Numri i faturës hyrëse / kuponit tatimor
+  status          String    @default("Paguar") // Paguar, Në pritje, Refuzuar
+  notes           String?
+  receiptUrl      String?
+  
+  projectId       Int?
+  userId          Int?
+
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+

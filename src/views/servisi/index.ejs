@@ -1,0 +1,193 @@
+<div class="space-y-6" x-data="{ showStatusModal: false, selectedTicket: null, newStatus: '', newNotes: '' }">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Kërkesat për Servis & Ndërhyrje Emergjente</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Regjistrimi dhe ndjekja e defekteve, alarmeve dhe tiketave teknike</p>
+    </div>
+    <a href="/servisi/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+      Hap Kërkesë Servisi
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+    <form action="/servisi" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Prioriteti</label>
+        <select name="priority" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">Të gjitha prioritetet</option>
+          <% priorities.forEach(p => { %>
+            <option value="<%= p %>" <%= filters.priority === p ? 'selected' : '' %>><%= p %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Statusi</label>
+        <select name="status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">Të gjitha statuset</option>
+          <% statuses.forEach(st => { %>
+            <option value="<%= st %>" <%= filters.status === st ? 'selected' : '' %>><%= st %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Kërko Tiketë</label>
+        <div class="relative">
+          <input type="text" name="search" value="<%= filters.search %>" placeholder="Numri i tiketës, SN, klienti..." class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+        </div>
+      </div>
+
+      <div class="flex items-end space-x-2">
+        <button type="submit" class="w-full py-2 px-4 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition">
+          Filtro
+        </button>
+        <% if (filters.priority || filters.status || filters.search) { %>
+          <a href="/servisi" class="py-2 px-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg hover:bg-slate-300 transition">
+            Pastro
+          </a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Tiketa</th>
+            <th class="py-3.5 px-4">Klienti</th>
+            <th class="py-3.5 px-4">Numri Serik</th>
+            <th class="py-3.5 px-4">Përshkrimi i Problemit</th>
+            <th class="py-3.5 px-4">Prioriteti</th>
+            <th class="py-3.5 px-4">Tekniku</th>
+            <th class="py-3.5 px-4">Data e Raportimit</th>
+            <th class="py-3.5 px-4">Statusi</th>
+            <th class="py-3.5 px-4 text-right">Veprime</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+          <% if (tickets.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center py-12 text-slate-400">
+                <i data-lucide="life-buoy" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600"></i>
+                Nuk ka asnjë kërkesë servisi aktive.
+              </td>
+            </tr>
+          <% } else { %>
+            <% tickets.forEach(t => { %>
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition">
+                <td class="py-3.5 px-4 font-bold font-mono text-slate-900 dark:text-white">
+                  <%= t.number %>
+                </td>
+                <td class="py-3.5 px-4 font-medium">
+                  <a href="/klientet/<%= t.customerId %>" class="hover:underline text-slate-900 dark:text-white">
+                    <%= t.customer ? t.customer.companyName : '-' %>
+                  </a>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-xs text-amber-700 dark:text-amber-400">
+                  <%= t.serialNumber || '-' %>
+                </td>
+                <td class="py-3.5 px-4 max-w-xs truncate" title="<%= t.problemDescription %>">
+                  <%= t.problemDescription %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="px-2.5 py-1 text-xs font-bold rounded-md <%= 
+                    t.priority === 'Kritik' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 border border-rose-300 dark:border-rose-800' :
+                    t.priority === 'I lartë' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400' :
+                    t.priority === 'Normal' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400' :
+                    'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                  %>">
+                    <%= t.priority %>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= t.technician ? t.technician.fullName : 'I pacaktuar' %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= new Date(t.reportedDate).toLocaleDateString('sq-AL') %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full <%= 
+                    t.status === 'Zgjidhur' || t.status === 'Mbyllur' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' :
+                    t.status === 'Në proces' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400' :
+                    t.status === 'Caktuar' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400' :
+                    'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400'
+                  %>">
+                    <%= t.status %>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button type="button" onclick='openQuickView(<%- JSON.stringify({
+                      title: `Tiketa ${t.number}`,
+                      subtitle: t.customer ? t.customer.companyName : "-",
+                      statusLabel: t.status,
+                      statusClass: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                      rows: [
+                        { label: "Nr. Serik", value: t.serialNumber || "-" },
+                        { label: "Prioriteti", value: t.priority },
+                        { label: "Tekniku", value: t.technician ? t.technician.fullName : "I pacaktuar" },
+                        { label: "Raportuar", value: new Date(t.reportedDate).toLocaleDateString('sq-AL') },
+                        { label: "Përshkrimi", value: t.problemDescription }
+                      ],
+                      viewUrl: `/servisi`
+                    }).replace(/</g, '\\u003c').replace(/'/g, '&#39;') %>)' class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition" title="Pamje e Shpejtë">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                    <button 
+                      @click="selectedTicket = <%= JSON.stringify(t) %>; newStatus = '<%= t.status %>'; newNotes = '<%= t.resolutionNotes || '' %>'; showStatusModal = true" 
+                    class="px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 rounded hover:bg-amber-100 transition">
+                    Përditëso
+                  </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal: Update Ticket Status -->
+  <div x-show="showStatusModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div @click.outside="showStatusModal = false" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md w-full space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">
+          Përditëso Tiketën <span class="font-mono text-amber-600" x-text="selectedTicket ? selectedTicket.number : ''"></span>
+        </h3>
+        <button @click="showStatusModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form :action="selectedTicket ? `/servisi/${selectedTicket.id}/status` : '#'" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Statusi i Ri</label>
+          <select name="status" x-model="newStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+            <% statuses.forEach(st => { %>
+              <option value="<%= st %>"><%= st %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Shënime mbi Zgjidhjen / Ndërhyrjen</label>
+          <textarea name="resolutionNotes" x-model="newNotes" rows="3" placeholder="Përshkruani punën e kryer, pjesët e ndërruara ose arsyen e mbylljes..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+          <button type="button" @click="showStatusModal = false" class="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg">Anulo</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg">Ruaj Ndryshimet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
