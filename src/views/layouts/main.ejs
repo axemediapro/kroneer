@@ -13,11 +13,13 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
   
-  <!-- Alpine.js & Chart.js -->
+  <!-- Alpine.js, Chart.js, QR/Barcode Decoders -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+  <script src="/js/vendor/jsQR.min.js"></script>
+  <script src="/js/vendor/zxing.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -34,7 +36,7 @@
     <%- include('../partials/topbar') %>
 
     <!-- Page Body Container -->
-    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
       <%- include('../partials/alerts') %>
       <%- body %>
     </main>
@@ -42,6 +44,9 @@
     <!-- Footer -->
     <%- include('../partials/footer') %>
   </div>
+
+  <!-- Mobile Bottom Navigation Bar (Fixed for mobile) -->
+  <%- include('../partials/mobile-navbar') %>
 
   <!-- Modal global i Pamjes së Shpejtë (Quick View) -->
   <%- include('../partials/quick-view-modal') %>

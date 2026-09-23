@@ -215,8 +215,9 @@ router.post('/api/njoftimet/lexo-te-gjitha', isAuthenticated, async (req, res) =
   }
 });
 
-// 20. Cilësimet & Settings
+// 20. Cilësimet & Settings & Përdoruesit
 router.get('/settings', isAuthenticated, (req, res) => res.redirect('/cilesimet'));
+router.get('/perdoruesit', isAuthenticated, (req, res) => res.redirect('/cilesimet#perdoruesit'));
 router.get('/cilesimet', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.getIndex);
 router.post('/cilesimet/logo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadLogo.single('logo'), SettingsController.postUploadLogo);
 router.post('/cilesimet/logo/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postDeleteLogo);

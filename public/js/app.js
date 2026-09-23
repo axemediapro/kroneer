@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchResultsContainer = document.getElementById('global-search-results');
   const searchTriggerBtn = document.getElementById('search-trigger-btn');
   const searchCloseBtn = document.getElementById('search-close-btn');
+  const mobileSearchBtn = document.getElementById('mobile-search-btn');
 
   function openSearchModal() {
     if (searchModal) {
@@ -82,6 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
     searchTriggerBtn.addEventListener('click', openSearchModal);
   }
 
+  if (mobileSearchBtn) {
+    mobileSearchBtn.addEventListener('click', openSearchModal);
+  }
+
   if (searchCloseBtn) {
     searchCloseBtn.addEventListener('click', closeSearchModal);
   }
@@ -99,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 3.1 Skanimi me Kamerë ose Foto (QR / Barkod) brenda modalit të kërkimit
+  // 3.1 Skanimi me Kamerë ose Foto (QR / Barkod) - Universal Safari & Cross-Browser
   const scanBtn = document.getElementById('search-scan-btn');
   const scanOverlay = document.getElementById('barcode-scan-overlay');
   const scanChoice = document.getElementById('barcode-scan-choice');
@@ -112,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const scanStatus = document.getElementById('barcode-scan-status');
   let scanStream = null;
   let scanLoopId = null;
+  let zxingReaderInstance = null;
 
   function showScanStep(step) {
     if (scanChoice) scanChoice.classList.toggle('hidden', step !== 'choice');
@@ -123,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!scanOverlay) return;
     showScanStep('choice');
     scanOverlay.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
   }
 
   function stopCameraScan() {
@@ -130,14 +137,22 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(scanLoopId);
       scanLoopId = null;
     }
+    if (zxingReaderInstance) {
+      try { zxingReaderInstance.reset(); } catch (e) {}
+      zxingReaderInstance = null;
+    }
     if (scanStream) {
       scanStream.getTracks().forEach(track => track.stop());
       scanStream = null;
+    }
+    if (scanVideo) {
+      scanVideo.srcObject = null;
     }
     if (scanOverlay) scanOverlay.classList.add('hidden');
   }
 
   function useDetectedCode(value) {
+    if (!value) return;
     stopCameraScan();
     openSearchModal();
     if (searchInput) {
@@ -149,63 +164,188 @@ document.addEventListener('DOMContentLoaded', () => {
   async function startCameraScan() {
     if (!scanOverlay || !scanVideo) return;
 
-    if (!('BarcodeDetector' in window)) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showScanStep('camera');
-      if (scanStatus) scanStatus.textContent = 'Shfletuesi juaj nuk mbështet skanim me kamerë. Provoni Chrome/Edge ose zgjidhni "Foto nga Kompjuteri".';
+      if (scanStatus) scanStatus.textContent = 'Qasja te kamera kërkon lidhje të sigurt (HTTPS) ose nuk mbështetet në këtë pajisje.';
       return;
     }
 
     try {
-      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      scanVideo.setAttribute('playsinline', 'true');
+      scanVideo.setAttribute('webkit-playsinline', 'true');
+      scanVideo.muted = true;
+
+      scanStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
       scanVideo.srcObject = scanStream;
       showScanStep('camera');
       if (scanStatus) scanStatus.textContent = 'Vendosni kodin brenda kornizës...';
       await scanVideo.play();
 
-      const detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'ean_8', 'code_39', 'upc_a', 'upc_e'] });
+      // Motori 1: BarcodeDetector i integruar (Chrome / Android)
+      let nativeDetector = null;
+      if ('BarcodeDetector' in window) {
+        try {
+          nativeDetector = new window.BarcodeDetector({
+            formats: ['qr_code', 'code_128', 'ean_13', 'ean_8', 'code_39', 'upc_a', 'upc_e']
+          });
+        } catch (e) {}
+      }
+
+      // Motori 2 & 3: Canvas decoding (Safari iOS / macOS / Firefox me jsQR & ZXing)
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
       const scanFrame = async () => {
-        if (!scanStream) return;
+        if (!scanStream || scanVideo.readyState < 2) {
+          scanLoopId = setTimeout(scanFrame, 200);
+          return;
+        }
+
         try {
-          const results = await detector.detect(scanVideo);
-          if (results && results.length > 0) {
-            useDetectedCode(results[0].rawValue);
-            return;
+          // A. Provë me BarcodeDetector
+          if (nativeDetector) {
+            const results = await nativeDetector.detect(scanVideo);
+            if (results && results.length > 0 && results[0].rawValue) {
+              useDetectedCode(results[0].rawValue);
+              return;
+            }
+          }
+
+          // B. Provë me jsQR në canvas (100% funksional në Safari iOS/Mac)
+          const vw = scanVideo.videoWidth || 640;
+          const vh = scanVideo.videoHeight || 480;
+          if (vw > 0 && vh > 0) {
+            offCanvas.width = vw;
+            offCanvas.height = vh;
+            offCtx.drawImage(scanVideo, 0, 0, vw, vh);
+
+            if (window.jsQR) {
+              const imgData = offCtx.getImageData(0, 0, vw, vh);
+              const qrResult = window.jsQR(imgData.data, vw, vh, { inversionAttempts: 'attemptBoth' });
+              if (qrResult && qrResult.data) {
+                useDetectedCode(qrResult.data);
+                return;
+              }
+            }
+
+            // C. Provë me ZXing (për barkode 1D)
+            if (window.ZXing && !zxingReaderInstance) {
+              try {
+                if (!zxingReaderInstance) {
+                  zxingReaderInstance = new window.ZXing.BrowserMultiFormatReader();
+                }
+                const zxResult = await zxingReaderInstance.decodeFromCanvas(offCanvas);
+                if (zxResult && zxResult.getText()) {
+                  useDetectedCode(zxResult.getText());
+                  return;
+                }
+              } catch (zxErr) {}
+            }
           }
         } catch (err) {
-          // vazhdo skanimin edhe nëse një kornizë dështon
+          // vazhdo te korniza tjetër pa u bllokuar
         }
-        scanLoopId = setTimeout(scanFrame, 300);
+
+        scanLoopId = setTimeout(scanFrame, 250);
       };
+
       scanFrame();
     } catch (err) {
+      console.error('Gabim qasjeje në kamerë:', err);
       showScanStep('camera');
-      if (scanStatus) scanStatus.textContent = 'Nuk u arrit qasja te kamera. Kontrolloni lejet e shfletuesit.';
+      if (scanStatus) scanStatus.textContent = 'Nuk u arrit qasja te kamera. Ju lutem lejoni qasjen te cilësimet e shfletuesit.';
     }
   }
 
   async function scanFromFile(file) {
     if (!file) return;
-    showScanStep('processing');
-    if (scanStatus) scanStatus.textContent = 'Duke përpunuar foton...';
-
-    if (!('BarcodeDetector' in window)) {
-      if (scanStatus) scanStatus.textContent = 'Shfletuesi juaj nuk mbështet leximin e kodeve nga foto. Provoni Chrome/Edge.';
-      return;
+    showScanStep('camera');
+    if (scanStatus) {
+      scanStatus.classList.remove('hidden');
+      scanStatus.textContent = 'Duke analizuar foton...';
     }
 
-    try {
-      const bitmap = await createImageBitmap(file);
-      const detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'ean_8', 'code_39', 'upc_a', 'upc_e'] });
-      const results = await detector.detect(bitmap);
-      if (results && results.length > 0) {
-        useDetectedCode(results[0].rawValue);
-      } else if (scanStatus) {
-        scanStatus.textContent = 'Nuk u gjet asnjë QR/Barkod në këtë foto. Provoni një tjetër.';
-      }
-    } catch (err) {
-      if (scanStatus) scanStatus.textContent = 'Nuk u arrit leximi i fotos së zgjedhur.';
-    }
+    const reader = new FileReader();
+    reader.onerror = () => {
+      if (scanStatus) scanStatus.textContent = 'Gabim gjatë leximit të skedarit.';
+    };
+
+    reader.onload = async (event) => {
+      const img = new Image();
+      img.onerror = () => {
+        if (scanStatus) scanStatus.textContent = 'Skedari i zgjedhur nuk është një foto e vlefshme.';
+      };
+
+      img.onload = async () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          const w = img.naturalWidth || img.width;
+          const h = img.naturalHeight || img.height;
+          canvas.width = w;
+          canvas.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
+
+          // 1. Lexim QR me jsQR (Punon në të gjithë shfletuesit përfshirë Safari iOS/Mac)
+          if (window.jsQR) {
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const qrCode = window.jsQR(imgData.data, w, h, {
+              inversionAttempts: 'attemptBoth'
+            });
+            if (qrCode && qrCode.data) {
+              useDetectedCode(qrCode.data);
+              return;
+            }
+          }
+
+          // 2. Lexim me ZXing (Barkode 1D & QR)
+          if (window.ZXing) {
+            try {
+              const zxing = new window.ZXing.BrowserMultiFormatReader();
+              const zxRes = await zxing.decodeFromCanvas(canvas);
+              if (zxRes && zxRes.getText()) {
+                useDetectedCode(zxRes.getText());
+                return;
+              }
+            } catch (zxErr) {}
+          }
+
+          // 3. Lexim me BarcodeDetector nëse mbështetet
+          if ('BarcodeDetector' in window) {
+            try {
+              const detector = new window.BarcodeDetector({
+                formats: ['qr_code', 'code_128', 'ean_13', 'ean_8', 'code_39', 'upc_a', 'upc_e']
+              });
+              const results = await detector.detect(canvas);
+              if (results && results.length > 0 && results[0].rawValue) {
+                useDetectedCode(results[0].rawValue);
+                return;
+              }
+            } catch (detErr) {}
+          }
+
+          if (scanStatus) {
+            scanStatus.textContent = 'Nuk u gjet asnjë QR/Barkod në këtë foto. Ju lutem provoni një foto më të qartë.';
+          }
+        } catch (err) {
+          console.error('Gabim gjatë përpunimit të fotos:', err);
+          if (scanStatus) {
+            scanStatus.textContent = 'Ndodhi një problem gjatë përpunimit të fotos.';
+          }
+        }
+      };
+
+      img.src = event.target.result;
+    };
+
+    reader.readAsDataURL(file);
   }
 
   if (scanBtn) {
