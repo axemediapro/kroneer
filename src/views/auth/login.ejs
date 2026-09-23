@@ -34,18 +34,15 @@
     
     <!-- Brand Header -->
     <div class="text-center mb-6">
-      <% const loginLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : (typeof company !== 'undefined' && company && company.logoUrl ? company.logoUrl : null); %>
-      <% if (loginLogo) { %>
-        <div class="h-12 max-w-[220px] mx-auto flex items-center justify-center mb-3">
-          <img src="<%= loginLogo %>" alt="<%= company.companyName %>" class="max-h-12 w-auto max-w-full object-contain filter drop-shadow-xl">
-        </div>
-      <% } else { %>
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 text-slate-950 font-black text-2xl shadow-xl shadow-amber-500/20 mb-3 font-mono tracking-wider border border-amber-300">
-          K
-        </div>
-        <h1 class="text-2xl font-black tracking-widest text-slate-100 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h1>
-        <p class="text-[11px] font-bold uppercase tracking-widest text-amber-400 mt-0.5"><%= typeof company !== 'undefined' && company ? company.tagline : 'SISTEM PËR MENAXHIMIN E LIFTEVE' %></p>
-      <% } %>
+      <% const loginLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) 
+            ? company.logoDarkBgUrl 
+            : ((typeof company !== 'undefined' && company && company.logoUrl) 
+                ? company.logoUrl 
+                : '/images/kroneer-logo-white.svg'); %>
+      <div class="h-14 max-w-[260px] mx-auto flex items-center justify-center mb-3">
+        <img src="<%= loginLogo %>" alt="KRONEER SISTEME LIFTSH" class="max-h-14 w-auto max-w-full object-contain filter drop-shadow-xl">
+      </div>
+      <p class="text-[11px] font-bold uppercase tracking-widest text-amber-400 mt-1"><%= typeof company !== 'undefined' && company ? company.tagline : 'SISTEME LIFTSH' %></p>
       <p class="text-xs text-slate-400 mt-1">ERP • CRM • Shitje • Projekte • Mirëmbajtje</p>
     </div>
 
@@ -82,7 +79,7 @@
               id="username" 
               name="username" 
               required 
-              value="Kroneer"
+              autocomplete="username"
               placeholder="Shkruani emrin e përdoruesit"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-medium"
             >
@@ -102,7 +99,7 @@
               id="password" 
               name="password" 
               required 
-              value="Kroneer#26"
+              autocomplete="current-password"
               placeholder="••••••••"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-medium"
             >
@@ -111,7 +108,7 @@
 
         <div class="flex items-center justify-between text-xs">
           <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300">
-            <input type="checkbox" name="remember" checked class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-amber-500 focus:ring-0 focus:ring-offset-0">
+            <input type="checkbox" name="remember" class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-amber-500 focus:ring-0 focus:ring-offset-0">
             <span>Më mbaj të kyçur</span>
           </label>
           <span class="text-slate-500">Qasje e Sigurt SSL 256-bit</span>
@@ -126,21 +123,6 @@
         </button>
 
       </form>
-
-      <!-- Demo Credentials Helper Box -->
-      <div class="mt-6 pt-5 border-t border-slate-800/80">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-amber-400/80 mb-2">Të dhënat e administratorit (Default):</p>
-        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-slate-400">
-          <div>
-            <span class="text-slate-500 block text-[10px]">Përdoruesi:</span>
-            <span class="font-mono font-bold text-slate-200">Kroneer</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block text-[10px]">Fjalëkalimi:</span>
-            <span class="font-mono font-bold text-slate-200">Kroneer#26</span>
-          </div>
-        </div>
-      </div>
 
     </div>
 
