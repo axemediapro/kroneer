@@ -7,7 +7,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node prisma/seed.js",
-    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --minify"
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --minify",
+    "postinstall": "prisma generate"
   },
   "keywords": [
     "elevator",
@@ -21,6 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.117.1",
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.7",
