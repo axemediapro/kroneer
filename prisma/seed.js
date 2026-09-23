@@ -68,14 +68,14 @@ async function main() {
   // 2. Përdoruesit & Rolet
   console.log('2. Krijimi i përdoruesve...');
   const salt = await bcrypt.genSalt(10);
-  const passwordAdmin = await bcrypt.hash('admin123', salt);
+  const passwordAdmin = await bcrypt.hash('Kroneer#26', salt);
   const passwordGeneral = await bcrypt.hash('fjalekalimi123', salt);
 
   const admin = await prisma.user.create({
     data: {
-      username: 'admin',
+      username: 'Kroneer',
       passwordHash: passwordAdmin,
-      fullName: 'Krenar Berisha (Kryeadmin)',
+      fullName: 'Administrator KRONEER',
       email: 'admin@kroneer-lifts.com',
       role: 'ADMINISTRATOR',
       phone: '+383 44 111 222',
