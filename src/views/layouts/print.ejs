@@ -110,56 +110,24 @@
 
       await waitForImagesToLoad(element);
 
-      // html2canvas ndonjëherë e "lë bosh" QR Code-in (imazh base64) pavarësisht pritjes -
-      // prandaj e përjashtojmë krejtësisht nga kapja e html2canvas (ignoreElements, jo vetëm
-      // visibility:hidden, sepse html2canvas nuk e respekton gjithmonë atë) dhe e vendosim
-      // manualisht mbi PDF-në përfundimtare me jsPDF.addImage(), duke garantuar shfaqjen e saj.
-      const qrImg = element.querySelector('img[alt*="QR" i]');
-      let qrPlacement = null;
-      const marginTopMM = 6;
-      const marginLeftMM = 6;
-      if (qrImg) {
-        const elementRect = element.getBoundingClientRect();
-        const qrRect = qrImg.getBoundingClientRect();
-        const pageWidthMM = 210;
-        const contentWidthMM = pageWidthMM - marginLeftMM - 6;
-        const scale = contentWidthMM / elementRect.width;
-
-        qrPlacement = {
-          dataUrl: qrImg.src,
-          x: marginLeftMM + (qrRect.left - elementRect.left) * scale,
-          y: marginTopMM + (qrRect.top - elementRect.top) * scale,
-          w: qrRect.width * scale,
-          h: qrRect.height * scale
-        };
-      }
-
       const opt = {
-        margin: [marginTopMM, 6, 6, marginLeftMM],
+        margin: [6, 6, 6, 6],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
           scale: 2,
+          useCORS: true,
+          allowTaint: true,
           backgroundColor: '#ffffff',
           logging: false,
           scrollY: 0,
-          imageTimeout: 15000,
-          ignoreElements: (el) => el === qrImg
-          // Mos detyro width/height/windowWidth/windowHeight: html2canvas i zbulon vetë
-          // saktë (klonon gjithë dokumentin); duke i barazuar me përmasat e vetë elementit
-          // (pa toolbar-in/padding-un sipër tij) "dritarja" e tij bëhet shumë e vogël dhe
-          // kapja del krejt bosh - ky ishte shkaku i PDF-ve me shumë hapësirë të zbrazët.
+          imageTimeout: 15000
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'], avoid: ['img', '.avoid-break'] }
       };
 
-      html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
-        if (qrPlacement) {
-          pdf.setPage(1);
-          pdf.addImage(qrPlacement.dataUrl, 'PNG', qrPlacement.x, qrPlacement.y, qrPlacement.w, qrPlacement.h);
-        }
-        pdf.save(filename);
+      html2pdf().set(opt).from(element).save().then(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
       }).catch(err => {

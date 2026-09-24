@@ -48,16 +48,16 @@
 
   <div class="flex items-center gap-4">
     <% if (typeof qrCodeDataUrl !== 'undefined' && qrCodeDataUrl) { %>
-      <div class="text-center">
-        <div class="p-1 bg-white border border-slate-900 rounded inline-block">
-          <img src="<%= qrCodeDataUrl %>" alt="QR Code Verifikimi" class="w-14 h-14 block">
+      <div class="text-center flex flex-col items-center">
+        <div class="p-1 bg-white border border-slate-900 rounded inline-flex items-center justify-center">
+          <img src="<%= qrCodeDataUrl %>" alt="QR Code Verifikimi" class="w-14 h-14 block object-contain">
         </div>
         <div class="text-[8px] font-mono text-slate-700 font-bold uppercase mt-0.5">Verifikimi Online</div>
       </div>
     <% } %>
     <div class="text-right">
       <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
-        KONTRATË ZYRTARE SHITJEJE & MONTIMI
+        KONTRATË
       </span>
       <div class="text-lg font-black font-mono text-slate-950"><%= contract.number %></div>
       <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(contract.createdAt) %></strong></div>
