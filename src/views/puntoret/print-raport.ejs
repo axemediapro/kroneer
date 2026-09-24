@@ -1,0 +1,109 @@
+<!-- Koka Zyrtare e Raportit të Prezencës -->
+<div class="avoid-break flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="h-11 max-w-[220px] flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company.companyName %>" class="max-h-11 w-auto max-w-full object-contain">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= company.companyName || 'KRONEER' %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline || 'SISTEME LIFTSH' %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600">
+      <%= company.address || 'Prishtinë' %>, <%= company.city || 'Kosovë' %> • NUI: <%= company.taxNumber || '330123456' %>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      RAPORT PREZENCE & ORARI
+    </span>
+    <div class="text-base font-black font-mono text-slate-950"><%= monthName %> <%= selectedYear %></div>
+    <div class="text-xs text-slate-600 mt-1">Departamenti: <strong class="text-slate-900"><%= departamenti %></strong></div>
+  </div>
+</div>
+
+<div class="text-center font-bold uppercase tracking-wider text-sm mb-4 border-b border-slate-300 pb-1.5 text-slate-950">
+  PASQYRA PËRMBLEDHËSE E PREZENCËS DHE ORËVE TË PUNËS TË STAFIT
+</div>
+
+<!-- Tabela e Përmbledhjes Mujore të Stafit -->
+<table class="w-full text-left text-xs border border-slate-300 mb-6">
+  <thead class="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
+    <tr>
+      <th class="p-2 border-r border-slate-300 text-center w-12">Kodi</th>
+      <th class="p-2 border-r border-slate-300">Puntori</th>
+      <th class="p-2 border-r border-slate-300">Pozita & Departamenti</th>
+      <th class="p-2 border-r border-slate-300 text-center w-20">Ditë Pune</th>
+      <th class="p-2 border-r border-slate-300 text-center w-24">Orë Pune Neto</th>
+      <th class="p-2 border-r border-slate-300 text-center w-24">Orë Shtesë</th>
+      <th class="p-2 text-right w-28">Paga Bazë / Llog.</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-200">
+    <% let grandTotalHours = 0; let grandTotalOvertime = 0; let grandTotalDays = 0; %>
+    <% employeeSummaries.forEach((item, idx) => { %>
+      <% grandTotalHours += parseFloat(item.totalHours) || 0; %>
+      <% grandTotalOvertime += parseFloat(item.overtimeHours) || 0; %>
+      <% grandTotalDays += item.daysWorked || 0; %>
+      <tr>
+        <td class="p-2 text-center font-mono border-r border-slate-200 text-slate-600 font-bold"><%= item.employee.code %></td>
+        <td class="p-2 border-r border-slate-200 font-bold text-slate-900">
+          <%= item.employee.firstName %> <%= item.employee.lastName %>
+        </td>
+        <td class="p-2 border-r border-slate-200 text-slate-700">
+          <div><%= item.employee.position %></div>
+          <div class="text-[10px] text-slate-500"><%= item.employee.department %></div>
+        </td>
+        <td class="p-2 text-center font-mono border-r border-slate-200 font-semibold text-slate-800">
+          <%= item.daysWorked %> ditë
+        </td>
+        <td class="p-2 text-center font-mono border-r border-slate-200 font-bold text-slate-900">
+          <%= item.totalHours %> orë
+        </td>
+        <td class="p-2 text-center font-mono border-r border-slate-200 font-bold text-cyan-700">
+          <%= item.overtimeHours > 0 ? (item.overtimeHours + ' orë') : '-' %>
+        </td>
+        <td class="p-2 text-right font-mono font-bold text-slate-900">
+          <%= item.salaryEstimated > 0 ? formatCurrency(item.salaryEstimated) : '-' %>
+        </td>
+      </tr>
+    <% }); %>
+  </tbody>
+  <tfoot class="bg-slate-100 border-t-2 border-slate-900 font-bold text-slate-950 text-xs">
+    <tr>
+      <td colspan="3" class="p-2 text-right uppercase">TOTALI I PËRGJITHSHËM:</td>
+      <td class="p-2 text-center font-mono"><%= grandTotalDays %> ditë</td>
+      <td class="p-2 text-center font-mono"><%= grandTotalHours.toFixed(1) %> orë</td>
+      <td class="p-2 text-center font-mono text-cyan-800"><%= grandTotalOvertime.toFixed(1) %> orë</td>
+      <td class="p-2 text-right font-mono">-</td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- Nënshkrimet Zyrtare -->
+<div class="avoid-break pt-8 border-t border-slate-300 text-xs">
+  <div class="grid grid-cols-2 gap-12 text-center">
+    <div>
+      <p class="font-bold text-slate-900 mb-12">Përgatitur nga (Menaxheri i Resurseve Njerëzore):</p>
+      <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+        <span class="text-[10px] text-slate-500">(Nënshkrimi)</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="font-bold text-slate-900 mb-12">Aprovuar nga (Drejtoria Ekzekutive KRONEER):</p>
+      <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+        <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi)</span>
+      </div>
+    </div>
+  </div>
+</div>

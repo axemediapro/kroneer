@@ -26,6 +26,7 @@ const DocumentController = require('../controllers/documentController');
 const ReportController = require('../controllers/reportController');
 const SearchController = require('../controllers/searchController');
 const SettingsController = require('../controllers/settingsController');
+const EmployeeController = require('../controllers/employeeController');
 
 // 1. Autentifikimi
 router.get('/kycu', AuthController.getLogin);
@@ -180,6 +181,25 @@ router.post('/pjeset-rezerve/:id/stok', isAuthenticated, authorizeRoles('ADMINIS
 router.get('/dokumentet', isAuthenticated, DocumentController.getIndex);
 router.get('/dokumentet/krijo', isAuthenticated, DocumentController.getCreate);
 router.post('/dokumentet/krijo', isAuthenticated, DocumentController.postCreate);
+
+// 16.1 Puntorët & Stafi
+router.get('/puntoret', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), EmployeeController.getIndex);
+router.get('/puntoret/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.getCreate);
+router.post('/puntoret/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postCreate);
+router.get('/puntoret/:id', isAuthenticated, EmployeeController.getDetail);
+router.get('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.getEdit);
+router.post('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postEdit);
+router.post('/puntoret/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), EmployeeController.postDelete);
+
+// 16.2 Prezenca & Orari i Punës (Attendance Software)
+router.get('/prezenca', isAuthenticated, EmployeeController.getAttendanceDashboard);
+router.get('/prezenca/print', isAuthenticated, EmployeeController.getAttendancePrint);
+router.post('/prezenca/nis-punen', isAuthenticated, EmployeeController.postClockIn);
+router.post('/prezenca/nis-pauzen', isAuthenticated, EmployeeController.postStartBreak);
+router.post('/prezenca/perfundo-pauzen', isAuthenticated, EmployeeController.postEndBreak);
+router.post('/prezenca/perfundo-punen', isAuthenticated, EmployeeController.postClockOut);
+router.post('/prezenca/manual', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postManualAttendance);
+router.post('/prezenca/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), EmployeeController.postDeleteAttendance);
 
 // 17. Raportet
 router.get('/raportet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'FINANCE', 'SHITJE', 'MENAXHER_PROJEKTI'), ReportController.getIndex);

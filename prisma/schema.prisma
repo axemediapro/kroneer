@@ -29,6 +29,7 @@ model User {
   notifications       Notification[]
   maintenanceContracts MaintenanceContract[]
   expenses            Expense[]
+  employee            Employee?
 }
 
 model Customer {
@@ -735,5 +736,63 @@ model Expense {
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+model Employee {
+  id             Int          @id @default(autoincrement())
+  code           String       @unique // KR-PUNT-0001
+  firstName      String
+  lastName       String
+  personalNumber String?      // Numri Personal / ID
+  email          String?
+  phone          String?
+  position       String       // Teknik Montimi, Inxhinier Elektrik, Mirëmbajtës Lifteve, Menaxher Kantieri, Ndihmës Teknik, Shofer/Logjistikë, Shitje, Administratë
+  department     String       @default("Instalime & Montim") // Instalime & Montim, Mirëmbajtje & Servis, Inxhinieri, Shitje & CRM, Administratë & Financa
+  status         String       @default("Aktiv") // Aktiv, Pushim Vjetor, Pushim Mjekësor, Pezulluar, Joaktiv
+  
+  // Orari & Kushtet e Punës
+  shiftStart     String       @default("08:00") // Orari zyrtar i fillimit
+  shiftEnd       String       @default("17:00") // Orari zyrtar i mbarimit
+  breakMinutes   Int          @default(60)     // Kohëzgjatja standarde e pauzës (min)
+  hourlyRate     Float        @default(0)      // Pagesa për orë (€)
+  monthlySalary  Float        @default(0)      // Paga mujore bazë (€)
+  hireDate       DateTime     @default(now())
+  notes          String?
+  
+  // Lidhja opsionale me User të sistemit
+  userId         Int?         @unique
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  attendances    Attendance[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Attendance {
+  id               Int       @id @default(autoincrement())
+  employeeId       Int
+  date             DateTime  @default(now()) // Data e regjistrimit
+  
+  checkIn          DateTime? // Koha e hyrjes / nisjes së punës
+  checkOut         DateTime? // Koha e daljes / përfundimit të punës
+  
+  breakStart       DateTime? // Fillimi i pauzës
+  breakEnd         DateTime? // Mbarimi i pauzës
+  totalBreakMinutes Int      @default(0) // Total minuta pauzë gjatë ditës
+  
+  workedMinutes    Int       @default(0) // Minuta neto pune
+  workedHours      Float     @default(0) // Orë neto pune
+  overtimeMinutes  Int       @default(0) // Minuta shtesë mbi orarin standard
+  
+  status           String    @default("Në Punë") // Në Punë, Në Pauzë, Përfunduar, Mungesë, Pushim, Vonesë
+  location         String?   @default("Zyra Qendrore") // Zyra Qendrore, Kantier / Terren, Suharekë, Prishtinë, Pejë, etj.
+  ipAddress        String?
+  notes            String?
+  
+  employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 

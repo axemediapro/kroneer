@@ -55,6 +55,10 @@ class NumberService {
         prefix = 'KR-CUST-';
         count = await prisma.customer.count();
         return `${prefix}${String(count + 1).padStart(4, '0')}`;
+      case 'employee':
+        prefix = 'KR-PUNT-';
+        count = await prisma.employee.count();
+        return `${prefix}${String(count + 1).padStart(4, '0')}`;
       case 'maintenance':
         prefix = `KR-MNT-${year}-`;
         count = await prisma.maintenanceContract.count();

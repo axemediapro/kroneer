@@ -35,7 +35,8 @@ class SearchController {
         serviceTickets,
         spareParts,
         expenses,
-        documents
+        documents,
+        employees
       ] = await Promise.all([
         prisma.customer.findMany({
           where: {
@@ -140,12 +141,23 @@ class SearchController {
           },
           include: { customer: true },
           take: 5
+        }),
+        prisma.employee.findMany({
+          where: {
+            OR: [
+              { firstName: { contains: q, mode: 'insensitive' } },
+              { lastName: { contains: q, mode: 'insensitive' } },
+              { code: { contains: q, mode: 'insensitive' } },
+              { position: { contains: q, mode: 'insensitive' } }
+            ]
+          },
+          take: 5
         })
       ]);
 
       const totalResults = customers.length + projects.length + quotations.length +
         contracts.length + invoices.length + installations.length +
-        serviceTickets.length + spareParts.length + expenses.length + documents.length;
+        serviceTickets.length + spareParts.length + expenses.length + documents.length + employees.length;
 
       res.render('kerko/index', {
         pageTitle: `Rezultatet e kërkimit: "${q}" - KRONEER`,
@@ -160,7 +172,8 @@ class SearchController {
           serviceTickets,
           spareParts,
           expenses,
-          documents
+          documents,
+          employees
         },
         totalResults
       });
@@ -177,7 +190,7 @@ class SearchController {
         return res.json({ items: [] });
       }
 
-      const [customers, projects, quotations, invoices, installations, serviceTickets, contracts, spareParts, expenses, documents] = await Promise.all([
+      const [customers, projects, quotations, invoices, installations, serviceTickets, contracts, spareParts, expenses, documents, employees] = await Promise.all([
         prisma.customer.findMany({
           where: {
             OR: [
@@ -249,6 +262,16 @@ class SearchController {
         }),
         prisma.document.findMany({
           where: { title: { contains: q } },
+          take: 3
+        }),
+        prisma.employee.findMany({
+          where: {
+            OR: [
+              { firstName: { contains: q, mode: 'insensitive' } },
+              { lastName: { contains: q, mode: 'insensitive' } },
+              { code: { contains: q, mode: 'insensitive' } }
+            ]
+          },
           take: 3
         })
       ]);
@@ -342,6 +365,15 @@ class SearchController {
           subtitle: `Dokument • ${d.documentType}`,
           url: `/dokumentet`,
           category: 'Dokument'
+        });
+      });
+
+      employees.forEach(emp => {
+        items.push({
+          title: `${emp.firstName} ${emp.lastName}`,
+          subtitle: `Puntor (${emp.code}) • ${emp.position}`,
+          url: `/puntoret/${emp.id}`,
+          category: 'Puntor'
         });
       });
 
