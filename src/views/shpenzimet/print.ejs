@@ -81,12 +81,18 @@
 
 <!-- Nënshkrimet e Autorizimit -->
 <div class="avoid-break grid grid-cols-2 gap-12 pt-6 text-xs text-center border-t border-slate-200 mt-6">
-  <div>
-    <div class="font-bold text-slate-900 mb-10">Aprovuar nga (Menaxhmenti / Drejtori)</div>
-    <div class="border-t border-slate-400 pt-2 font-mono text-[11px] text-slate-600">Nënshkrimi & Vula</div>
+  <div class="flex flex-col items-center">
+    <div class="font-bold text-slate-900 mb-1">Aprovuar nga (Menaxhmenti / Drejtori)</div>
+    <div class="h-16 flex items-end justify-center mb-1">
+      <% if (company && company.stampUrl) { %>
+        <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi KRONEER" class="max-h-16 max-w-[190px] object-contain filter drop-shadow-sm">
+      <% } %>
+    </div>
+    <div class="w-56 mx-auto border-t border-slate-400 pt-1 font-mono text-[11px] text-slate-600">Nënshkrimi & Vula</div>
   </div>
-  <div>
-    <div class="font-bold text-slate-900 mb-10">Pranuar / Përfituesi (Furnitori / Punonjësi)</div>
-    <div class="border-t border-slate-400 pt-2 font-mono text-[11px] text-slate-600">Emri, Mbiemri & Nënshkrimi</div>
+  <div class="flex flex-col items-center">
+    <div class="font-bold text-slate-900 mb-1">Pranuar / Përfituesi (Furnitori / Punonjësi)</div>
+    <div class="h-16 mb-1"></div>
+    <div class="w-56 mx-auto border-t border-slate-400 pt-1 font-mono text-[11px] text-slate-600">Emri, Mbiemri & Nënshkrimi</div>
   </div>
 </div>

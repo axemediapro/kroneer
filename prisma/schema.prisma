@@ -686,6 +686,7 @@ model CompanySettings {
   logoSvg        String?
   logoDarkBgUrl  String?
   logoDarkBgSvg  String?
+  stampUrl       String?
   address        String   @default("Rruga Dëshmorët e Kombit, Nr. 45")
   city           String   @default("Prishtinë")
   country        String   @default("Kosovë")

@@ -4,6 +4,7 @@ const fs = require('fs');
 const prisma = require('../config/prisma');
 const ActivityService = require('../services/activityService');
 const { normalizeSvgFile } = require('../middleware/upload');
+const { invalidateCompanySettingsCache } = require('../middleware/auth');
 
 // Renditja e modeleve nga "prindi" te "fëmija" (respekton varësitë e çelësave të huaj për restore/insert)
 const BACKUP_MODEL_ORDER = [
@@ -160,6 +161,8 @@ class SettingsController {
         entityId: first?.id,
         description: 'U përditësuan cilësimet e kompanisë dhe parametrat e sistemit KRONEER.'
       });
+
+      invalidateCompanySettingsCache();
 
       const tab = req.body.returnTab || 'kompania';
       req.flash('success', 'Cilësimet u ruajtën me sukses.');
@@ -409,6 +412,8 @@ class SettingsController {
         description: `U ngarkua me sukses ${variantTitle} (${ext.toUpperCase().replace('.', '') || 'SVG'}) pa deformim.`
       });
 
+      invalidateCompanySettingsCache();
+
       req.flash('success', `${variantTitle} u ngarkua dhe u përditësua me sukses në sistem!`);
       res.redirect(returnUrl);
     } catch (err) {
@@ -502,11 +507,109 @@ class SettingsController {
         description: `U fshi logoja (${variant === 'dark_bg' ? 'Dark UI' : 'Standarde'}) e kompanisë.`
       });
 
+      invalidateCompanySettingsCache();
       res.redirect(returnUrl);
     } catch (err) {
       console.error('Gabim gjatë fshirjes së logos:', err);
       req.flash('error', 'Ndodhi një gabim gjatë fshirjes së logos.');
       res.redirect(req.body.returnUrl || '/paneli');
+    }
+  }
+
+  static async postUploadStamp(req, res) {
+    try {
+      const returnUrl = req.body.returnUrl || req.headers.referer || '/cilesimet?tab=kompania';
+
+      if (!req.file) {
+        req.flash('error', 'Ju lutem zgjidhni një skedar të vlefshëm për vulën dhe nënshkrimin (.PNG, .WebP, .SVG, .JPG).');
+        return res.redirect(returnUrl);
+      }
+
+      const stampUrl = `/uploads/stamps/${req.file.filename}`;
+
+      let company = await prisma.companySettings.findFirst();
+      if (!company) {
+        company = await prisma.companySettings.create({
+          data: {
+            companyName: 'KRONEER',
+            tagline: 'SISTEME LIFTSH',
+            stampUrl
+          }
+        });
+      } else {
+        // Fshijmë skedarin e mëparshëm nëse ekziston
+        if (company.stampUrl && company.stampUrl.startsWith('/uploads/stamps/')) {
+          const oldFilename = path.basename(company.stampUrl);
+          const oldPath = path.join(__dirname, '../../public/uploads/stamps', oldFilename);
+          if (fs.existsSync(oldPath) && oldFilename !== req.file.filename) {
+            try { fs.unlinkSync(oldPath); } catch (e) { /* ignore */ }
+          }
+        }
+        await prisma.companySettings.update({
+          where: { id: company.id },
+          data: { stampUrl }
+        });
+      }
+
+      invalidateCompanySettingsCache();
+
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Ndryshuar',
+        entityType: 'Cilësime',
+        entityId: company.id,
+        description: 'U ngarkua me sukses vula dhe nënshkrimi zyrtar (.PNG) për dokumentet dhe faturat e KRONEER.'
+      });
+
+      req.flash('success', 'Vula dhe nënshkrimi zyrtar (.PNG) u ngarkua me sukses dhe do të shfaqet automatikisht në të gjitha faturat, ofertat dhe kontratat.');
+      res.redirect(returnUrl);
+    } catch (err) {
+      console.error('Gabim gjatë ngarkimit të vulës/nënshkrimit:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë ngarkimit të vulës: ' + (err.message || 'Dështoi'));
+      res.redirect(req.body.returnUrl || '/cilesimet');
+    }
+  }
+
+  static async postDeleteStamp(req, res) {
+    try {
+      const returnUrl = req.body.returnUrl || req.headers.referer || '/cilesimet?tab=kompania';
+      const company = await prisma.companySettings.findFirst();
+
+      if (company && company.stampUrl) {
+        if (company.stampUrl.startsWith('/uploads/stamps/')) {
+          const oldFilename = path.basename(company.stampUrl);
+          const oldPath = path.join(__dirname, '../../public/uploads/stamps', oldFilename);
+          if (fs.existsSync(oldPath)) {
+            try { fs.unlinkSync(oldPath); } catch (e) { /* ignore */ }
+          }
+        }
+        await prisma.companySettings.update({
+          where: { id: company.id },
+          data: { stampUrl: null }
+        });
+
+        invalidateCompanySettingsCache();
+
+        await ActivityService.log({
+          userId: req.session.user?.id,
+          userName: req.session.user?.fullName,
+          actionType: 'Fshirë',
+          entityType: 'Cilësime',
+          entityId: company.id,
+          description: 'U hoq vula dhe nënshkrimi zyrtar i kompanisë nga dokumentet.'
+        });
+
+        req.flash('success', 'Vula dhe nënshkrimi zyrtar u hoqën me sukses nga dokumentet.');
+      } else {
+        req.flash('info', 'Nuk ka vulë të konfiguruar.');
+      }
+
+      res.redirect(returnUrl);
+    } catch (err) {
+      console.error('Gabim gjatë fshirjes së vulës:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë fshirjes së vulës.');
+      res.redirect(req.body.returnUrl || '/cilesimet');
     }
   }
 

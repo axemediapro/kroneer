@@ -4,7 +4,7 @@ const prisma = require('../config/prisma');
 
 const { isAuthenticated } = require('../middleware/auth');
 const { authorizeRoles } = require('../middleware/roles');
-const { uploadLogo, uploadBackupJson, uploadElevatorMedia } = require('../middleware/upload');
+const { uploadLogo, uploadStamp, uploadBackupJson, uploadElevatorMedia } = require('../middleware/upload');
 
 const AuthController = require('../controllers/authController');
 const DashboardController = require('../controllers/dashboardController');
@@ -46,6 +46,8 @@ router.get('/', (req, res) => {
 router.get('/paneli', isAuthenticated, DashboardController.getIndex);
 router.post('/paneli/logo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), uploadLogo.single('logo'), SettingsController.postUploadLogo);
 router.post('/paneli/logo/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), SettingsController.postDeleteLogo);
+router.post('/paneli/vula', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), uploadStamp.single('stamp'), SettingsController.postUploadStamp);
+router.post('/paneli/vula/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), SettingsController.postDeleteStamp);
 
 // 3. Klientët (CRM)
 router.get('/klientet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'MENAXHER_PROJEKTI'), CustomerController.getIndex);
@@ -241,6 +243,8 @@ router.get('/perdoruesit', isAuthenticated, (req, res) => res.redirect('/cilesim
 router.get('/cilesimet', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.getIndex);
 router.post('/cilesimet/logo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadLogo.single('logo'), SettingsController.postUploadLogo);
 router.post('/cilesimet/logo/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postDeleteLogo);
+router.post('/cilesimet/vula', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadStamp.single('stamp'), SettingsController.postUploadStamp);
+router.post('/cilesimet/vula/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postDeleteStamp);
 router.post('/cilesimet/kompania', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postUpdateCompany);
 router.post('/cilesimet/perdoruesit/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postCreateUser);
 router.post('/cilesimet/perdoruesit/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postEditUser);

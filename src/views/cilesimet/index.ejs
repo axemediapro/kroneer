@@ -47,7 +47,7 @@
   <!-- TAB 1: Kompania & Banka -->
   <div x-show="activeTab === 'kompania'" x-cloak class="space-y-6">
 
-    <!-- Karta e Menaxhimit të Dy Logove të Kompanisë -->
+    <!-- Karta e Menaxhimit të Logove dhe Vulës & Nënshkrimit të Kompanisë -->
     <div class="space-y-6" x-data="{
       darkBgLogoPreview: '<%= settings && settings.logoDarkBgUrl ? settings.logoDarkBgUrl : "" %>',
       darkBgLogoFile: '',
@@ -56,6 +56,10 @@
       standardLogoPreview: '<%= settings && settings.logoUrl ? settings.logoUrl : "" %>',
       standardLogoFile: '',
       standardLogoSize: '',
+
+      stampPreview: '<%= settings && settings.stampUrl ? settings.stampUrl : "" %>',
+      stampFile: '',
+      stampSize: '',
 
       handleDarkBgLogoSelect(event) {
         const file = event.target.files[0];
@@ -75,11 +79,21 @@
         const reader = new FileReader();
         reader.onload = (e) => { this.standardLogoPreview = e.target.result; };
         reader.readAsDataURL(file);
+      },
+
+      handleStampSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.stampFile = file.name;
+        this.stampSize = (file.size / 1024).toFixed(1) + ' KB';
+        const reader = new FileReader();
+        reader.onload = (e) => { this.stampPreview = e.target.result; };
+        reader.readAsDataURL(file);
       }
     }">
       
-      <!-- Seksioni me 2 Kolona: Logo Dark UI dhe Logo Dokumentesh -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Seksioni me 3 Kolona: Logo Dark UI, Logo Dokumentesh, dhe Vula & Nënshkrimi (.PNG) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <!-- Karta 1: Logoja e Bardhë / për Sfond të Errët (Dark UI) -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between">
@@ -92,9 +106,8 @@
                 <div>
                   <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
                     Logoja e Bardhë (Dark UI)
-                    <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Për Sfond të Errët</span>
                   </h3>
-                  <p class="text-[11px] text-slate-400">Shfaqet në Sidebar, Faqen e Kyçjes dhe Header të Panelit</p>
+                  <p class="text-[11px] text-slate-400">Për Sidebar, Faqen e Kyçjes & Panel</p>
                 </div>
               </div>
             </div>
@@ -105,7 +118,7 @@
                 <div class="flex flex-col items-center justify-center h-full w-full">
                   <img :src="darkBgLogoPreview" alt="Dark UI Logo Preview" class="max-h-16 max-w-[75%] w-auto object-contain filter drop-shadow">
                   <span class="mt-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    ✓ E optimizuar për sfond të zi/errët
+                    ✓ E optimizuar për Dark Mode
                   </span>
                 </div>
               </template>
@@ -114,8 +127,8 @@
                   <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-base font-bold font-mono">
                     K
                   </div>
-                  <p class="font-bold text-slate-300 text-xs">Nuk është ngarkuar logo e bardhë</p>
-                  <p class="text-[10px] text-slate-500">Sistemi do të përdorë logon standarde ose emblemën</p>
+                  <p class="font-bold text-slate-300 text-xs">Nuk është ngarkuar</p>
+                  <p class="text-[10px] text-slate-500">Përdoret emblema standarde</p>
                 </div>
               </template>
             </div>
@@ -127,19 +140,19 @@
 
               <div>
                 <label class="block font-semibold text-slate-300 text-xs mb-1">
-                  Zgjidh Skedarin e Logos së Bardhë (.SVG, .PNG, .WEBP):
+                  Skedari (.SVG, .PNG, .WEBP):
                 </label>
                 <input type="file" name="logo" accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/*" required @change="handleDarkBgLogoSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 file:cursor-pointer">
               </div>
 
               <div class="flex flex-wrap items-center gap-2 pt-1">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition-all">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                  <span>Ruaj Logon e Bardhë</span>
+                  <span>Ruaj</span>
                 </button>
 
                 <% if (settings && settings.logoDarkBgUrl) { %>
-                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon e bardhë për sfond të errët?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon e bardhë?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     <span>Fshi</span>
                   </button>
@@ -159,10 +172,9 @@
                 </div>
                 <div>
                   <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
-                    Logoja Kryesore (Dokumente Zyrtare)
-                    <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Për Sfond të Bardhë</span>
+                    Logoja e Dokumenteve
                   </h3>
-                  <p class="text-[11px] text-slate-400">Përdoret në Fatura, Oferta, Kontrata & Printime A4</p>
+                  <p class="text-[11px] text-slate-400">Për Fatura, Oferta, Kontrata & PDF</p>
                 </div>
               </div>
             </div>
@@ -173,7 +185,7 @@
                 <div class="flex flex-col items-center justify-center h-full w-full">
                   <img :src="standardLogoPreview" alt="Document Logo Preview" class="max-h-16 max-w-[75%] w-auto object-contain filter drop-shadow">
                   <span class="mt-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    ✓ E optimizuar për dokumente A4
+                    ✓ E optimizuar për A4
                   </span>
                 </div>
               </template>
@@ -182,8 +194,8 @@
                   <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-300 text-slate-800 flex items-center justify-center mx-auto text-base font-bold font-mono">
                     K
                   </div>
-                  <p class="font-bold text-slate-700 text-xs">Nuk është ngarkuar logo për dokumente</p>
-                  <p class="text-[10px] text-slate-500">Sistemi do të përdorë logon standarde KRONEER</p>
+                  <p class="font-bold text-slate-700 text-xs">Nuk është ngarkuar</p>
+                  <p class="text-[10px] text-slate-500">Përdoret logo standarde</p>
                 </div>
               </template>
             </div>
@@ -195,19 +207,86 @@
 
               <div>
                 <label class="block font-semibold text-slate-300 text-xs mb-1">
-                  Zgjidh Skedarin e Logos për Dokumente (.SVG, .PNG, .WEBP):
+                  Skedari (.SVG, .PNG, .WEBP):
                 </label>
                 <input type="file" name="logo" accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/*" required @change="handleStandardLogoSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 file:cursor-pointer">
               </div>
 
               <div class="flex flex-wrap items-center gap-2 pt-1">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                  <span>Ruaj Logon e Dokumenteve</span>
+                  <span>Ruaj</span>
                 </button>
 
                 <% if (settings && settings.logoUrl) { %>
-                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon kryesore për dokumente?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon për dokumente?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Fshi</span>
+                  </button>
+                <% } %>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Karta 3: Vula & Nënshkrimi Zyrtar (.PNG) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-sm">
+                  🖋️
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    Vula & Nënshkrimi (.PNG)
+                    <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Auto-Signature</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-400">Shfaqet automatikisht te Kroneer-i në të gjitha PDF-të</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Box (Sfond me Pattern Transparency Checkerboard) -->
+            <div class="bg-white border-2 border-dashed border-blue-300 rounded-xl h-36 flex flex-col items-center justify-center p-3 relative mb-4" style="background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px); background-size: 8px 8px;">
+              <template x-if="stampPreview">
+                <div class="flex flex-col items-center justify-center h-full w-full">
+                  <img :src="stampPreview" alt="Stamp & Signature Preview" class="max-h-20 max-w-[85%] w-auto object-contain filter drop-shadow-sm">
+                  <span class="mt-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                    ✓ Aktive në Fatura, Oferta, Kontrata & PDF
+                  </span>
+                </div>
+              </template>
+              <template x-if="!stampPreview">
+                <div class="text-center space-y-1 text-slate-500">
+                  <div class="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mx-auto text-base">
+                    📜
+                  </div>
+                  <p class="font-bold text-slate-700 text-xs">Nuk është ngarkuar vula & nënshkrimi</p>
+                  <p class="text-[10px] text-slate-500">Mbetet vija standarde për nënshkrim manual</p>
+                </div>
+              </template>
+            </div>
+
+            <!-- Forma e Ngarkimit të Vulës & Nënshkrimit -->
+            <form action="/cilesimet/vula" method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="returnUrl" value="/cilesimet?tab=kompania">
+
+              <div>
+                <label class="block font-semibold text-slate-300 text-xs mb-1">
+                  Skedari Transparent (.PNG, .WEBP):
+                </label>
+                <input type="file" name="stamp" accept=".png,.webp,.svg,.jpg,.jpeg,image/png,image/*" required @change="handleStampSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-500 file:text-slate-950 hover:file:bg-blue-400 file:cursor-pointer">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <span>Ruaj Vulën & Nënshkrimin</span>
+                </button>
+
+                <% if (settings && settings.stampUrl) { %>
+                  <button type="submit" formaction="/cilesimet/vula/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini vulën dhe nënshkrimin zyrtar?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     <span>Fshi</span>
                   </button>
@@ -220,9 +299,9 @@
       </div>
 
       <!-- Këshilla Informative -->
-      <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
-        <span class="text-amber-400 font-bold">ℹ️ Këshillë:</span>
-        <span>Ngarkimi i skedarit në format <strong>.SVG</strong> ofron qartësi maksimale vektoriale pa u deformuar kurrë në printimet PDF apo ekranet me rezolucion të lartë.</span>
+      <div class="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2.5">
+        <span class="text-amber-400 font-bold mt-0.5">ℹ️ Këshillë:</span>
+        <span class="leading-relaxed">Për <strong>Vula & Nënshkrimi</strong>, rekomandohet skedar në format <strong>.PNG me sfond transparent</strong> (ose .WEBP). Sistemi do ta vendosë automatikisht mbi/te seksioni i nënshkrimit dhe vulës së KRONEER në <strong>Fatura, Oferta, Kontrata, Mirëmbajtje, Dorëzim, Dëftesa Pagesash dhe Raportet Zyrtare</strong>.</span>
       </div>
     </div>
 

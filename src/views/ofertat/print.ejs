@@ -127,15 +127,21 @@
 
 <!-- Nënshkrimet Zyrtare -->
 <div class="avoid-break grid grid-cols-2 gap-12 pt-8 border-t border-slate-300 text-xs">
-  <div class="text-center">
-    <p class="font-bold text-slate-800 mb-12">Për <%= company.companyName %>:</p>
+  <div class="text-center flex flex-col items-center">
+    <p class="font-bold text-slate-800 mb-1">Për <%= company.companyName %>:</p>
+    <div class="h-16 flex items-end justify-center mb-1">
+      <% if (company && company.stampUrl) { %>
+        <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi <%= company.companyName %>" class="max-h-16 max-w-[190px] object-contain filter drop-shadow-sm">
+      <% } %>
+    </div>
     <div class="w-48 mx-auto border-b border-slate-900 pb-1">
       <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
     </div>
   </div>
 
-  <div class="text-center">
-    <p class="font-bold text-slate-800 mb-12">Pranuar nga Klienti:</p>
+  <div class="text-center flex flex-col items-center">
+    <p class="font-bold text-slate-800 mb-1">Pranuar nga Klienti:</p>
+    <div class="h-16 mb-1"></div>
     <div class="w-48 mx-auto border-b border-slate-900 pb-1">
       <span class="text-[10px] text-slate-500">(Emri, Mbiemri & Nënshkrimi)</span>
     </div>

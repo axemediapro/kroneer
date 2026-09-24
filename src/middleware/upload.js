@@ -8,6 +8,12 @@ if (!fs.existsSync(logosDir)) {
   fs.mkdirSync(logosDir, { recursive: true });
 }
 
+// Sigurojmë që folderi i ngarkimit të vulave dhe nënshkrimeve ekziston
+const stampsDir = path.join(__dirname, '../../public/uploads/stamps');
+if (!fs.existsSync(stampsDir)) {
+  fs.mkdirSync(stampsDir, { recursive: true });
+}
+
 // Sigurojmë që folderi i galerisë së lifteve (foto/video) ekziston
 const elevatorsDir = path.join(__dirname, '../../public/uploads/elevators');
 if (!fs.existsSync(elevatorsDir)) {
@@ -33,6 +39,25 @@ const storage = multer.diskStorage({
   }
 });
 
+// Ruajtja e vulës dhe nënshkrimit zyrtar (.png, .webp, .svg, .jpg)
+const stampStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    if (!fs.existsSync(stampsDir)) {
+      fs.mkdirSync(stampsDir, { recursive: true });
+    }
+    cb(null, stampsDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const cleanBase = path.basename(file.originalname, ext)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_')
+      .slice(0, 25);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e6);
+    cb(null, `vula_nenshkrimi_${cleanBase}_${uniqueSuffix}${ext}`);
+  }
+});
+
 // Filtruesi i tipit të skedarit (SVG, PNG, JPG, JPEG, WEBP)
 const fileFilter = (req, file, cb) => {
   const allowedExtensions = ['.svg', '.png', '.jpg', '.jpeg', '.webp'];
@@ -50,6 +75,14 @@ const fileFilter = (req, file, cb) => {
 
 const uploadLogo = multer({
   storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5 MB Max
+  }
+});
+
+const uploadStamp = multer({
+  storage: stampStorage,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5 MB Max
@@ -155,6 +188,7 @@ function normalizeSvgFile(filePath) {
 
 module.exports = {
   uploadLogo,
+  uploadStamp,
   uploadBackupJson,
   uploadElevatorMedia,
   normalizeSvgFile
