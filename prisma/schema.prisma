@@ -687,6 +687,7 @@ model CompanySettings {
   logoDarkBgUrl  String?
   logoDarkBgSvg  String?
   stampUrl       String?
+  stampHeight    Int      @default(80) // Madhësia/lartësia e vulës në px (p.sh. 40 - 250px)
   address        String   @default("Rruga Dëshmorët e Kombit, Nr. 45")
   city           String   @default("Prishtinë")
   country        String   @default("Kosovë")

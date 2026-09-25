@@ -528,12 +528,14 @@ class SettingsController {
       const stampUrl = `/uploads/stamps/${req.file.filename}`;
 
       let company = await prisma.companySettings.findFirst();
+      const initialHeight = req.body.stampHeight ? Math.max(30, Math.min(300, parseInt(req.body.stampHeight, 10))) : 80;
       if (!company) {
         company = await prisma.companySettings.create({
           data: {
             companyName: 'KRONEER',
             tagline: 'SISTEME LIFTSH',
-            stampUrl
+            stampUrl,
+            stampHeight: initialHeight
           }
         });
       } else {
@@ -547,7 +549,10 @@ class SettingsController {
         }
         await prisma.companySettings.update({
           where: { id: company.id },
-          data: { stampUrl }
+          data: { 
+            stampUrl,
+            ...(req.body.stampHeight ? { stampHeight: initialHeight } : {})
+          }
         });
       }
 
@@ -567,6 +572,47 @@ class SettingsController {
     } catch (err) {
       console.error('Gabim gjatë ngarkimit të vulës/nënshkrimit:', err);
       req.flash('error', 'Ndodhi një gabim gjatë ngarkimit të vulës: ' + (err.message || 'Dështoi'));
+      res.redirect(req.body.returnUrl || '/cilesimet');
+    }
+  }
+
+  static async postUpdateStampSize(req, res) {
+    try {
+      const returnUrl = req.body.returnUrl || req.headers.referer || '/cilesimet?tab=kompania';
+      const height = Math.max(30, Math.min(300, parseInt(req.body.stampHeight, 10) || 80));
+
+      let company = await prisma.companySettings.findFirst();
+      if (!company) {
+        company = await prisma.companySettings.create({
+          data: {
+            companyName: 'KRONEER',
+            tagline: 'SISTEME LIFTSH',
+            stampHeight: height
+          }
+        });
+      } else {
+        await prisma.companySettings.update({
+          where: { id: company.id },
+          data: { stampHeight: height }
+        });
+      }
+
+      invalidateCompanySettingsCache();
+
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Ndryshuar',
+        entityType: 'Cilësime',
+        entityId: company.id,
+        description: `U përditësua madhësia e vulës dhe nënshkrimit zyrtar në ${height}px.`
+      });
+
+      req.flash('success', `Madhësia e vulës dhe nënshkrimit u përditësua në ${height}px me sukses!`);
+      res.redirect(returnUrl);
+    } catch (err) {
+      console.error('Gabim gjatë përditësimit të madhësisë së vulës:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë ruajtjes së madhësisë së vulës.');
       res.redirect(req.body.returnUrl || '/cilesimet');
     }
   }

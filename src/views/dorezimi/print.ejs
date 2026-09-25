@@ -110,15 +110,16 @@
   </p>
 
   <!-- Signatures Grid -->
-  <div class="grid grid-cols-2 gap-10 pt-6 mt-4 border-t border-slate-400">
+  <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+  <div class="avoid-break grid grid-cols-2 gap-10 pt-6 mt-4 border-t border-slate-400">
     <div class="text-center">
       <p class="text-xs font-bold text-slate-900 mb-1">Për KRONEER — SISTEME LIFTSH</p>
       <p class="text-[11px] text-slate-500 mb-2"><%= handover.repSigneeName %></p>
-      <div class="h-20 flex items-center justify-center border-b border-dashed border-slate-400">
+      <div style="height: <%= Math.max(80, stampH + 10) %>px; min-height: <%= Math.max(80, stampH + 10) %>px;" class="flex items-center justify-center border-b border-dashed border-slate-400">
         <% if (handover.repSignatureData) { %>
           <img src="<%= handover.repSignatureData %>" alt="Nënshkrim" class="max-h-16">
         <% } else if (company && company.stampUrl) { %>
-          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi" class="max-h-16 max-w-[190px] object-contain filter drop-shadow-sm">
+          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
         <% } %>
       </div>
       <p class="text-[10px] text-slate-400 mt-1">(Vula & Nënshkrimi)</p>
@@ -127,7 +128,7 @@
     <div class="text-center">
       <p class="text-xs font-bold text-slate-900 mb-1">Pranoi Klienti / Investitori</p>
       <p class="text-[11px] text-slate-500 mb-2"><%= handover.clientSigneeName %></p>
-      <div class="h-20 flex items-center justify-center border-b border-dashed border-slate-400">
+      <div style="height: <%= Math.max(80, stampH + 10) %>px; min-height: <%= Math.max(80, stampH + 10) %>px;" class="flex items-center justify-center border-b border-dashed border-slate-400">
         <% if (handover.clientSignatureData) { %>
           <img src="<%= handover.clientSignatureData %>" alt="Nënshkrim" class="max-h-16">
         <% } %>

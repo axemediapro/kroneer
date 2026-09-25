@@ -90,11 +90,12 @@
 </table>
 
 <!-- Nënshkrimet Zyrtare -->
+<% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
 <div class="avoid-break pt-8 border-t border-slate-300 text-xs">
   <div class="grid grid-cols-2 gap-12 text-center">
     <div class="flex flex-col items-center">
       <p class="font-bold text-slate-900 mb-1">Përgatitur nga (Menaxheri i Resurseve Njerëzore):</p>
-      <div class="h-16 mb-1"></div>
+      <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="mb-1"></div>
       <div class="w-56 mx-auto border-b border-slate-900 pb-1">
         <span class="text-[10px] text-slate-500">(Nënshkrimi)</span>
       </div>
@@ -102,9 +103,9 @@
 
     <div class="flex flex-col items-center">
       <p class="font-bold text-slate-900 mb-1">Aprovuar nga (Drejtoria Ekzekutive KRONEER):</p>
-      <div class="h-16 flex items-end justify-center mb-1">
+      <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="flex items-end justify-center mb-1">
         <% if (company && company.stampUrl) { %>
-          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi KRONEER" class="max-h-16 max-w-[190px] object-contain filter drop-shadow-sm">
+          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi KRONEER" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
         <% } %>
       </div>
       <div class="w-56 mx-auto border-b border-slate-900 pb-1">

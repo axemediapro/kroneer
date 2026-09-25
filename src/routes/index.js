@@ -245,6 +245,7 @@ router.post('/cilesimet/logo', isAuthenticated, authorizeRoles('ADMINISTRATOR'),
 router.post('/cilesimet/logo/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postDeleteLogo);
 router.post('/cilesimet/vula', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadStamp.single('stamp'), SettingsController.postUploadStamp);
 router.post('/cilesimet/vula/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postDeleteStamp);
+router.post('/cilesimet/vula/madhesia', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postUpdateStampSize);
 router.post('/cilesimet/kompania', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postUpdateCompany);
 router.post('/cilesimet/perdoruesit/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postCreateUser);
 router.post('/cilesimet/perdoruesit/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SettingsController.postEditUser);
