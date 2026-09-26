@@ -102,11 +102,15 @@ class EmployeeController {
   // 2. Faqja e Regjistrimit të Puntorit
   static async getCreate(req, res) {
     try {
-      const [nextCode, users] = await Promise.all([
+      const [nextCode, users, managers] = await Promise.all([
         NumberService.getNextNumber('employee'),
         prisma.user.findMany({
           where: { isActive: true },
           include: { employee: true },
+          orderBy: { fullName: 'asc' }
+        }),
+        prisma.user.findMany({
+          where: { isActive: true, role: { in: ['MENAXHER_PROJEKTI', 'ADMINISTRATOR'] } },
           orderBy: { fullName: 'asc' }
         })
       ]);
@@ -140,6 +144,7 @@ class EmployeeController {
         pageTitle: 'Regjistro Puntor të Ri - KRONEER',
         nextCode,
         availableUsers,
+        managers,
         departments,
         positions
       });
@@ -157,7 +162,7 @@ class EmployeeController {
         firstName, lastName, personalNumber, email, phone,
         position, department, status,
         shiftStart, shiftEnd, breakMinutes,
-        hourlyRate, monthlySalary, hireDate, notes, userId
+        hourlyRate, monthlySalary, hireDate, notes, userId, managerId
       } = req.body;
 
       if (!firstName || !lastName || !position) {
@@ -185,7 +190,8 @@ class EmployeeController {
           monthlySalary: parseFloat(monthlySalary) || 0,
           hireDate: hireDate ? new Date(hireDate) : new Date(),
           notes: notes ? notes.trim() : null,
-          userId: userId ? parseInt(userId) : null
+          userId: userId ? parseInt(userId) : null,
+          managerId: managerId ? parseInt(managerId) : null
         }
       });
 
@@ -207,7 +213,7 @@ class EmployeeController {
     }
   }
 
-  // 4. Detajet & Profili i Puntorit me Historikun e Prezencës
+  // 4. Detajet & Profili i Puntorit me Historikun, Keshin & Bonuset
   static async getDetail(req, res) {
     try {
       const id = parseInt(req.params.id);
@@ -220,21 +226,55 @@ class EmployeeController {
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
 
-      const employee = await prisma.employee.findUnique({
-        where: { id },
-        include: {
-          user: true,
-          attendances: {
-            where: {
-              date: {
-                gte: startOfMonth,
-                lte: endOfMonth
-              }
+      const [employee, activeProjects] = await Promise.all([
+        prisma.employee.findUnique({
+          where: { id },
+          include: {
+            user: true,
+            manager: true,
+            attendances: {
+              where: {
+                date: {
+                  gte: startOfMonth,
+                  lte: endOfMonth
+                }
+              },
+              orderBy: { date: 'desc' }
             },
-            orderBy: { date: 'desc' }
+            transactions: {
+              include: {
+                project: true,
+                intervention: true
+              },
+              orderBy: { date: 'desc' }
+            },
+            projectMemberships: {
+              include: {
+                project: {
+                  include: { customer: true }
+                }
+              },
+              orderBy: { assignedAt: 'desc' }
+            },
+            interventionAssignments: {
+              include: {
+                intervention: {
+                  include: {
+                    project: true,
+                    projectManager: true
+                  }
+                }
+              },
+              orderBy: { id: 'desc' },
+              take: 20
+            }
           }
-        }
-      });
+        }),
+        prisma.project.findMany({
+          where: { stage: { not: 'Përfunduar' } },
+          orderBy: { name: 'asc' }
+        })
+      ]);
 
       if (!employee) {
         req.flash('error', 'Puntori nuk u gjet.');
@@ -260,18 +300,40 @@ class EmployeeController {
       const totalBreakMinutes = employee.attendances.reduce((acc, a) => acc + (a.totalBreakMinutes || 0), 0);
       const avgHoursPerDay = totalDaysWorked > 0 ? (totalWorkedHours / totalDaysWorked).toFixed(1) : '0';
 
+      // Statistikat Financiare (Bonuse & Kesh)
+      const totalBonuses = employee.transactions
+        .filter(t => t.type === 'BONUS')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const totalCashAdvances = employee.transactions
+        .filter(t => t.type === 'KESH_AVANC' || t.type === 'PAGESE_KESH')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const totalDeductions = employee.transactions
+        .filter(t => t.type === 'ZBRITJE')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const baseSalary = employee.monthlySalary || 0;
+      const netPayableEstimated = Math.max(0, baseSalary + totalBonuses - totalCashAdvances - totalDeductions);
+
       const stats = {
         totalDaysWorked,
         totalWorkedHours: totalWorkedHours.toFixed(1),
         totalOvertimeHours: (totalOvertimeMinutes / 60).toFixed(1),
         totalBreakHours: (totalBreakMinutes / 60).toFixed(1),
-        avgHoursPerDay
+        avgHoursPerDay,
+        totalBonuses,
+        totalCashAdvances,
+        totalDeductions,
+        baseSalary,
+        netPayableEstimated
       };
 
       res.render('puntoret/detajet', {
         pageTitle: `${employee.firstName} ${employee.lastName} (${employee.code}) - KRONEER`,
         employee,
         todayAttendance,
+        activeProjects,
         stats,
         selectedMonth,
         selectedYear
@@ -287,14 +349,18 @@ class EmployeeController {
   static async getEdit(req, res) {
     try {
       const id = parseInt(req.params.id);
-      const [employee, users] = await Promise.all([
+      const [employee, users, managers] = await Promise.all([
         prisma.employee.findUnique({
           where: { id },
-          include: { user: true }
+          include: { user: true, manager: true }
         }),
         prisma.user.findMany({
           where: { isActive: true },
           include: { employee: true },
+          orderBy: { fullName: 'asc' }
+        }),
+        prisma.user.findMany({
+          where: { isActive: true, role: { in: ['MENAXHER_PROJEKTI', 'ADMINISTRATOR'] } },
           orderBy: { fullName: 'asc' }
         })
       ]);
@@ -333,6 +399,7 @@ class EmployeeController {
         pageTitle: `Ndrysho ${employee.firstName} ${employee.lastName} - KRONEER`,
         employee,
         availableUsers,
+        managers,
         departments,
         positions
       });
@@ -351,7 +418,7 @@ class EmployeeController {
         firstName, lastName, personalNumber, email, phone,
         position, department, status,
         shiftStart, shiftEnd, breakMinutes,
-        hourlyRate, monthlySalary, hireDate, notes, userId
+        hourlyRate, monthlySalary, hireDate, notes, userId, managerId
       } = req.body;
 
       const existing = await prisma.employee.findUnique({ where: { id } });
@@ -378,7 +445,8 @@ class EmployeeController {
           monthlySalary: parseFloat(monthlySalary) >= 0 ? parseFloat(monthlySalary) : existing.monthlySalary,
           hireDate: hireDate ? new Date(hireDate) : existing.hireDate,
           notes: notes !== undefined ? notes.trim() : existing.notes,
-          userId: userId ? parseInt(userId) : null
+          userId: userId ? parseInt(userId) : null,
+          managerId: managerId ? parseInt(managerId) : null
         }
       });
 
@@ -956,6 +1024,221 @@ class EmployeeController {
       res.status(500).send('Gabim gjatë përgatitjes së raportit të prezencës.');
     }
   }
+
+  // =========================================================================
+  // 16. Menaxhimi i Keshit & Bonuseve (Cash Advance & Bonuses)
+  // =========================================================================
+  static async postAddTransaction(req, res) {
+    try {
+      const {
+        employeeId,
+        type, // 'KESH_AVANC', 'PAGESE_KESH', 'BONUS', 'ZBRITJE'
+        category,
+        amount,
+        title,
+        notes,
+        date,
+        projectId,
+        interventionId,
+        paymentMethod
+      } = req.body;
+
+      const empId = parseInt(employeeId);
+      const parsedAmount = parseFloat(amount);
+
+      if (!empId || !parsedAmount || parsedAmount <= 0) {
+        req.flash('error', 'Ju lutem plotësoni puntorin dhe një shumë valide më të madhe se 0.');
+        return res.redirect(req.get('referer') || `/puntoret/${empId}`);
+      }
+
+      const employee = await prisma.employee.findUnique({ where: { id: empId } });
+      if (!employee) {
+        req.flash('error', 'Puntori nuk u gjet.');
+        return res.redirect('/puntoret');
+      }
+
+      // Gjenerimi i numrit serik sipas llojit
+      const isBonus = type === 'BONUS';
+      const number = await NumberService.getNextNumber(isBonus ? 'employee_bonus' : 'employee_cash');
+
+      const defaultTitle = isBonus
+        ? `Bonus për ${employee.firstName} ${employee.lastName} (${category || 'Performancë'})`
+        : `Pagesë Kesh / Avancë për ${employee.firstName} ${employee.lastName}`;
+
+      const transaction = await prisma.employeeTransaction.create({
+        data: {
+          number,
+          employeeId: empId,
+          type: type || 'KESH_AVANC',
+          category: category || (isBonus ? 'Bonus Projekti / Montimi' : 'Avancë Terreni'),
+          amount: parsedAmount,
+          currency: 'EUR',
+          date: date ? new Date(date) : new Date(),
+          title: title ? title.trim() : defaultTitle,
+          notes: notes ? notes.trim() : null,
+          status: 'Paguar',
+          paymentMethod: paymentMethod || 'Para në dorë (Cash)',
+          projectId: projectId ? parseInt(projectId) : null,
+          interventionId: interventionId ? parseInt(interventionId) : null,
+          recordedBy: req.session.user?.fullName || 'Administrator'
+        }
+      });
+
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Pagesë',
+        entityType: 'Puntor',
+        entityId: empId,
+        description: `U regjistrua ${isBonus ? 'Bonus' : 'Kesh/Avancë'} prej ${parsedAmount}€ (${transaction.number}) për ${employee.firstName} ${employee.lastName}.`
+      });
+
+      req.flash('success', `${isBonus ? 'Bonusi' : 'Keshi/Avanca'} prej ${parsedAmount}€ (${transaction.number}) u regjistrua me sukses për ${employee.firstName} ${employee.lastName}!`);
+      res.redirect(req.get('referer') || `/puntoret/${empId}`);
+    } catch (err) {
+      console.error('Gabim në shtimin e transaksionit të keshit/bonusit:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë regjistrimit të transaksionit.');
+      res.redirect(req.get('referer') || '/puntoret');
+    }
+  }
+
+  // 17. Fshirja e një Transaksioni Kesh / Bonus
+  static async postDeleteTransaction(req, res) {
+    try {
+      const id = parseInt(req.params.id);
+      const transaction = await prisma.employeeTransaction.findUnique({
+        where: { id },
+        include: { employee: true }
+      });
+
+      if (!transaction) {
+        req.flash('error', 'Transaksioni nuk u gjet.');
+        return res.redirect(req.get('referer') || '/puntoret');
+      }
+
+      await prisma.employeeTransaction.delete({ where: { id } });
+
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Fshirë',
+        entityType: 'Puntor',
+        entityId: transaction.employeeId,
+        description: `U fshi transaksioni ${transaction.number} (${transaction.amount}€) i puntorit ${transaction.employee?.firstName} ${transaction.employee?.lastName}.`
+      });
+
+      req.flash('success', `Transaksioni ${transaction.number} u fshi me sukses.`);
+      res.redirect(req.get('referer') || `/puntoret/${transaction.employeeId}`);
+    } catch (err) {
+      console.error('Gabim në fshirjen e transaksionit:', err);
+      req.flash('error', 'Nuk u arrit të fshihet transaksioni.');
+      res.redirect(req.get('referer') || '/puntoret');
+    }
+  }
+
+  // 18. Dëftesë / Fletëpagesë Zyrtare Kesh & Bonuse për Printim
+  static async getTransactionReceipt(req, res) {
+    try {
+      const id = parseInt(req.params.id);
+      const [transaction, company] = await Promise.all([
+        prisma.employeeTransaction.findUnique({
+          where: { id },
+          include: {
+            employee: true,
+            project: { include: { customer: true } },
+            intervention: true
+          }
+        }),
+        prisma.companySettings.findFirst()
+      ]);
+
+      if (!transaction) {
+        req.flash('error', 'Transaksioni nuk u gjet.');
+        return res.redirect('/puntoret');
+      }
+
+      res.render('puntoret/deftese-kesh', {
+        pageTitle: `Deftese_${transaction.number}`,
+        transaction,
+        company: company || {},
+        layout: 'layouts/print'
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e dëftesës:', err);
+      res.status(500).send('Gabim gjatë përgatitjes së dëftesës për printim.');
+    }
+  }
+
+  // 19. Pasqyra e Përgjithshme e Keshit & Bonuseve (Faqja e dedikuar)
+  static async getCashAndBonusesOverview(req, res) {
+    try {
+      const { tipi, puntoriId, muaji, viti } = req.query;
+
+      const where = {};
+      if (tipi && tipi !== 'te-gjitha') {
+        where.type = tipi;
+      }
+      if (puntoriId && puntoriId !== 'te-gjitha') {
+        where.employeeId = parseInt(puntoriId);
+      }
+
+      const [transactions, employees, projects] = await Promise.all([
+        prisma.employeeTransaction.findMany({
+          where,
+          include: {
+            employee: true,
+            project: { include: { customer: true } },
+            intervention: true
+          },
+          orderBy: { date: 'desc' }
+        }),
+        prisma.employee.findMany({
+          where: { status: 'Aktiv' },
+          orderBy: { firstName: 'asc' }
+        }),
+        prisma.project.findMany({
+          where: { stage: { not: 'Përfunduar' } },
+          orderBy: { name: 'asc' }
+        })
+      ]);
+
+      // Llogaritjet globale
+      const totalCash = transactions
+        .filter(t => t.type === 'KESH_AVANC' || t.type === 'PAGESE_KESH')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const totalBonus = transactions
+        .filter(t => t.type === 'BONUS')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const totalDeduction = transactions
+        .filter(t => t.type === 'ZBRITJE')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      res.render('puntoret/kesh-bonuse', {
+        pageTitle: 'Kesh & Bonuset e Punëtorëve - KRONEER',
+        transactions,
+        employees,
+        projects,
+        stats: {
+          totalCount: transactions.length,
+          totalCash,
+          totalBonus,
+          totalDeduction,
+          grandTotal: totalCash + totalBonus
+        },
+        filters: {
+          tipi: tipi || 'te-gjitha',
+          puntoriId: puntoriId || 'te-gjitha'
+        }
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e pasqyrës së keshit & bonuseve:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë ngarkimit.');
+      res.redirect('/puntoret');
+    }
+  }
 }
 
 module.exports = EmployeeController;
+

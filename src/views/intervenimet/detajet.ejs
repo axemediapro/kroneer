@@ -1,0 +1,279 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2 flex-wrap">
+          <span class="px-3 py-1 text-xs font-bold rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono">
+            <%= intervention.number %>
+          </span>
+          <span class="px-3 py-1 text-xs font-bold uppercase rounded-full <%= intervention.status === 'Përfunduar' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (intervention.status === 'Në Proces' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-300') %>">
+            <%= intervention.status %>
+          </span>
+          <span class="px-3 py-1 text-xs font-bold rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-mono">
+            <%= intervention.type %>
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight"><%= intervention.title %></h1>
+        <p class="text-xs text-slate-400 mt-1">
+          Data e Ndërhyrjes: <strong class="text-slate-200"><%= formatDate(intervention.date) %></strong>
+          <% if (intervention.startTime) { %>
+            • Orari: <span class="font-mono text-amber-400"><%= intervention.startTime %><%= intervention.endTime ? ' - ' + intervention.endTime : '' %></span>
+          <% } %>
+          <% if (intervention.location) { %>
+            • Lokacioni: <span class="text-slate-300 font-medium"><%= intervention.location %></span>
+          <% } %>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Status update form -->
+        <form action="/intervenimet/<%= intervention.id %>/status" method="POST" class="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs">
+          <label class="font-bold text-slate-300 pl-2">Statusi:</label>
+          <select name="status" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-amber-400">
+            <option value="Planifikuar" <%= intervention.status === 'Planifikuar' ? 'selected' : '' %>>Planifikuar</option>
+            <option value="Në Proces" <%= intervention.status === 'Në Proces' ? 'selected' : '' %>>Në Proces</option>
+            <option value="Përfunduar" <%= intervention.status === 'Përfunduar' ? 'selected' : '' %>>Përfunduar</option>
+            <option value="Anuluar" <%= intervention.status === 'Anuluar' ? 'selected' : '' %>>Anuluar</option>
+          </select>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold">
+            Ruaj
+          </button>
+        </form>
+
+        <a href="/intervenimet/<%= intervention.id %>/print" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Printo Raportin</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Left 2 Cols: EKIPET QË KANË QENË NË KËTË INTERVENIM & RAPORTI TEKNIK -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- 1. EKIPIN E SAKTË TË PUNËTORËVE/MONTERËVE QË ISHIN PREZENT -->
+      <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-100 font-mono flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+              Ekipi i Monterëve që ka qenë në këtë Intervenim (<%= intervention.teamWorkers.length %>)
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">Identifikimi i plotë i çdo punëtori të pranishëm dhe shpërblimet/mëditjet përkatëse</p>
+          </div>
+
+          <button type="button" onclick="document.getElementById('modal-shto-monter-intervenim').classList.remove('hidden')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <span>+ Shto Monter në Ekip</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-mono">
+              <tr>
+                <th class="py-2.5 px-3">Punëtori / Monter</th>
+                <th class="py-2.5 px-3">Roli në Ndërhyrje</th>
+                <th class="py-2.5 px-3">Kesh i Dhënë</th>
+                <th class="py-2.5 px-3">Bonus</th>
+                <th class="py-2.5 px-3">Shënime</th>
+                <th class="py-2.5 px-3 text-right">Veprime</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              <% if (intervention.teamWorkers && intervention.teamWorkers.length > 0) { %>
+                <% intervention.teamWorkers.forEach(tw => { %>
+                  <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3 px-3">
+                      <a href="/puntoret/<%= tw.employee.id %>" class="font-bold text-slate-100 hover:text-amber-400 block text-xs">
+                        <%= tw.employee.firstName %> <%= tw.employee.lastName %>
+                      </a>
+                      <span class="text-[10px] text-slate-500 font-mono"><%= tw.employee.code %> • <%= tw.employee.position %></span>
+                    </td>
+                    <td class="py-3 px-3">
+                      <span class="px-2 py-0.5 rounded-md bg-slate-800 text-amber-300 font-mono text-[10px] font-bold border border-slate-700">
+                        <%= tw.roleInTeam %>
+                      </span>
+                    </td>
+                    <td class="py-3 px-3 font-mono font-bold text-amber-400">
+                      <%= tw.cashGiven > 0 ? (tw.cashGiven.toFixed(2) + ' €') : '-' %>
+                    </td>
+                    <td class="py-3 px-3 font-mono font-bold text-emerald-400">
+                      <%= tw.bonusGiven > 0 ? (tw.bonusGiven.toFixed(2) + ' €') : '-' %>
+                    </td>
+                    <td class="py-3 px-3 text-slate-400 text-[11px]">
+                      <%= tw.notes || '-' %>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                      <form action="/intervenimet/<%= intervention.id %>/workers/<%= tw.id %>/fshi" method="POST" onsubmit="return confirm('A jeni të sigurt që dëshironi ta hiqni këtë punëtor nga ky intervenim?');">
+                        <button type="submit" title="Hiq nga Ekipi" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-slate-500 text-xs">
+                    Nuk ka ende monterë të regjistruar për këtë intervenim.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Raporti i Punimeve të Kryera & Materialet -->
+      <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
+        <h2 class="text-base font-bold text-slate-100 font-mono border-b border-slate-800 pb-2">
+          Raporti Teknik & Punimet e Realizuara
+        </h2>
+
+        <div class="space-y-3">
+          <div>
+            <span class="font-bold text-amber-400 uppercase tracking-wider block text-[11px] mb-1">Përshkrimi i Punëve nga Ekipi:</span>
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-slate-200 leading-relaxed whitespace-pre-line">
+              <%= intervention.workDescription || 'Nuk është shkruar përshkrim i hollësishëm.' %>
+            </div>
+          </div>
+
+          <div>
+            <span class="font-bold text-slate-400 uppercase tracking-wider block text-[11px] mb-1">Pjesët / Materialet e Vendosura ose të Ndërruara:</span>
+            <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 text-slate-300 font-mono">
+              <%= intervention.partsReplaced || 'Nuk ka pjesë të ndërruara.' %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right 1 Col: MENAXHERI, PROJEKTI, NËNSHKRIMI -->
+    <div class="space-y-6">
+      
+      <!-- Menaxheri i Projektit -->
+      <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3 text-xs">
+        <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider border-b border-slate-800 pb-2">
+          Menaxheri Përgjegjës
+        </h3>
+        <div>
+          <span class="text-[10px] text-slate-500 block uppercase">Menaxheri i Caktuar:</span>
+          <span class="text-sm font-bold text-cyan-400 block"><%= intervention.projectManager ? intervention.projectManager.fullName : 'Pa Menaxher të Veçantë' %></span>
+          <% if (intervention.projectManager && intervention.projectManager.email) { %>
+            <span class="text-[11px] text-slate-400 font-mono"><%= intervention.projectManager.email %></span>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Projekti & Ashensori -->
+      <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3 text-xs">
+        <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider border-b border-slate-800 pb-2">
+          Projekti & Ashensori
+        </h3>
+        
+        <div class="space-y-2">
+          <% if (intervention.project) { %>
+            <div>
+              <span class="text-[10px] text-slate-500 block uppercase">Projekti:</span>
+              <a href="/projektet/<%= intervention.project.id %>" class="font-bold text-amber-400 hover:underline">
+                <%= intervention.project.name %> (<%= intervention.project.number %>)
+              </a>
+            </div>
+          <% } %>
+
+          <% if (intervention.elevatorSerialNumber) { %>
+            <div>
+              <span class="text-[10px] text-slate-500 block uppercase">Numri Serik (SN):</span>
+              <span class="font-mono font-bold text-slate-200"><%= intervention.elevatorSerialNumber %></span>
+            </div>
+          <% } %>
+
+          <div>
+            <span class="text-[10px] text-slate-500 block uppercase">Pranuesi në Objekt (Klienti):</span>
+            <span class="text-slate-200 font-semibold"><%= intervention.clientSignee || 'I pa nënshkruar' %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shënime -->
+      <% if (intervention.notes) { %>
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl text-xs">
+          <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider mb-2">Shënime Shtesë</h3>
+          <p class="text-slate-400 leading-relaxed whitespace-pre-line"><%= intervention.notes %></p>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Shto Monter në Ekipin e Intervenimit -->
+<div id="modal-shto-monter-intervenim" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+        Shto Monter në Ekipin e Intervenimit
+      </h3>
+      <button type="button" onclick="document.getElementById('modal-shto-monter-intervenim').classList.add('hidden')" class="text-slate-400 hover:text-slate-200">
+        ✕
+      </button>
+    </div>
+
+    <form action="/intervenimet/<%= intervention.id %>/workers" method="POST" class="space-y-3.5 text-xs">
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Përzgjidh Punëtorin / Monterin *</label>
+        <select name="employeeId" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+          <option value="">-- Zgjidh Punëtorin --</option>
+          <% if (typeof availableEmployees !== 'undefined' && availableEmployees) { %>
+            <% availableEmployees.forEach(e => { %>
+              <option value="<%= e.id %>"><%= e.firstName %> <%= e.lastName %> (<%= e.code %>) - <%= e.position %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Roli në Ndërhyrje *</label>
+        <select name="roleInTeam" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+          <option value="Kryemonter">Kryemonter</option>
+          <option value="Monter" selected>Monter</option>
+          <option value="Elektricist">Elektricist</option>
+          <option value="Teknik Servisi">Teknik Servisi</option>
+          <option value="Ndihmës">Ndihmës</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Mëditje Kesh (€)</label>
+          <input type="number" step="0.01" min="0" name="cashGiven" placeholder="0.00 €" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Bonus (€)</label>
+          <input type="number" step="0.01" min="0" name="bonusGiven" placeholder="0.00 €" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-400">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Shënime</label>
+        <textarea name="notes" rows="2" placeholder="Shënime mbi punët..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="document.getElementById('modal-shto-monter-intervenim').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">
+          Anulo
+        </button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20">
+          Shto në Ekip
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

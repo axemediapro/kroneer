@@ -27,6 +27,8 @@ const ReportController = require('../controllers/reportController');
 const SearchController = require('../controllers/searchController');
 const SettingsController = require('../controllers/settingsController');
 const EmployeeController = require('../controllers/employeeController');
+const InterventionController = require('../controllers/interventionController');
+const ManagerDashboardController = require('../controllers/managerDashboardController');
 
 // 1. Autentifikimi
 router.get('/kycu', AuthController.getLogin);
@@ -42,8 +44,14 @@ router.get('/', (req, res) => {
   }
 });
 
-// 2. Paneli Kryesor (Dashboard)
-router.get('/paneli', isAuthenticated, DashboardController.getIndex);
+// 2. Paneli Kryesor (Dashboard) & Paneli i Menaxherit
+router.get('/paneli', isAuthenticated, (req, res, next) => {
+  if (req.session.user && req.session.user.role === 'MENAXHER_PROJEKTI') {
+    return res.redirect('/menaxheri');
+  }
+  return DashboardController.getIndex(req, res, next);
+});
+router.get('/menaxheri', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ManagerDashboardController.getIndex);
 router.post('/paneli/logo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), uploadLogo.single('logo'), SettingsController.postUploadLogo);
 router.post('/paneli/logo/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), SettingsController.postDeleteLogo);
 router.post('/paneli/vula', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE', 'FINANCE', 'MENAXHER_PROJEKTI'), uploadStamp.single('stamp'), SettingsController.postUploadStamp);
@@ -135,12 +143,25 @@ router.post('/shpenzimet/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINIST
 router.post('/shpenzimet/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'FINANCE'), ExpenseController.postDelete);
 router.get('/shpenzimet/:id/print', isAuthenticated, ExpenseController.getPrint);
 
-// 10. Projektet
+// 10. Projektet & Ekipet
 router.get('/projektet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), ProjectController.getIndex);
 router.get('/projektet/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ProjectController.getCreate);
 router.post('/projektet/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ProjectController.postCreate);
 router.get('/projektet/:id', isAuthenticated, ProjectController.getDetail);
 router.post('/projektet/:id/faza', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ProjectController.postUpdateStage);
+router.post('/projektet/:id/ekipi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ProjectController.postAddTeamMember);
+router.post('/projektet/:id/ekipi/:memberId/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), ProjectController.postRemoveTeamMember);
+router.post('/projektet/:id/menaxheri', isAuthenticated, authorizeRoles('ADMINISTRATOR'), ProjectController.postUpdateProjectManager);
+
+// 10.1 Intervenimet në Terren & Ekipet
+router.get('/intervenimet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), InterventionController.getIndex);
+router.get('/intervenimet/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), InterventionController.getCreate);
+router.post('/intervenimet/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), InterventionController.postCreate);
+router.get('/intervenimet/:id/print', isAuthenticated, InterventionController.getPrint);
+router.get('/intervenimet/:id', isAuthenticated, InterventionController.getDetail);
+router.post('/intervenimet/:id/status', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), InterventionController.postUpdateStatus);
+router.post('/intervenimet/:id/workers', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), InterventionController.postAddWorker);
+router.post('/intervenimet/:id/workers/:workerId/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), InterventionController.postRemoveWorker);
 
 // 11. Qendra e Instalimeve
 router.get('/instalimet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'TEKNIK'), InstallationController.getIndex);
@@ -188,6 +209,10 @@ router.post('/dokumentet/krijo', isAuthenticated, DocumentController.postCreate)
 router.get('/puntoret', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), EmployeeController.getIndex);
 router.get('/puntoret/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.getCreate);
 router.post('/puntoret/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postCreate);
+router.get('/puntoret/financat/kesh-bonuse', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), EmployeeController.getCashAndBonusesOverview);
+router.post('/puntoret/transaksionet', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), EmployeeController.postAddTransaction);
+router.post('/puntoret/transaksionet/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), EmployeeController.postDeleteTransaction);
+router.get('/puntoret/transaksionet/:id/print', isAuthenticated, EmployeeController.getTransactionReceipt);
 router.get('/puntoret/:id', isAuthenticated, EmployeeController.getDetail);
 router.get('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.getEdit);
 router.post('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postEdit);

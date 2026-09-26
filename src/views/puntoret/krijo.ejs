@@ -97,6 +97,18 @@
           <% }); %>
         </select>
       </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Menaxheri i Ekipit / Përgjegjësi</label>
+        <select name="managerId" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="">-- Pa menaxher të veçantë (Staf Qendror) --</option>
+          <% if (typeof managers !== 'undefined' && managers) { %>
+            <% managers.forEach(m => { %>
+              <option value="<%= m.id %>"><%= m.fullName %> (<%= m.role %>)</option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
     </div>
   </div>
 

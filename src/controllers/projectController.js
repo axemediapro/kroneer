@@ -5,27 +5,48 @@ const ActivityService = require('../services/activityService');
 class ProjectController {
   static async getIndex(req, res) {
     try {
-      const { stage, search } = req.query;
+      const { stage, search, managerId } = req.query;
+      const user = req.session.user;
+
       const where = {};
+
+      // Nëse është Menaxher Projekti dhe vjen me filter ose dëshiron projektet e veta
+      if (managerId && managerId !== 'te-gjitha') {
+        where.projectManagerId = parseInt(managerId);
+      } else if (user && user.role === 'MENAXHER_PROJEKTI' && !req.query.all) {
+        // Default për menaxherin e projektit: shfaq projektet e tij
+        where.projectManagerId = user.id;
+      }
 
       if (stage) where.stage = stage;
       if (search) {
         where.OR = [
-          { number: { contains: search } },
-          { name: { contains: search } },
-          { customer: { companyName: { contains: search } } }
+          { number: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+          { customer: { companyName: { contains: search, mode: 'insensitive' } } }
         ];
       }
 
-      const projects = await prisma.project.findMany({
-        where,
-        include: {
-          customer: true,
-          installations: true,
-          contract: true
-        },
-        orderBy: { createdAt: 'desc' }
-      });
+      const [projects, managers] = await Promise.all([
+        prisma.project.findMany({
+          where,
+          include: {
+            customer: true,
+            projectManager: true,
+            teamMembers: {
+              include: { employee: true }
+            },
+            interventions: true,
+            installations: true,
+            contract: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.user.findMany({
+          where: { isActive: true, role: { in: ['MENAXHER_PROJEKTI', 'ADMINISTRATOR'] } },
+          orderBy: { fullName: 'asc' }
+        })
+      ]);
 
       const stages = [
         'Planifikim',
@@ -40,10 +61,15 @@ class ProjectController {
       ];
 
       res.render('projektet/index', {
-        pageTitle: 'Projektet - KRONEER',
+        pageTitle: 'Projektet & Ekipet - KRONEER',
         projects,
+        managers,
         stages,
-        filters: { stage: stage || '', search: search || '' }
+        filters: {
+          stage: stage || '',
+          search: search || '',
+          managerId: managerId || (user && user.role === 'MENAXHER_PROJEKTI' && !req.query.all ? String(user.id) : 'te-gjitha')
+        }
       });
     } catch (err) {
       console.error('Gabim në ngarkimin e projekteve:', err);
@@ -54,12 +80,24 @@ class ProjectController {
 
   static async getCreate(req, res) {
     try {
-      const customers = await prisma.customer.findMany({ orderBy: { companyName: 'asc' } });
-      const nextNumber = await NumberService.getNextNumber('project');
+      const [customers, managers, employees, nextNumber] = await Promise.all([
+        prisma.customer.findMany({ orderBy: { companyName: 'asc' } }),
+        prisma.user.findMany({
+          where: { isActive: true, role: { in: ['MENAXHER_PROJEKTI', 'ADMINISTRATOR'] } },
+          orderBy: { fullName: 'asc' }
+        }),
+        prisma.employee.findMany({
+          where: { status: 'Aktiv' },
+          orderBy: { firstName: 'asc' }
+        }),
+        NumberService.getNextNumber('project')
+      ]);
 
       res.render('projektet/krijo', {
         pageTitle: 'Hap Projekt të Ri - KRONEER',
         customers,
+        managers,
+        employees,
         nextNumber
       });
     } catch (err) {
@@ -70,14 +108,20 @@ class ProjectController {
 
   static async postCreate(req, res) {
     try {
-      const { name, customerId, elevatorCount, floorsCount, value, stage, startDate, targetCompletionDate, notes } = req.body;
+      const {
+        name, customerId, elevatorCount, floorsCount, value, stage,
+        startDate, targetCompletionDate, notes, projectManagerId, teamMembers
+      } = req.body;
+
       const number = await NumberService.getNextNumber('project');
+      const pmId = projectManagerId ? parseInt(projectManagerId) : (req.session.user?.role === 'MENAXHER_PROJEKTI' ? req.session.user.id : null);
 
       const project = await prisma.project.create({
         data: {
           number,
           name: name.trim(),
           customerId: parseInt(customerId),
+          projectManagerId: pmId,
           elevatorCount: parseInt(elevatorCount) || 1,
           floorsCount: parseInt(floorsCount) || 5,
           value: parseFloat(value) || 0,
@@ -88,13 +132,29 @@ class ProjectController {
         }
       });
 
+      // Shtimi i punëtorëve fillestarë në ekip
+      if (teamMembers) {
+        const memberIds = Array.isArray(teamMembers) ? teamMembers : [teamMembers];
+        for (const empId of memberIds) {
+          if (empId) {
+            await prisma.projectMember.create({
+              data: {
+                projectId: project.id,
+                employeeId: parseInt(empId),
+                roleInProject: 'Monter / Teknik'
+              }
+            }).catch(() => {});
+          }
+        }
+      }
+
       await ActivityService.log({
         userId: req.session.user?.id,
         userName: req.session.user?.fullName,
         actionType: 'Krijuar',
         entityType: 'Projekt',
         entityId: project.id,
-        description: `U hap projekti i ri "${project.name}" (${project.number}).`
+        description: `U hap projekti i ri "${project.name}" (${project.number}) me menaxher të caktuar.`
       });
 
       req.flash('success', `Projekti ${project.number} u hap me sukses.`);
@@ -109,24 +169,54 @@ class ProjectController {
   static async getDetail(req, res) {
     try {
       const id = parseInt(req.params.id);
-      const project = await prisma.project.findUnique({
-        where: { id },
-        include: {
-          customer: true,
-          contract: true,
-          installations: {
-            include: { checklistItems: true, technician: true }
-          },
-          handovers: true,
-          payments: true,
-          documents: true
-        }
-      });
+      const [project, allEmployees, managers] = await Promise.all([
+        prisma.project.findUnique({
+          where: { id },
+          include: {
+            customer: true,
+            contract: true,
+            projectManager: true,
+            teamMembers: {
+              include: { employee: true },
+              orderBy: { id: 'asc' }
+            },
+            interventions: {
+              include: {
+                teamWorkers: { include: { employee: true } },
+                projectManager: true
+              },
+              orderBy: { date: 'desc' }
+            },
+            installations: {
+              include: { checklistItems: true, technician: true }
+            },
+            handovers: true,
+            payments: true,
+            documents: true,
+            employeeTransactions: {
+              include: { employee: true },
+              orderBy: { date: 'desc' }
+            }
+          }
+        }),
+        prisma.employee.findMany({
+          where: { status: 'Aktiv' },
+          orderBy: { firstName: 'asc' }
+        }),
+        prisma.user.findMany({
+          where: { isActive: true, role: { in: ['MENAXHER_PROJEKTI', 'ADMINISTRATOR'] } },
+          orderBy: { fullName: 'asc' }
+        })
+      ]);
 
       if (!project) {
         req.flash('error', 'Projekti nuk u gjet.');
         return res.redirect('/projektet');
       }
+
+      // Filtro punëtorët që nuk janë ende në ekipin e këtij projekti
+      const assignedEmployeeIds = project.teamMembers.map(tm => tm.employeeId);
+      const availableEmployees = allEmployees.filter(e => !assignedEmployeeIds.includes(e.id));
 
       const stages = [
         'Planifikim',
@@ -143,6 +233,8 @@ class ProjectController {
       res.render('projektet/detajet', {
         pageTitle: `${project.name} (${project.number}) - KRONEER`,
         project,
+        availableEmployees,
+        managers,
         stages
       });
     } catch (err) {
@@ -178,6 +270,95 @@ class ProjectController {
     } catch (err) {
       console.error(err);
       res.redirect('/projektet');
+    }
+  }
+
+  // Shto anëtar në ekipin e projektit
+  static async postAddTeamMember(req, res) {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { employeeId, roleInProject, notes } = req.body;
+
+      if (!employeeId) {
+        req.flash('error', 'Ju lutem përzgjidhni punëtorin.');
+        return res.redirect(`/projektet/${projectId}`);
+      }
+
+      await prisma.projectMember.create({
+        data: {
+          projectId,
+          employeeId: parseInt(employeeId),
+          roleInProject: roleInProject || 'Monter / Teknik',
+          notes: notes ? notes.trim() : null
+        }
+      });
+
+      const emp = await prisma.employee.findUnique({ where: { id: parseInt(employeeId) } });
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Ndryshuar',
+        entityType: 'Projekt',
+        entityId: projectId,
+        description: `${emp?.firstName} ${emp?.lastName} u caktua në ekipin e projektit si "${roleInProject || 'Monter'}".`
+      });
+
+      req.flash('success', `Punëtori ${emp?.firstName} ${emp?.lastName} u shtua në ekipin e projektit!`);
+      res.redirect(`/projektet/${projectId}`);
+    } catch (err) {
+      console.error('Gabim në shtimin e anëtarit të ekipit:', err);
+      req.flash('error', 'Punëtori tashmë është në këtë ekip ose ndodhi një gabim.');
+      res.redirect(`/projektet/${req.params.id}`);
+    }
+  }
+
+  // Heq anëtar nga ekipi i projektit
+  static async postRemoveTeamMember(req, res) {
+    try {
+      const projectId = parseInt(req.params.id);
+      const memberId = parseInt(req.params.memberId);
+
+      await prisma.projectMember.delete({
+        where: { id: memberId }
+      });
+
+      req.flash('success', 'Anëtari u hoq nga ekipi i projektit.');
+      res.redirect(`/projektet/${projectId}`);
+    } catch (err) {
+      console.error('Gabim në heqjen e anëtarit të ekipit:', err);
+      req.flash('error', 'Nuk u arrit të hiqet anëtari.');
+      res.redirect(`/projektet/${req.params.id}`);
+    }
+  }
+
+  // Ndrysho Menaxherin e Projektit
+  static async postUpdateProjectManager(req, res) {
+    try {
+      const id = parseInt(req.params.id);
+      const { projectManagerId } = req.body;
+
+      const project = await prisma.project.update({
+        where: { id },
+        data: {
+          projectManagerId: projectManagerId ? parseInt(projectManagerId) : null
+        },
+        include: { projectManager: true }
+      });
+
+      await ActivityService.log({
+        userId: req.session.user?.id,
+        userName: req.session.user?.fullName,
+        actionType: 'Ndryshuar',
+        entityType: 'Projekt',
+        entityId: id,
+        description: `Menaxheri i projektit "${project.name}" u përcaktua: ${project.projectManager?.fullName || 'Pa menaxher'}.`
+      });
+
+      req.flash('success', 'Menaxheri i projektit u përditësua me sukses.');
+      res.redirect(`/projektet/${id}`);
+    } catch (err) {
+      console.error(err);
+      res.redirect(`/projektet/${req.params.id}`);
     }
   }
 }

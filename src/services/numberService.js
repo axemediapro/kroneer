@@ -67,6 +67,18 @@ class NumberService {
         prefix = `KR-SN-${year}-`;
         count = await prisma.installation.count();
         break;
+      case 'employee_cash':
+        prefix = `KR-KESH-${year}-`;
+        count = await prisma.employeeTransaction.count({ where: { type: { in: ['KESH_AVANC', 'PAGESE_KESH'] } } });
+        break;
+      case 'employee_bonus':
+        prefix = `KR-BON-${year}-`;
+        count = await prisma.employeeTransaction.count({ where: { type: 'BONUS' } });
+        break;
+      case 'intervention':
+        prefix = `KR-INT-${year}-`;
+        count = await prisma.intervention.count();
+        break;
       default:
         prefix = `KR-DOC-${year}-`;
         count = 1;

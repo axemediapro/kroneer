@@ -30,6 +30,9 @@ model User {
   maintenanceContracts MaintenanceContract[]
   expenses            Expense[]
   employee            Employee?
+  managedProjects     Project[]             @relation("ProjectManagerProjects")
+  managedInterventions Intervention[]       @relation("ProjectManagerInterventions")
+  managedEmployees    Employee[]            @relation("ManagerEmployees")
 }
 
 model Customer {
@@ -471,11 +474,16 @@ model Project {
 
   customer             Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
   contract             Contract?      @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  projectManagerId     Int?
+  projectManager       User?          @relation("ProjectManagerProjects", fields: [projectManagerId], references: [id], onDelete: SetNull)
   installations        Installation[]
   handovers            Handover[]
   payments             Payment[]
   documents            Document[]
   expenses             Expense[]
+  teamMembers          ProjectMember[]
+  interventions        Intervention[]
+  employeeTransactions EmployeeTransaction[]
 }
 
 model Installation {
@@ -765,7 +773,13 @@ model Employee {
   userId         Int?         @unique
   user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  attendances    Attendance[]
+  managerId      Int?
+  manager        User?        @relation("ManagerEmployees", fields: [managerId], references: [id], onDelete: SetNull)
+
+  attendances            Attendance[]
+  transactions           EmployeeTransaction[]
+  projectMemberships     ProjectMember[]
+  interventionAssignments InterventionWorker[]
   
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -796,5 +810,99 @@ model Attendance {
   
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+}
+
+model EmployeeTransaction {
+  id            Int       @id @default(autoincrement())
+  number        String    @unique // KR-KESH-2026-0001 ose KR-BON-2026-0001
+  employeeId    Int
+  type          String    // "KESH_AVANC", "PAGESE_KESH", "BONUS", "PAGA_BAZE", "ZBRITJE"
+  category      String?   // "Avancë Terreni", "Bonus Projekti", "Bonus Montimi", "Bonus Vjetor", "Shpërblim", "Kompensim Shpenzimi"
+  amount        Float     @default(0)
+  currency      String    @default("EUR")
+  date          DateTime  @default(now())
+  title         String
+  notes         String?
+  status        String    @default("Paguar") // "Paguar", "Në Pritje", "Aprovuar", "Anuluar"
+  paymentMethod String    @default("Para në dorë (Cash)") // Para në dorë (Cash), Transfertë Bankare
+  
+  projectId      Int?
+  interventionId Int?
+  recordedBy     String?   // Emri i Menaxherit ose Adminit që e regjistroi
+  
+  employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  project       Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  intervention  Intervention? @relation(fields: [interventionId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model ProjectMember {
+  id            Int       @id @default(autoincrement())
+  projectId     Int
+  employeeId    Int
+  roleInProject String    @default("Monter") // "Kryemonter", "Teknik Montimi", "Elektricist", "Ndihmës", "Inxhinier"
+  assignedAt    DateTime  @default(now())
+  notes         String?
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+}
+
+model Intervention {
+  id                   Int       @id @default(autoincrement())
+  number               String    @unique // KR-INT-2026-0001
+  title                String
+  type                 String    @default("Montim & Instalim") // "Montim & Instalim", "Mirëmbajtje Periodike", "Servis Urgjent", "Riparim & Pjesë", "Testim & Kalibrim", "Inspektim Teknik"
+  priority             String    @default("Normal") // "Normal", "I Lartë", "Urgjent", "Kritik"
+  
+  projectId            Int?
+  installationId       Int?
+  customerId           Int?
+  
+  elevatorModel        String?
+  elevatorSerialNumber String?
+  location             String?
+  
+  date                 DateTime  @default(now())
+  startTime            String?   // p.sh. "09:00"
+  endTime              String?   // p.sh. "14:30"
+  durationHours        Float?    @default(0)
+  
+  projectManagerId     Int?
+  projectManager       User?     @relation("ProjectManagerInterventions", fields: [projectManagerId], references: [id], onDelete: SetNull)
+  teamLeadName         String?   // Emri i kryemonterit / udhëheqësit të ekipit
+  
+  status               String    @default("Në Proces") // "Planifikuar", "Në Proces", "Përfunduar", "Anuluar"
+  workDescription      String?   // Çfarë pune është kryer saktësisht
+  partsReplaced        String?   // Pjesët / materialet e vendosura ose ndërruara
+  clientSignee         String?   // Emri i personit pranues në objekt
+  notes                String?
+  
+  project              Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  teamWorkers          InterventionWorker[]
+  transactions         EmployeeTransaction[]
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model InterventionWorker {
+  id             Int          @id @default(autoincrement())
+  interventionId Int
+  employeeId     Int
+  roleInTeam     String       @default("Monter") // "Kryemonter", "Teknik", "Elektricist", "Ndihmës"
+  hoursSpent     Float        @default(0)
+  cashGiven      Float        @default(0) // Kesh i dhënë për mëditje/shpenzime
+  bonusGiven     Float        @default(0) // Bonus për këtë ndërhyrje
+  notes          String?
+
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([interventionId, employeeId])
 }
 
