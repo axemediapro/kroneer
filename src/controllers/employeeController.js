@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
@@ -14,8 +15,19 @@ class EmployeeController {
   static async getIndex(req, res) {
     try {
       const { kerko, departamenti, statusi } = req.query;
-
       const where = {};
+
+      const user = req.session.user;
+      let currentEmp = null;
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        currentEmp = await prisma.employee.findFirst({ where: { userId: user.id } });
+        where.OR = [
+          { managerId: currentEmp ? currentEmp.id : -1 },
+          { id: currentEmp ? currentEmp.id : -1 },
+          { projectMemberships: { some: { project: { projectManagerId: user.id } } } }
+        ];
+      }
+
       if (statusi && statusi !== 'te-gjitha') {
         where.status = statusi;
       }
@@ -24,7 +36,7 @@ class EmployeeController {
       }
       if (kerko && kerko.trim()) {
         const q = kerko.trim();
-        where.OR = [
+        const searchConditions = [
           { firstName: { contains: q, mode: 'insensitive' } },
           { lastName: { contains: q, mode: 'insensitive' } },
           { code: { contains: q, mode: 'insensitive' } },
@@ -32,6 +44,15 @@ class EmployeeController {
           { phone: { contains: q, mode: 'insensitive' } },
           { email: { contains: q, mode: 'insensitive' } }
         ];
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { OR: searchConditions }
+          ];
+          delete where.OR;
+        } else {
+          where.OR = searchConditions;
+        }
       }
 
       const [employees, allEmployeesCount, todayAttendances] = await Promise.all([
@@ -162,12 +183,57 @@ class EmployeeController {
         firstName, lastName, personalNumber, email, phone,
         position, department, status,
         shiftStart, shiftEnd, breakMinutes,
-        hourlyRate, monthlySalary, hireDate, notes, userId, managerId
+        hourlyRate, monthlySalary, hireDate, notes, userId, managerId,
+        createAccount, accountUsername, accountPassword, accountRole
       } = req.body;
 
       if (!firstName || !lastName || !position) {
         req.flash('error', 'Ju lutem plotësoni fushat e detyrueshme (Emri, Mbiemri, Pozita).');
         return res.redirect('/puntoret/krijo');
+      }
+
+      let assignedUserId = userId ? parseInt(userId) : null;
+
+      // Nëse është aktivizuar krijimi i llogarisë së kyçjes ose është plotësuar username
+      if (createAccount === 'true' || createAccount === 'on' || createAccount === '1' || (accountUsername && accountUsername.trim())) {
+        const cleanUname = accountUsername && accountUsername.trim()
+          ? accountUsername.trim().toLowerCase()
+          : `${firstName.trim().toLowerCase()}.${lastName.trim().toLowerCase().replace(/\s+/g, '')}`;
+        const cleanPass = accountPassword && accountPassword.trim() ? accountPassword.trim() : 'kroneer123';
+        const cleanEmail = (email && email.trim()) ? email.trim() : `${cleanUname}@kroneer-lifts.com`;
+        const cleanRole = accountRole || (position.toLowerCase().includes('menaxher') ? 'MENAXHER_PROJEKTI' : 'TEKNIK');
+
+        // Kontrollo nëse username ose email ekziston tashmë
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: { equals: cleanUname, mode: 'insensitive' } },
+              { email: { equals: cleanEmail, mode: 'insensitive' } }
+            ]
+          }
+        });
+
+        if (existingUser) {
+          req.flash('error', `Përdoruesi me username "${cleanUname}" ose email "${cleanEmail}" ekziston tashmë.`);
+          return res.redirect('/puntoret/krijo');
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(cleanPass, salt);
+
+        const newUser = await prisma.user.create({
+          data: {
+            username: cleanUname,
+            passwordHash,
+            fullName: `${firstName.trim()} ${lastName.trim()}`,
+            email: cleanEmail,
+            role: cleanRole,
+            phone: phone ? phone.trim() : null,
+            isActive: true
+          }
+        });
+
+        assignedUserId = newUser.id;
       }
 
       const code = await NumberService.getNextNumber('employee');
@@ -190,7 +256,7 @@ class EmployeeController {
           monthlySalary: parseFloat(monthlySalary) || 0,
           hireDate: hireDate ? new Date(hireDate) : new Date(),
           notes: notes ? notes.trim() : null,
-          userId: userId ? parseInt(userId) : null,
+          userId: assignedUserId,
           managerId: managerId ? parseInt(managerId) : null
         }
       });
@@ -210,6 +276,89 @@ class EmployeeController {
       console.error('Gabim në ruajtjen e puntorit:', err);
       req.flash('error', 'Ndodhi një gabim gjatë ruajtjes së puntorit.');
       res.redirect('/puntoret/krijo');
+    }
+  }
+
+  // 3.1 Menaxhimi / Krijimi i Llogarisë së Kyçjes për Punonjësin
+  static async postManageAccount(req, res) {
+    try {
+      const id = parseInt(req.params.id);
+      const { username, password, role, email } = req.body;
+
+      const employee = await prisma.employee.findUnique({
+        where: { id },
+        include: { user: true }
+      });
+
+      if (!employee) {
+        req.flash('error', 'Punonjësi nuk u gjet.');
+        return res.redirect('/puntoret');
+      }
+
+      const accRole = role || (employee.position.toLowerCase().includes('menaxher') ? 'MENAXHER_PROJEKTI' : 'TEKNIK');
+
+      if (employee.user) {
+        const updateData = { role: accRole };
+        if (username && username.trim()) updateData.username = username.trim();
+        if (email && email.trim()) updateData.email = email.trim();
+        if (password && password.trim().length >= 4) {
+          const salt = await bcrypt.genSalt(10);
+          updateData.passwordHash = await bcrypt.hash(password.trim(), salt);
+        }
+
+        await prisma.user.update({
+          where: { id: employee.user.id },
+          data: updateData
+        });
+
+        req.flash('success', `Llogaria e ${employee.firstName} ${employee.lastName} u përditësua me sukses.`);
+      } else {
+        const cleanUsername = username ? username.trim() : `${employee.firstName.toLowerCase()}.${employee.lastName.toLowerCase().replace(/\s+/g, '')}`;
+        const cleanPassword = password && password.trim() ? password.trim() : 'kroneer123';
+        const cleanEmail = (email && email.trim()) || employee.email || `${cleanUsername}@kroneer-lifts.com`;
+
+        const existing = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: { equals: cleanUsername, mode: 'insensitive' } },
+              { email: { equals: cleanEmail, mode: 'insensitive' } }
+            ]
+          }
+        });
+
+        if (existing) {
+          req.flash('error', `Username "${cleanUsername}" ose email "${cleanEmail}" është i zënë.`);
+          return res.redirect(`/puntoret/${id}`);
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(cleanPassword, salt);
+
+        const newUser = await prisma.user.create({
+          data: {
+            username: cleanUsername,
+            passwordHash,
+            fullName: `${employee.firstName} ${employee.lastName}`,
+            email: cleanEmail,
+            role: accRole,
+            phone: employee.phone,
+            isActive: true
+          }
+        });
+
+        await prisma.employee.update({
+          where: { id },
+          data: { userId: newUser.id }
+        });
+
+        req.flash('success', `Llogaria e kyçjes për ${employee.firstName} ${employee.lastName} u krijua me sukses (@${cleanUsername} - ${accRole}).`);
+      }
+
+      res.redirect(`/puntoret/${id}`);
+    } catch (err) {
+      console.error('Gabim në menaxhimin e llogarisë së punonjësit:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë krijimit/përditësimit të llogarisë.');
+      res.redirect(`/puntoret/${req.params.id}`);
     }
   }
 
@@ -279,6 +428,18 @@ class EmployeeController {
       if (!employee) {
         req.flash('error', 'Puntori nuk u gjet.');
         return res.redirect('/puntoret');
+      }
+
+      // Verifikim i autorizimit për Menaxherin e Projektit
+      if (req.session.user && req.session.user.role === 'MENAXHER_PROJEKTI') {
+        const currentEmp = await prisma.employee.findFirst({ where: { userId: req.session.user.id } });
+        const isSelf = currentEmp && currentEmp.id === employee.id;
+        const isSupervised = currentEmp && employee.managerId === currentEmp.id;
+        const isProjectMember = employee.projectMemberships && employee.projectMemberships.some(pm => pm.project && pm.project.projectManagerId === req.session.user.id);
+        if (!isSelf && !isSupervised && !isProjectMember) {
+          req.flash('error', 'Nuk keni autorizim për të parë këtë punëtor. Mund të menaxhoni vetëm ekipin tuaj.');
+          return res.redirect('/puntoret');
+        }
       }
 
       // Regjistrimi i sotëm
@@ -1173,8 +1334,24 @@ class EmployeeController {
   static async getCashAndBonusesOverview(req, res) {
     try {
       const { tipi, puntoriId, muaji, viti } = req.query;
+      const user = req.session.user;
 
       const where = {};
+      let currentEmp = null;
+      let empWhere = { status: 'Aktiv' };
+
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        currentEmp = await prisma.employee.findFirst({ where: { userId: user.id } });
+        empWhere = {
+          OR: [
+            { managerId: currentEmp ? currentEmp.id : -1 },
+            { id: currentEmp ? currentEmp.id : -1 },
+            { projectMemberships: { some: { project: { projectManagerId: user.id } } } }
+          ]
+        };
+        where.employee = empWhere;
+      }
+
       if (tipi && tipi !== 'te-gjitha') {
         where.type = tipi;
       }
@@ -1193,11 +1370,13 @@ class EmployeeController {
           orderBy: { date: 'desc' }
         }),
         prisma.employee.findMany({
-          where: { status: 'Aktiv' },
+          where: empWhere,
           orderBy: { firstName: 'asc' }
         }),
         prisma.project.findMany({
-          where: { stage: { not: 'Përfunduar' } },
+          where: user && user.role === 'MENAXHER_PROJEKTI' 
+            ? { stage: { not: 'Përfunduar' }, projectManagerId: user.id }
+            : { stage: { not: 'Përfunduar' } },
           orderBy: { name: 'asc' }
         })
       ]);
@@ -1236,6 +1415,115 @@ class EmployeeController {
       console.error('Gabim në ngarkimin e pasqyrës së keshit & bonuseve:', err);
       req.flash('error', 'Ndodhi një gabim gjatë ngarkimit.');
       res.redirect('/puntoret');
+    }
+  }
+
+  // 17. Krijimi / Përditësimi i Llogarisë së Kyçjes për Punonjësin
+  static async postManageAccount(req, res) {
+    const id = parseInt(req.params.id);
+    try {
+      const { username, email, password, role } = req.body;
+
+      const employee = await prisma.employee.findUnique({
+        where: { id },
+        include: { user: true }
+      });
+
+      if (!employee) {
+        req.flash('error', 'Punëtori nuk u gjet.');
+        return res.redirect('/puntoret');
+      }
+
+      const cleanUname = username ? username.trim().toLowerCase() : '';
+      const cleanEmail = email ? email.trim() : null;
+      const cleanRole = role || 'TEKNIK';
+
+      if (!cleanUname) {
+        req.flash('error', 'Username është i detyrueshëm për llogarinë.');
+        return res.redirect(`/puntoret/${id}`);
+      }
+
+      // Kontrollo nëse username është i zënë nga një user tjetër
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          username: { equals: cleanUname, mode: 'insensitive' },
+          ...(employee.userId ? { id: { not: employee.userId } } : {})
+        }
+      });
+
+      if (existingUser) {
+        req.flash('error', `Username "${cleanUname}" është i zënë nga një përdorues tjetër.`);
+        return res.redirect(`/puntoret/${id}`);
+      }
+
+      if (employee.userId && employee.user) {
+        // Përditëso llogarinë ekzistuese
+        const updateData = {
+          username: cleanUname,
+          email: cleanEmail,
+          role: cleanRole
+        };
+
+        if (password && password.trim().length >= 4) {
+          const salt = await bcrypt.genSalt(10);
+          updateData.passwordHash = await bcrypt.hash(password.trim(), salt);
+        }
+
+        await prisma.user.update({
+          where: { id: employee.userId },
+          data: updateData
+        });
+
+        await ActivityService.log({
+          userId: req.session.user?.id,
+          userName: req.session.user?.fullName,
+          actionType: 'Përditësuar',
+          entityType: 'Llogari Përdoruesi',
+          entityId: employee.userId,
+          description: `U përditësua llogaria e kyçjes @${cleanUname} për punonjësin ${employee.firstName} ${employee.lastName}.`
+        });
+
+        req.flash('success', `Llogaria @${cleanUname} u përditësua me sukses!`);
+      } else {
+        // Krijo llogari të re
+        const passToHash = (password && password.trim()) ? password.trim() : 'kroneer123';
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(passToHash, salt);
+
+        const newUser = await prisma.user.create({
+          data: {
+            username: cleanUname,
+            passwordHash,
+            fullName: `${employee.firstName} ${employee.lastName}`,
+            email: cleanEmail || `${cleanUname}@kroneer-lifts.com`,
+            role: cleanRole,
+            phone: employee.phone || null,
+            isActive: true
+          }
+        });
+
+        await prisma.employee.update({
+          where: { id },
+          data: { userId: newUser.id }
+        });
+
+        await ActivityService.log({
+          userId: req.session.user?.id,
+          userName: req.session.user?.fullName,
+          actionType: 'Krijuar',
+          entityType: 'Llogari Përdoruesi',
+          entityId: newUser.id,
+          description: `U krijua llogari e re kyçjeje @${cleanUname} (${cleanRole}) për punonjësin ${employee.firstName} ${employee.lastName}.`
+        });
+
+        req.flash('success', `Llogaria @${cleanUname} u krijua me sukses! Fjalëkalimi: ${passToHash}`);
+      }
+
+      res.redirect(`/puntoret/${id}`);
+    } catch (err) {
+      console.error('Gabim në menaxhimin e llogarisë së puntorit:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë ruajtjes së llogarisë.');
+      res.redirect(`/puntoret/${id}`);
     }
   }
 }

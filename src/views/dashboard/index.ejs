@@ -84,7 +84,7 @@
           PËRSHËNDETJE, <%= currentUser ? currentUser.fullName.toUpperCase() : 'ADMIN' %>
         </h1>
         <p class="text-xs text-slate-400">
-          <%= company ? company.companyName : 'KRONEER' %> • <%= company ? company.tagline : 'SISTEME LIFTSH' %> • Të dhëna financiare dhe inxhinierike në kohë reale
+          <%= company ? company.companyName : 'KRONEER' %> • <%= company ? (company.tagline || 'Professional Elevator Solutions') : 'Professional Elevator Solutions' %> • Të dhëna financiare dhe inxhinierike në kohë reale
         </p>
       </div>
     </div>
@@ -545,9 +545,19 @@
 }) %>
 </script>
 
-<!-- Inicimi i Grafikëve me Chart.js -->
+<!-- Inicimi i Grafikëve me Chart.js (Ngarkim Dinamik me Performancë të Lartë) -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+async function initDashboardCharts() {
+  if (!window.Chart && window.loadScript) {
+    try {
+      await window.loadScript('/js/vendor/chart.min.js');
+    } catch (e) {
+      console.error('Nuk u arrit të ngarkohet Chart.js:', e);
+      return;
+    }
+  }
+  if (!window.Chart) return;
+
   const dataEl = document.getElementById('dashboard-charts-data');
   const chartsData = dataEl ? JSON.parse(dataEl.textContent) : { monthlySales: [], elevatorTypesBreakdown: { labels: [], data: [] } };
   const monthlySales = chartsData.monthlySales || [];
@@ -653,5 +663,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboardCharts);
+} else {
+  initDashboardCharts();
+}
 </script>

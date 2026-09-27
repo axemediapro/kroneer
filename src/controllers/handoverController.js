@@ -4,7 +4,24 @@ const ActivityService = require('../services/activityService');
 class HandoverController {
   static async getIndex(req, res) {
     try {
+      const user = req.session.user;
+      const where = {};
+
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        where.project = {
+          OR: [
+            { projectManagerId: user.id },
+            { teamMembers: { some: { employee: { userId: user.id } } } }
+          ]
+        };
+      } else if (user && user.role === 'TEKNIK') {
+        where.project = {
+          teamMembers: { some: { employee: { userId: user.id } } }
+        };
+      }
+
       const handovers = await prisma.handover.findMany({
+        where,
         include: {
           project: { include: { customer: true } },
           customer: true

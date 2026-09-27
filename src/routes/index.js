@@ -44,10 +44,10 @@ router.get('/', (req, res) => {
   }
 });
 
-// 2. Paneli Kryesor (Dashboard) & Paneli i Menaxherit
+// 2. Paneli Kryesor (Dashboard)
 router.get('/paneli', isAuthenticated, (req, res, next) => {
   if (req.session.user && req.session.user.role === 'MENAXHER_PROJEKTI') {
-    return res.redirect('/menaxheri');
+    return ManagerDashboardController.getIndex(req, res, next);
   }
   return DashboardController.getIndex(req, res, next);
 });
@@ -69,7 +69,9 @@ router.get('/klientet/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRAT
 router.post('/klientet/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'SHITJE'), CustomerController.postEdit);
 router.post('/klientet/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), CustomerController.postDelete);
 
-// 4. Lifta & Konfiguruesi (Publike & ERP)
+// 4. Lifta & Konfiguruesi & Ndjekja Publike (Pa Kyçje)
+router.get('/track/:token', InterventionController.getPublicTracking);
+router.get('/p/intervenimet/:token', InterventionController.getPublicTracking);
 router.get('/p/lifts/:id', ElevatorController.getPublicDetail);
 router.get('/public/lifts/:id', ElevatorController.getPublicDetail);
 router.get('/p/kontrata/:token', ContractController.getPublicDetail);
@@ -216,6 +218,7 @@ router.get('/puntoret/transaksionet/:id/print', isAuthenticated, EmployeeControl
 router.get('/puntoret/:id', isAuthenticated, EmployeeController.getDetail);
 router.get('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.getEdit);
 router.post('/puntoret/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postEdit);
+router.post('/puntoret/:id/llogaria', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), EmployeeController.postManageAccount);
 router.post('/puntoret/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), EmployeeController.postDelete);
 
 // 16.2 Prezenca & Orari i Punës (Attendance Software)

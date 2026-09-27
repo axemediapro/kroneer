@@ -202,7 +202,17 @@
 
 <% if (activeTab === 'shitjet') { %>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    async function initSalesReportChart() {
+      if (!window.Chart && window.loadScript) {
+        try {
+          await window.loadScript('/js/vendor/chart.min.js');
+        } catch (e) {
+          console.error('Nuk u ngarkua Chart.js:', e);
+          return;
+        }
+      }
+      if (!window.Chart) return;
+
       const ctx = document.getElementById('salesReportChart');
       if (ctx) {
         new Chart(ctx, {
@@ -223,6 +233,12 @@
           }
         });
       }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSalesReportChart);
+    } else {
+      initSalesReportChart();
+    }
   </script>
 <% } %>

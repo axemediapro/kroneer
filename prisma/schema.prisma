@@ -689,7 +689,7 @@ model Notification {
 model CompanySettings {
   id             Int      @id @default(autoincrement())
   companyName    String   @default("KRONEER")
-  tagline        String   @default("SISTEME LIFTSH")
+  tagline        String   @default("Professional Elevator Solutions")
   logoUrl        String?
   logoSvg        String?
   logoDarkBgUrl  String?

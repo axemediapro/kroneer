@@ -23,16 +23,41 @@ class InstallationController {
   static async getIndex(req, res) {
     try {
       const { status, search } = req.query;
+      const user = req.session.user;
       const where = {};
+
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        where.project = {
+          OR: [
+            { projectManagerId: user.id },
+            { teamMembers: { some: { employee: { userId: user.id } } } }
+          ]
+        };
+      } else if (user && user.role === 'TEKNIK') {
+        where.OR = [
+          { technicianId: user.id },
+          { project: { teamMembers: { some: { employee: { userId: user.id } } } } }
+        ];
+      }
 
       if (status) where.status = status;
       if (search) {
-        where.OR = [
-          { serialNumber: { contains: search } },
-          { elevatorModel: { contains: search } },
-          { teamLead: { contains: search } },
-          { project: { name: { contains: search } } }
+        const s = { contains: search, mode: 'insensitive' };
+        const searchConditions = [
+          { serialNumber: s },
+          { elevatorModel: s },
+          { teamLead: s },
+          { project: { name: s } }
         ];
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { OR: searchConditions }
+          ];
+          delete where.OR;
+        } else {
+          where.OR = searchConditions;
+        }
       }
 
       const installations = await prisma.installation.findMany({

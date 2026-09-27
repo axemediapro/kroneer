@@ -23,7 +23,7 @@ async function getCachedCompanySettings() {
     if (!settings) {
       settings = {
         companyName: 'KRONEER',
-        tagline: 'SISTEME LIFTSH',
+        tagline: 'Professional Elevator Solutions',
         logoUrl: null,
         logoSvg: null,
         logoDarkBgUrl: '/images/kroneer-logo-white.svg',
@@ -43,7 +43,7 @@ async function getCachedCompanySettings() {
   } catch (e) {
     return cachedSettings || {
       companyName: 'KRONEER',
-      tagline: 'SISTEME LIFTSH',
+      tagline: 'Professional Elevator Solutions',
       logoDarkBgUrl: '/images/kroneer-logo-white.svg'
     };
   }
@@ -61,18 +61,15 @@ async function globalLocals(req, res, next) {
     res.locals.flashSuccess = req.flash('success');
     res.locals.flashError = req.flash('error');
 
-    // Ekzekuto paralelisht marrjen e cilësimeve dhe njoftimeve për shpejtësi maksimale
+    // Ekzekuto paralelisht marrjen e cilësimeve dhe njoftimeve me cache në memorie (0ms pritje)
     const [settings, notifData] = await Promise.all([
       getCachedCompanySettings(),
-      res.locals.currentUser ? Promise.all([
-        NotificationService.getUnreadCount(res.locals.currentUser.id),
-        NotificationService.getRecent(res.locals.currentUser.id, 5)
-      ]) : Promise.resolve([0, []])
+      res.locals.currentUser ? NotificationService.getUserSummary(res.locals.currentUser.id) : Promise.resolve({ unreadCount: 0, recent: [] })
     ]);
 
     res.locals.company = settings;
-    res.locals.unreadNotifCount = notifData[0];
-    res.locals.recentNotifications = notifData[1];
+    res.locals.unreadNotifCount = notifData.unreadCount || 0;
+    res.locals.recentNotifications = notifData.recent || [];
 
     // Formatuesit e ndihmës në shqip
     res.locals.formatCurrency = (amount) => {

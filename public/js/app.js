@@ -1,5 +1,42 @@
 // KRONEER - Sistem Menaxhimi i Lifteve (app.js)
 
+// Utility për ngarkim dinamik dhe asinkron të skripteve vetëm kur kërkohen
+window.loadScript = function(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === 'true' || (src.includes('jsQR') && window.jsQR) || (src.includes('zxing') && window.ZXing) || (src.includes('JsBarcode') && window.JsBarcode) || (src.includes('chart') && window.Chart)) {
+        return resolve();
+      }
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
+
+window.ensureScannerLibraries = async function() {
+  const promises = [];
+  if (!window.jsQR) promises.push(window.loadScript('/js/vendor/jsQR.min.js'));
+  if (!window.ZXing) promises.push(window.loadScript('/js/vendor/zxing.min.js'));
+  if (promises.length > 0) await Promise.all(promises);
+};
+
+window.ensureJsBarcode = async function() {
+  if (!window.JsBarcode) {
+    await window.loadScript('/js/vendor/JsBarcode.all.min.js');
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // 0. Rendo ikonat Lucide (data-lucide="...") në SVG
   if (window.lucide) {
@@ -171,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+      showScanStep('camera');
+      if (scanStatus) scanStatus.textContent = 'Duke ngarkuar modulin e skanimit...';
+      await window.ensureScannerLibraries();
+
       scanVideo.setAttribute('playsinline', 'true');
       scanVideo.setAttribute('webkit-playsinline', 'true');
       scanVideo.muted = true;
@@ -269,6 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showScanStep('camera');
     if (scanStatus) {
       scanStatus.classList.remove('hidden');
+      scanStatus.textContent = 'Duke ngarkuar skanerin...';
+    }
+
+    await window.ensureScannerLibraries();
+
+    if (scanStatus) {
       scanStatus.textContent = 'Duke analizuar foton...';
     }
 
@@ -568,8 +615,12 @@ function serialCodeModal() {
         this.$nextTick(() => this.renderBarcode());
       }
     },
-    renderBarcode() {
+    async renderBarcode() {
       const canvas = this.$refs.barcodeCanvas;
+      if (!canvas) return;
+      if (!window.JsBarcode && window.ensureJsBarcode) {
+        await window.ensureJsBarcode();
+      }
       if (canvas && window.JsBarcode) {
         window.JsBarcode(canvas, this.serial, {
           format: 'CODE128',

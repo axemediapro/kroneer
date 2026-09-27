@@ -157,7 +157,26 @@ class ManagerDashboardController {
     } catch (err) {
       console.error('Gabim në ngarkimin e Panelit të Menaxherit:', err);
       req.flash('error', 'Ndodhi një gabim gjatë ngarkimit të panelit.');
-      res.redirect('/paneli');
+      return res.render('menaxheri/index', {
+        pageTitle: 'Paneli i Menaxherit të Projektit - KRONEER',
+        myProjects: [],
+        myTeamEmployees: [],
+        myInterventions: [],
+        recentTransactions: [],
+        allManagers: [],
+        targetManagerId: 0,
+        isAdmin: false,
+        stats: {
+          totalTeamCount: 0,
+          workingNowCount: 0,
+          onBreakCount: 0,
+          completedTodayCount: 0,
+          activeProjectsCount: 0,
+          interventionsCount: 0,
+          totalCashTeam: 0,
+          totalBonusTeam: 0
+        }
+      });
     }
   }
 }

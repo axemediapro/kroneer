@@ -41,7 +41,7 @@ async function main() {
   await prisma.companySettings.create({
     data: {
       companyName: 'KRONEER',
-      tagline: 'SISTEME LIFTSH',
+      tagline: 'Professional Elevator Solutions',
       address: 'Bulevardi Dëshmorët e Kombit, Kompleksi Tregtar Nd. 45',
       city: 'Prishtinë',
       country: 'Kosovë',

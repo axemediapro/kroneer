@@ -5,16 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'KRONEER — Sisteme Profesionale të Lifteve' %></title>
   
-  <!-- Fonts: Inter, Outfit, JetBrains Mono -->
+  <!-- Preconnect & Optimized Asynchronous Web Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  </noscript>
   
-  <!-- Stylesheet -->
+  <!-- Minified Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
   
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <!-- Local Cached Alpine.js -->
+  <script defer src="/js/vendor/alpine.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
 
@@ -68,7 +71,7 @@
   <footer class="bg-slate-900 border-t border-slate-800 mt-12 py-8 text-xs text-slate-400">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-300">KRONEER SISTEME LIFTSH</span>
+        <span class="font-bold text-slate-300">KRONEER — Professional Elevator Solutions</span>
         <span>•</span>
         <span>Standardi Evropian EN 81-20/50</span>
       </div>

@@ -16,8 +16,11 @@ const compression = require('compression');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Gzip Compression për përgjigje ultra të shpejta
-app.use(compression());
+// Gzip / Deflate Compression për ngarkim ultra të shpejtë të aseteve dhe HTML
+app.use(compression({
+  threshold: 512, // Kompreso të gjitha përgjigjet > 512B
+  level: 6
+}));
 
 // Konfigurimi i EJS & Layouts
 app.use(expressLayouts);
@@ -30,9 +33,20 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(methodOverride('_method'));
+
+// Shërbimi i skedarëve statikë me cache afatgjatë dhe ETags
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '7d',
-  etag: true
+  maxAge: '30d',
+  immutable: true,
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('.ejs')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    }
+  }
 }));
 
 // Sesionet

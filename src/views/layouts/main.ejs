@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'KRONEER - Sistem për Menaxhimin e Lifteve' %></title>
   
-  <!-- Fonts: Inter & Outfit -->
+  <!-- Preconnect & Optimized Asynchronous Web Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  </noscript>
   
-  <!-- Stylesheet -->
+  <!-- Minified Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
   
-  <!-- Alpine.js, Chart.js, QR/Barcode Decoders -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
-  <script src="/js/vendor/jsQR.min.js"></script>
-  <script src="/js/vendor/zxing.min.js"></script>
+  <!-- Local Cached Core Frameworks (Zero Network Latency) -->
+  <script defer src="/js/vendor/lucide.min.js"></script>
+  <script defer src="/js/vendor/alpine.min.js"></script>
+  <script defer src="/js/app.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -50,8 +50,5 @@
 
   <!-- Modal global i Pamjes së Shpejtë (Quick View) -->
   <%- include('../partials/quick-view-modal') %>
-
-  <!-- Global Application Scripts -->
-  <script src="/js/app.js"></script>
 </body>
 </html>

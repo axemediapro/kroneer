@@ -14,7 +14,7 @@
           </div>
           <div>
             <h2 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h2>
-            <p class="text-[10px] font-bold text-amber-600 tracking-wider"><%= typeof company !== 'undefined' && company ? company.tagline : 'SISTEME LIFTSH' %></p>
+            <p class="text-[10px] font-bold text-amber-600 tracking-wider"><%= typeof company !== 'undefined' && company && company.tagline ? company.tagline : 'Professional Elevator Solutions' %></p>
           </div>
         </div>
       <% } %>
@@ -113,7 +113,7 @@
   <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
   <div class="avoid-break grid grid-cols-2 gap-10 pt-6 mt-4 border-t border-slate-400">
     <div class="text-center">
-      <p class="text-xs font-bold text-slate-900 mb-1">Për KRONEER — SISTEME LIFTSH</p>
+      <p class="text-xs font-bold text-slate-900 mb-1">Për KRONEER — Professional Elevator Solutions</p>
       <p class="text-[11px] text-slate-500 mb-2"><%= handover.repSigneeName %></p>
       <div style="height: <%= Math.max(80, stampH + 10) %>px; min-height: <%= Math.max(80, stampH + 10) %>px;" class="flex items-center justify-center border-b border-dashed border-slate-400">
         <% if (handover.repSignatureData) { %>

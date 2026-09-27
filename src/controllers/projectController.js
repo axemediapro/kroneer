@@ -10,21 +10,28 @@ class ProjectController {
 
       const where = {};
 
-      // Nëse është Menaxher Projekti dhe vjen me filter ose dëshiron projektet e veta
-      if (managerId && managerId !== 'te-gjitha') {
+      // Menaxheri i projektit ka qasje EKSKLUZIVISHT në projektet ku është përgjegjës ose anëtar
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        where.OR = [
+          { projectManagerId: user.id },
+          { teamMembers: { some: { employee: { userId: user.id } } } }
+        ];
+      } else if (managerId && managerId !== 'te-gjitha') {
         where.projectManagerId = parseInt(managerId);
-      } else if (user && user.role === 'MENAXHER_PROJEKTI' && !req.query.all) {
-        // Default për menaxherin e projektit: shfaq projektet e tij
-        where.projectManagerId = user.id;
       }
 
       if (stage) where.stage = stage;
       if (search) {
-        where.OR = [
-          { number: { contains: search, mode: 'insensitive' } },
-          { name: { contains: search, mode: 'insensitive' } },
-          { customer: { companyName: { contains: search, mode: 'insensitive' } } }
-        ];
+        const s = { contains: search, mode: 'insensitive' };
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { OR: [{ number: s }, { name: s }, { customer: { companyName: s } }] }
+          ];
+          delete where.OR;
+        } else {
+          where.OR = [{ number: s }, { name: s }, { customer: { companyName: s } }];
+        }
       }
 
       const [projects, managers] = await Promise.all([
@@ -212,6 +219,16 @@ class ProjectController {
       if (!project) {
         req.flash('error', 'Projekti nuk u gjet.');
         return res.redirect('/projektet');
+      }
+
+      // Verifikim i autorizimit për Menaxherin e Projektit
+      if (req.session.user && req.session.user.role === 'MENAXHER_PROJEKTI') {
+        const isManager = project.projectManagerId === req.session.user.id;
+        const isMember = project.teamMembers && project.teamMembers.some(m => m.employee && m.employee.userId === req.session.user.id);
+        if (!isManager && !isMember) {
+          req.flash('error', 'Nuk keni autorizim për këtë projekt. Mund të menaxhoni vetëm projektet tuaja.');
+          return res.redirect('/projektet');
+        }
       }
 
       // Filtro punëtorët që nuk janë ende në ekipin e këtij projekti

@@ -1,6 +1,30 @@
+const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
+
+const TRACKING_SECRET = process.env.SESSION_SECRET || 'kroneer_tracking_secret_2026';
+
+function generateTrackingToken(interventionId) {
+  const data = `int_${interventionId}_kroneer_live`;
+  const hash = crypto.createHmac('sha256', TRACKING_SECRET).update(data).digest('hex').substring(0, 16);
+  return Buffer.from(`${interventionId}-${hash}`).toString('base64url');
+}
+
+function verifyTrackingToken(token) {
+  try {
+    if (!token) return null;
+    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    const [idStr, hash] = decoded.split('-');
+    const id = parseInt(idStr);
+    if (!id || isNaN(id)) return null;
+    const expectedHash = crypto.createHmac('sha256', TRACKING_SECRET).update(`int_${id}_kroneer_live`).digest('hex').substring(0, 16);
+    if (hash === expectedHash) return id;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
 
 class InterventionController {
   // 1. Lista e Intervenimeve në Terren
@@ -17,11 +41,20 @@ class InterventionController {
       if (tipi && tipi !== 'te-gjitha') {
         where.type = tipi;
       }
-      if (projectManagerId && projectManagerId !== 'te-gjitha') {
+      if (user && user.role === 'MENAXHER_PROJEKTI') {
+        where.OR = [
+          { projectManagerId: user.id },
+          { project: { projectManagerId: user.id } }
+        ];
+      } else if (user && user.role === 'TEKNIK') {
+        const currentEmp = await prisma.employee.findFirst({ where: { userId: user.id } });
+        where.teamWorkers = {
+          some: {
+            employeeId: currentEmp ? currentEmp.id : -1
+          }
+        };
+      } else if (projectManagerId && projectManagerId !== 'te-gjitha') {
         where.projectManagerId = parseInt(projectManagerId);
-      } else if (user && user.role === 'MENAXHER_PROJEKTI' && !req.query.all) {
-        // Default për menaxherin: sheh intervenimet e veta
-        where.projectManagerId = user.id;
       }
 
       if (puntoriId && puntoriId !== 'te-gjitha') {
@@ -34,13 +67,22 @@ class InterventionController {
 
       if (search && search.trim()) {
         const q = search.trim();
-        where.OR = [
+        const searchConditions = [
           { number: { contains: q, mode: 'insensitive' } },
           { title: { contains: q, mode: 'insensitive' } },
           { location: { contains: q, mode: 'insensitive' } },
           { elevatorSerialNumber: { contains: q, mode: 'insensitive' } },
           { project: { name: { contains: q, mode: 'insensitive' } } }
         ];
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { OR: searchConditions }
+          ];
+          delete where.OR;
+        } else {
+          where.OR = searchConditions;
+        }
       }
 
       const [interventions, managers, employees, projects] = await Promise.all([
@@ -79,6 +121,12 @@ class InterventionController {
       ];
 
       const statuses = ['Planifikuar', 'Në Proces', 'Përfunduar', 'Anuluar'];
+
+      // Gjenero trackingToken për çdo intervenim
+      interventions.forEach(int => {
+        int.trackingToken = generateTrackingToken(int.id);
+        int.trackingUrl = `/track/${int.trackingToken}`;
+      });
 
       res.render('intervenimet/index', {
         pageTitle: 'Intervenimet në Terren & Ekipet - KRONEER',
@@ -291,6 +339,10 @@ class InterventionController {
         return res.redirect('/intervenimet');
       }
 
+      // Shto linkun e koduar të tracking-ut publik
+      intervention.trackingToken = generateTrackingToken(intervention.id);
+      intervention.trackingUrl = `/track/${intervention.trackingToken}`;
+
       const assignedWorkerIds = intervention.teamWorkers.map(tw => tw.employeeId);
       const availableEmployees = allEmployees.filter(e => !assignedWorkerIds.includes(e.id));
 
@@ -456,6 +508,62 @@ class InterventionController {
     } catch (err) {
       console.error(err);
       res.status(500).send('Gabim gjatë përgatitjes së raportit për printim.');
+    }
+  }
+
+  // 9. Faqja Publike e Ndjekjes Live (Encrypted Tracking)
+  static async getPublicTracking(req, res) {
+    try {
+      const { token } = req.params;
+      const interventionId = verifyTrackingToken(token);
+
+      if (!interventionId) {
+        return res.status(404).render('partials/error', {
+          pageTitle: 'Link i Pavlefshëm - KRONEER',
+          message: 'Linku i ndjekjes së intervenimit është i pasaktë ose ka skaduar.',
+          layout: 'layouts/public'
+        });
+      }
+
+      const [intervention, company] = await Promise.all([
+        prisma.intervention.findUnique({
+          where: { id: interventionId },
+          include: {
+            project: { include: { customer: true } },
+            projectManager: true,
+            teamWorkers: {
+              include: { employee: true },
+              orderBy: { id: 'asc' }
+            }
+          }
+        }),
+        prisma.companySettings.findFirst()
+      ]);
+
+      if (!intervention) {
+        return res.status(404).render('partials/error', {
+          pageTitle: 'Intervenimi nuk u gjet - KRONEER',
+          message: 'Intervenimi i kërkuar nuk ekziston.',
+          layout: 'layouts/public'
+        });
+      }
+
+      intervention.trackingToken = token;
+      intervention.trackingUrl = `/track/${token}`;
+
+      res.render('public/track-intervention', {
+        pageTitle: `Ndjekja Live: ${intervention.title} (${intervention.number}) - KRONEER`,
+        intervention,
+        company: company || { companyName: 'KRONEER', phone: '+383 (0) 38 500 600', email: 'info@kroneer-lifts.com' },
+        layout: 'layouts/public'
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e ndjekjes live të intervenimit:', err);
+      res.status(500).render('partials/error', {
+        pageTitle: 'Gabim Sistemi - KRONEER',
+        message: 'Ndodhi një gabim gjatë ngarkimit të statusit të intervenimit.',
+        layout: 'layouts/public'
+      });
     }
   }
 }

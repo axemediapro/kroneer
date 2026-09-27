@@ -35,7 +35,7 @@ class SettingsController {
         settings = await prisma.companySettings.create({
           data: {
             companyName: 'KRONEER',
-            tagline: 'SISTEME LIFTSH',
+            tagline: 'Professional Elevator Solutions',
             address: 'Rruga Dëshmorët e Kombit, Nr. 45',
             city: 'Prishtinë',
             country: 'Kosovë',
@@ -128,7 +128,7 @@ class SettingsController {
           where: { id: first.id },
           data: {
             companyName: companyName ? companyName.trim() : 'KRONEER',
-            tagline: tagline ? tagline.trim() : 'SISTEME LIFTSH',
+            tagline: tagline ? tagline.trim() : 'Professional Elevator Solutions',
             address: address ? address.trim() : null,
             city: city ? city.trim() : null,
             country: country ? country.trim() : 'Kosovë',
@@ -356,7 +356,7 @@ class SettingsController {
       if (!company) {
         const createData = {
           companyName: 'KRONEER',
-          tagline: 'SISTEME LIFTSH'
+          tagline: 'Professional Elevator Solutions'
         };
         if (variant === 'dark_bg') {
           createData.logoDarkBgUrl = logoUrl;
@@ -533,7 +533,7 @@ class SettingsController {
         company = await prisma.companySettings.create({
           data: {
             companyName: 'KRONEER',
-            tagline: 'SISTEME LIFTSH',
+            tagline: 'Professional Elevator Solutions',
             stampUrl,
             stampHeight: initialHeight
           }
@@ -586,7 +586,7 @@ class SettingsController {
         company = await prisma.companySettings.create({
           data: {
             companyName: 'KRONEER',
-            tagline: 'SISTEME LIFTSH',
+            tagline: 'Professional Elevator Solutions',
             stampHeight: height
           }
         });
