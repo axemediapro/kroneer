@@ -1,0 +1,76 @@
+# ==============================================================================
+# KRONEER ENTERPRISE SECURITY & PROXY CONFIGURATION (.htaccess)
+# ==============================================================================
+
+# 1. Blloko shfletimin e direktoriumeve (Prevent Directory Indexing)
+Options -Indexes -MultiViews
+ServerSignature Off
+
+# 2. Mbrojtje e rreptë për skedarët sensitivë dhe të sistemit
+<FilesMatch "(^\.env|\.git|\.gitignore|schema\.prisma|\.db|\.sqlite|\.log|package(-lock)?\.json|tsconfig\.json|\.md|\.sh|\.sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. Blloko qasjen direkte në dosjet e burimit (Source Code Directories)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Blloko qasjen direkte në src/, prisma/, node_modules/, config/
+    RewriteRule ^(src|prisma|node_modules|config)/ - [F,L,NC]
+
+    # Blloko skedarët e fshehur (.dotfiles)
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Blloko sulmet e zakonshme (Path Traversal, Null Byte Injection, XSS)
+    RewriteCond %{QUERY_STRING} (\.\./|\.\.\\|%00|<script|eval\(|base64_) [NC]
+    RewriteRule .* - [F,L]
+
+    # 4. HTTPS Enforcing (nëse serveri ka certifikatë SSL)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # 5. Reverse Proxy për Node.js / Express Server (Port 3000)
+    <IfModule mod_proxy.c>
+        # Mos kalo asetet statike te Node nëse menaxhohen direkt nga Apache
+        RewriteCond %{REQUEST_URI} !^/uploads/ [NC]
+        RewriteCond %{REQUEST_URI} !^/css/ [NC]
+        RewriteCond %{REQUEST_URI} !^/js/ [NC]
+        RewriteCond %{REQUEST_URI} !^/images/ [NC]
+        RewriteCond %{REQUEST_URI} !^/favicon.ico$ [NC]
+        RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+        ProxyPassReverse / http://127.0.0.1:3000/
+    </IfModule>
+</IfModule>
+
+# 6. HTTP Security Headers
+<IfModule mod_headers.c>
+    # Mbrojtje nga Clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Mbrojtje nga MIME-type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Aktivizo filtrin XSS të shfletuesit
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Referrer Policy e sigurt
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Permissions Policy (Fik sensorët e panevojshëm)
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    
+    # Fshih nënshkrimin e serverit
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
+# 7. Kompresim GZIP / Brotli për performancë maksimale
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css application/xml application/xhtml+xml application/rss+xml application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
