@@ -45,6 +45,7 @@ class SparePartController {
         totalInventoryValue,
         lowStockCount,
         outOfStockCount,
+        canManage: req.session.user && req.session.user.role === 'ADMINISTRATOR',
         filters: { category: category || '', stockStatus: stockStatus || '', search: search || '' }
       });
     } catch (err) {

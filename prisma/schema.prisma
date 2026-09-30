@@ -459,6 +459,7 @@ model Project {
   id                   Int       @id @default(autoincrement())
   number               String    @unique // KR-PRJ-2026-0012
   name                 String
+  lineOfBusiness       String    @default("Instalim") // Furnizim, Instalim, Servis, Modernizim
   customerId           Int
   contractId           Int?
   elevatorCount        Int       @default(1)

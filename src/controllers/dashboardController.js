@@ -1,14 +1,99 @@
 const prisma = require('../config/prisma');
+const { ownedProjectsWhere } = require('../services/projectScope');
 
 let cachedDashboardData = null;
 let cachedDashboardTime = 0;
+let cachedDashboardRole = null;
 const DASHBOARD_CACHE_TTL = 15 * 1000; // 15 sekonda cache për shpejtësi të menjëhershme
 
 class DashboardController {
+  static async getWorkerIndex(req, res) {
+    try {
+      const user = req.session.user;
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      const employee = user
+        ? await prisma.employee.findFirst({ where: { userId: user.id } })
+        : null;
+
+      const [myProjects, myInterventions, todayAttendance] = await Promise.all([
+        prisma.project.findMany({
+          where: ownedProjectsWhere(user),
+          include: {
+            customer: { select: { companyName: true, firstName: true, lastName: true, code: true } },
+            projectManager: { select: { id: true, fullName: true } },
+            teamMembers: { include: { employee: { select: { id: true, firstName: true, lastName: true, position: true } } } },
+            installations: { select: { id: true, status: true, progressPercent: true } }
+          },
+          orderBy: { createdAt: 'desc' }
+        }),
+        employee
+          ? prisma.intervention.findMany({
+              where: { teamWorkers: { some: { employeeId: employee.id } } },
+              include: { project: { select: { id: true, name: true, number: true } } },
+              orderBy: { date: 'desc' },
+              take: 8
+            })
+          : Promise.resolve([]),
+        employee
+          ? prisma.attendance.findFirst({
+              where: { employeeId: employee.id, date: { gte: start, lte: end } },
+              orderBy: { id: 'desc' }
+            })
+          : Promise.resolve(null)
+      ]);
+
+      const activeProjects = myProjects.filter((p) => p.stage !== 'Përfunduar');
+      const installingCount = myProjects.reduce((sum, p) => {
+        return sum + (p.installations || []).filter((i) => ['Në Instalim', 'Në Testim', 'Në Pritje'].includes(i.status)).length;
+      }, 0);
+
+      res.render('dashboard/puntori', {
+        pageTitle: 'Paneli i Punëtorit - KRONEER',
+        employee,
+        myProjects,
+        myInterventions,
+        todayAttendance,
+        stats: {
+          assignedCount: myProjects.length,
+          activeCount: activeProjects.length,
+          installingCount,
+          interventionsCount: myInterventions.length
+        }
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e panelit të punëtorit:', err);
+      req.flash('error', 'Nuk u arrit të ngarkohet paneli i projekteve tuaja.');
+      res.render('dashboard/puntori', {
+        pageTitle: 'Paneli i Punëtorit - KRONEER',
+        employee: null,
+        myProjects: [],
+        myInterventions: [],
+        todayAttendance: null,
+        stats: { assignedCount: 0, activeCount: 0, installingCount: 0, interventionsCount: 0 }
+      });
+    }
+  }
+
   static async getIndex(req, res) {
     try {
+      const role = req.session.user && req.session.user.role;
+      if (role === 'TEKNIK') {
+        return DashboardController.getWorkerIndex(req, res);
+      }
+      if (role === 'MENAXHER_PROJEKTI') {
+        const ManagerDashboardController = require('./managerDashboardController');
+        return ManagerDashboardController.getIndex(req, res);
+      }
+
       const now = Date.now();
-      if (cachedDashboardData && (now - cachedDashboardTime < DASHBOARD_CACHE_TTL)) {
+      if (
+        cachedDashboardData &&
+        cachedDashboardRole === role &&
+        (now - cachedDashboardTime < DASHBOARD_CACHE_TTL)
+      ) {
         return res.render('dashboard/index', cachedDashboardData);
       }
 
@@ -131,6 +216,7 @@ class DashboardController {
 
       cachedDashboardData = payload;
       cachedDashboardTime = now;
+      cachedDashboardRole = role;
 
       res.render('dashboard/index', payload);
     } catch (err) {

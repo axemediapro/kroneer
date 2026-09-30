@@ -1,20 +1,38 @@
 const prisma = require('../config/prisma');
 const ActivityService = require('../services/activityService');
+const { ownedProjectsWhere } = require('../services/projectScope');
 
 class DocumentController {
   static async getIndex(req, res) {
     try {
       const { type, search } = req.query;
+      const user = req.session.user;
       const where = {};
+      const andFilters = [];
 
-      if (type) where.documentType = type;
-      if (search) {
-        where.OR = [
-          { title: { contains: search } },
-          { customer: { companyName: { contains: search } } },
-          { project: { name: { contains: search } } }
-        ];
+      if (user && (user.role === 'TEKNIK' || user.role === 'MENAXHER_PROJEKTI')) {
+        const scope = ownedProjectsWhere(user);
+        andFilters.push({
+          OR: [
+            { projectId: null },
+            { project: scope }
+          ]
+        });
       }
+
+      if (type) andFilters.push({ documentType: type });
+      if (search) {
+        andFilters.push({
+          OR: [
+            { title: { contains: search } },
+            { customer: { companyName: { contains: search } } },
+            { project: { name: { contains: search } } }
+          ]
+        });
+      }
+
+      if (andFilters.length === 1) Object.assign(where, andFilters[0]);
+      else if (andFilters.length > 1) where.AND = andFilters;
 
       const documents = await prisma.document.findMany({
         where,
@@ -44,6 +62,7 @@ class DocumentController {
         pageTitle: 'Qendra e Dokumenteve - KRONEER',
         documents,
         types,
+        canManage: user && ['ADMINISTRATOR', 'SHITJE', 'FINANCE'].includes(user.role),
         filters: { type: type || '', search: search || '' }
       });
     } catch (err) {

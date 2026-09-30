@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const NotificationService = require('../services/notificationService');
+const { canAssignBonus, isFieldStaff } = require('./roles');
 
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -58,6 +59,8 @@ async function globalLocals(req, res, next) {
   try {
     res.locals.currentUser = req.session ? req.session.user : null;
     res.locals.currentPath = req.path;
+    res.locals.canAssignBonus = canAssignBonus(res.locals.currentUser);
+    res.locals.isFieldStaff = isFieldStaff(res.locals.currentUser);
     res.locals.flashSuccess = req.flash('success');
     res.locals.flashError = req.flash('error');
 

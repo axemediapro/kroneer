@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { ownedProjectsWhere } = require('../services/projectScope');
 
 function getStartAndEndOfDay() {
   const d = new Date();
@@ -21,7 +22,9 @@ class ManagerDashboardController {
       const { start, end } = getStartAndEndOfDay();
 
       // 1. Merr projektet e këtij menaxheri
-      const projectWhere = isAdmin && !req.query.managerId ? {} : { projectManagerId: targetManagerId };
+      const projectWhere = isAdmin && !req.query.managerId
+        ? {}
+        : ownedProjectsWhere({ id: targetManagerId, role: 'MENAXHER_PROJEKTI' });
 
       const [myProjects, allManagers] = await Promise.all([
         prisma.project.findMany({

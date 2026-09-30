@@ -1,12 +1,20 @@
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
   <div>
-    <h1 class="text-2xl font-black text-slate-100 font-mono tracking-tight">MENAXHIMI I PROJEKTEVE & EKIPIVE</h1>
-    <p class="text-xs text-slate-400 mt-1">Ndjekja e fazave inxhinierike, menaxherët përgjegjës dhe ekipet e monterëve në terren</p>
+    <h1 class="text-2xl font-black text-slate-100 font-mono tracking-tight">
+      <%= (typeof currentUser !== 'undefined' && currentUser && (currentUser.role === 'TEKNIK' || currentUser.role === 'MENAXHER_PROJEKTI')) ? 'PROJEKTET E MIA' : 'MENAXHIMI I PROJEKTEVE & EKIPIVE' %>
+    </h1>
+    <p class="text-xs text-slate-400 mt-1">
+      <%= (typeof currentUser !== 'undefined' && currentUser && (currentUser.role === 'TEKNIK' || currentUser.role === 'MENAXHER_PROJEKTI'))
+        ? 'Vetëm projektet ku jeni caktuar si menaxher ose anëtar ekipi'
+        : 'Ndjekja e fazave inxhinierike, menaxherët përgjegjës dhe ekipet e monterëve në terren' %>
+    </p>
   </div>
+  <% if (!currentUser || (currentUser.role !== 'TEKNIK')) { %>
   <a href="/projektet/krijo" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
     <span>Hap Projekt të Ri</span>
   </a>
+  <% } %>
 </div>
 
 <!-- Filtruesi -->
@@ -15,6 +23,7 @@
     <div>
       <input type="text" name="search" value="<%= filters.search %>" placeholder="Kërko me emër projekti, klient..." class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
     </div>
+    <% if (!currentUser || (currentUser.role !== 'TEKNIK' && currentUser.role !== 'MENAXHER_PROJEKTI')) { %>
     <div>
       <select name="managerId" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
         <option value="te-gjitha">Të gjithë menaxherët</option>
@@ -25,6 +34,7 @@
         <% } %>
       </select>
     </div>
+    <% } %>
     <div>
       <select name="stage" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
         <option value="">Të gjitha fazat</option>

@@ -1,3 +1,21 @@
+function canAssignBonus(user) {
+  const role = user && user.role;
+  return role === 'ADMINISTRATOR' || role === 'MENAXHER_PROJEKTI';
+}
+
+function isFieldStaff(user) {
+  const role = user && user.role;
+  return role === 'TEKNIK' || role === 'MENAXHER_PROJEKTI';
+}
+
+function denyFieldFromCrm(req, res, next) {
+  if (isFieldStaff(req.session && req.session.user)) {
+    req.flash('error', 'Nuk keni qasje te klientët, faturat dhe shitjet. Ky seksion është për zyrën.');
+    return res.redirect('/paneli');
+  }
+  return next();
+}
+
 function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
     if (!req.session || !req.session.user) {
@@ -22,5 +40,8 @@ function authorizeRoles(...allowedRoles) {
 }
 
 module.exports = {
-  authorizeRoles
+  authorizeRoles,
+  canAssignBonus,
+  isFieldStaff,
+  denyFieldFromCrm
 };

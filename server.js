@@ -82,3 +82,4 @@ app.listen(PORT, () => {
   console.log(`  Kyçja Demo: admin / admin123`);
   console.log(`====================================================`);
 });
+// KRONEER - Advanced Elevator ERP & CRM 2026

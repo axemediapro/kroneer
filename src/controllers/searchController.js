@@ -1,4 +1,20 @@
 const prisma = require('../config/prisma');
+const { ownedProjectsWhere } = require('../services/projectScope');
+const { isFieldStaff } = require('../middleware/roles');
+
+function projectSearchWhere(user, q) {
+  const textMatch = {
+    OR: [
+      { name: { contains: q } },
+      { number: { contains: q } }
+    ]
+  };
+  const scope = ownedProjectsWhere(user);
+  if (scope && Object.keys(scope).length > 0) {
+    return { AND: [scope, textMatch] };
+  }
+  return textMatch;
+}
 
 class SearchController {
   static async search(req, res) {
@@ -51,12 +67,7 @@ class SearchController {
           take: 5
         }),
         prisma.project.findMany({
-          where: {
-            OR: [
-              { name: { contains: q } },
-              { number: { contains: q } }
-            ]
-          },
+          where: projectSearchWhere(req.session.user, q),
           include: { customer: true },
           take: 5
         }),
@@ -190,8 +201,11 @@ class SearchController {
         return res.json({ items: [] });
       }
 
+      const fieldOnly = isFieldStaff(req.session.user);
+      const empty = Promise.resolve([]);
+
       const [customers, projects, quotations, invoices, installations, serviceTickets, contracts, spareParts, expenses, documents, employees] = await Promise.all([
-        prisma.customer.findMany({
+        fieldOnly ? empty : prisma.customer.findMany({
           where: {
             OR: [
               { companyName: { contains: q } },
@@ -201,20 +215,15 @@ class SearchController {
           take: 3
         }),
         prisma.project.findMany({
-          where: {
-            OR: [
-              { name: { contains: q } },
-              { number: { contains: q } }
-            ]
-          },
+          where: projectSearchWhere(req.session.user, q),
           take: 3
         }),
-        prisma.quotation.findMany({
+        fieldOnly ? empty : prisma.quotation.findMany({
           where: { number: { contains: q } },
           include: { customer: true },
           take: 3
         }),
-        prisma.invoice.findMany({
+        fieldOnly ? empty : prisma.invoice.findMany({
           where: { number: { contains: q } },
           include: { customer: true },
           take: 3
@@ -237,7 +246,7 @@ class SearchController {
           },
           take: 3
         }),
-        prisma.contract.findMany({
+        fieldOnly ? empty : prisma.contract.findMany({
           where: { number: { contains: q } },
           include: { customer: true },
           take: 3
@@ -251,7 +260,7 @@ class SearchController {
           },
           take: 3
         }),
-        prisma.expense.findMany({
+        fieldOnly ? empty : prisma.expense.findMany({
           where: {
             OR: [
               { number: { contains: q } },

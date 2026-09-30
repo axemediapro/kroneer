@@ -37,6 +37,9 @@ prisma/*.safety-backup
 *.sln
 *.sw?
 .kilo/
+.continue/
+.gemini/
+
 
 # OS generated files
 .DS_Store

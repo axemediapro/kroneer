@@ -5,10 +5,14 @@
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Qendra e Dokumenteve</h1>
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Arkiva qendrore e kontratave, certifikatave CE, vizatimeve teknike dhe raporteve</p>
     </div>
+    <% if (typeof canManage !== 'undefined' && canManage) { %>
     <a href="/dokumentet/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
       <i data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i>
       Ngarko / Regjistro Dokument
     </a>
+    <% } else { %>
+    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">Vetëm lexim — pa ndryshime</span>
+    <% } %>
   </div>
 
   <!-- Filters -->

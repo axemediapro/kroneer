@@ -26,14 +26,14 @@ window.loadScript = function(src) {
 
 window.ensureScannerLibraries = async function() {
   const promises = [];
-  if (!window.jsQR) promises.push(window.loadScript('/js/vendor/jsQR.min.js'));
-  if (!window.ZXing) promises.push(window.loadScript('/js/vendor/zxing.min.js'));
+  if (!window.jsQR) promises.push(window.loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'));
+  if (!window.ZXing) promises.push(window.loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'));
   if (promises.length > 0) await Promise.all(promises);
 };
 
 window.ensureJsBarcode = async function() {
   if (!window.JsBarcode) {
-    await window.loadScript('/js/vendor/JsBarcode.all.min.js');
+    await window.loadScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js');
   }
 };
 
@@ -793,7 +793,7 @@ function markAllNotificationsRead() {
   }
 
   function prefetchUrl(url) {
-    if (pageCache.has(url) || prefetchingUrls.has(url)) return;
+    if (pageCache.has(url) || prefetchingUrls.has(url) || pageCache.size > 12) return;
     prefetchingUrls.add(url);
     fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(res => {
@@ -809,19 +809,12 @@ function markAllNotificationsRead() {
       .finally(() => prefetchingUrls.delete(url));
   }
 
-  // Hover / Touchstart prefetching për përgjigje 0ms
+  let prefetchTimer = null;
   document.addEventListener('pointerenter', (e) => {
     const link = e.target.closest('a');
-    if (isValidNavigationLink(link)) {
-      prefetchUrl(link.href);
-    }
-  }, { capture: true, passive: true });
-
-  document.addEventListener('touchstart', (e) => {
-    const link = e.target.closest('a');
-    if (isValidNavigationLink(link)) {
-      prefetchUrl(link.href);
-    }
+    if (!isValidNavigationLink(link)) return;
+    clearTimeout(prefetchTimer);
+    prefetchTimer = setTimeout(() => prefetchUrl(link.href), 350);
   }, { capture: true, passive: true });
 
   async function navigateTo(url, pushState = true) {

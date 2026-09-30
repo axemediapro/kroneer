@@ -1,21 +1,25 @@
 const prisma = require('../config/prisma');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
+const { ownedProjectsWhere, canAccessProject } = require('../services/projectScope');
 
 class ProjectController {
   static async getIndex(req, res) {
     try {
-      const { stage, search, managerId } = req.query;
+      const { stage, search, managerId, line } = req.query;
       const user = req.session.user;
+      const isField = user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK');
+      const lineOfBusiness = line === 'te-gjitha'
+        ? ''
+        : (line === 'Modernizim' || line === 'Instalim' || line === 'Servis' || line === 'Furnizim')
+          ? line
+          : (isField ? '' : 'Instalim');
 
       const where = {};
+      if (lineOfBusiness) where.lineOfBusiness = lineOfBusiness;
 
-      // Menaxheri i projektit ka qasje EKSKLUZIVISHT në projektet ku është përgjegjës ose anëtar
-      if (user && user.role === 'MENAXHER_PROJEKTI') {
-        where.OR = [
-          { projectManagerId: user.id },
-          { teamMembers: { some: { employee: { userId: user.id } } } }
-        ];
+      if (user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK')) {
+        Object.assign(where, ownedProjectsWhere(user));
       } else if (managerId && managerId !== 'te-gjitha') {
         where.projectManagerId = parseInt(managerId);
       }
@@ -75,7 +79,8 @@ class ProjectController {
         filters: {
           stage: stage || '',
           search: search || '',
-          managerId: managerId || (user && user.role === 'MENAXHER_PROJEKTI' && !req.query.all ? String(user.id) : 'te-gjitha')
+          line: lineOfBusiness,
+          managerId: managerId || (user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK') && !req.query.all ? String(user.id) : 'te-gjitha')
         }
       });
     } catch (err) {
@@ -100,12 +105,15 @@ class ProjectController {
         NumberService.getNextNumber('project')
       ]);
 
+      const defaultLine = req.query.line === 'Modernizim' ? 'Modernizim' : (req.query.line === 'Servis' ? 'Servis' : 'Instalim');
+
       res.render('projektet/krijo', {
-        pageTitle: 'Hap Projekt të Ri - KRONEER',
+        pageTitle: defaultLine === 'Modernizim' ? 'Hap Projekt Modernizimi - KRONEER' : 'Hap Projekt të Ri - KRONEER',
         customers,
         managers,
         employees,
-        nextNumber
+        nextNumber,
+        defaultLine
       });
     } catch (err) {
       console.error(err);
@@ -116,9 +124,11 @@ class ProjectController {
   static async postCreate(req, res) {
     try {
       const {
-        name, customerId, elevatorCount, floorsCount, value, stage,
+        name, customerId, elevatorCount, floorsCount, value, stage, lineOfBusiness,
         startDate, targetCompletionDate, notes, projectManagerId, teamMembers
       } = req.body;
+      const allowedLines = ['Furnizim', 'Instalim', 'Servis', 'Modernizim'];
+      const businessLine = allowedLines.includes(lineOfBusiness) ? lineOfBusiness : 'Instalim';
 
       const number = await NumberService.getNextNumber('project');
       const pmId = projectManagerId ? parseInt(projectManagerId) : (req.session.user?.role === 'MENAXHER_PROJEKTI' ? req.session.user.id : null);
@@ -127,6 +137,7 @@ class ProjectController {
         data: {
           number,
           name: name.trim(),
+          lineOfBusiness: businessLine,
           customerId: parseInt(customerId),
           projectManagerId: pmId,
           elevatorCount: parseInt(elevatorCount) || 1,
@@ -221,14 +232,9 @@ class ProjectController {
         return res.redirect('/projektet');
       }
 
-      // Verifikim i autorizimit për Menaxherin e Projektit
-      if (req.session.user && req.session.user.role === 'MENAXHER_PROJEKTI') {
-        const isManager = project.projectManagerId === req.session.user.id;
-        const isMember = project.teamMembers && project.teamMembers.some(m => m.employee && m.employee.userId === req.session.user.id);
-        if (!isManager && !isMember) {
-          req.flash('error', 'Nuk keni autorizim për këtë projekt. Mund të menaxhoni vetëm projektet tuaja.');
-          return res.redirect('/projektet');
-        }
+      if (!canAccessProject(req.session.user, project)) {
+        req.flash('error', 'Nuk keni autorizim për këtë projekt. Mund të shihni vetëm projektet tuaja.');
+        return res.redirect('/projektet');
       }
 
       // Filtro punëtorët që nuk janë ende në ekipin e këtij projekti

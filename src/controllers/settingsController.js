@@ -762,8 +762,114 @@ class SettingsController {
       res.redirect('/cilesimet?tab=sistemi');
     } catch (err) {
       console.error('Gabim gjatë restore-it të backup-it:', err);
-      req.flash('error', 'Ndodhi një gabim gjatë rikthimit të të dhënave. Asnjë ndryshim nuk u ruajt.');
+        req.flash('error', 'Ndodhi një gabim gjatë rikthimit të të dhënave. Asnjë ndryshim nuk u ruajt.');
       res.redirect('/cilesimet?tab=sistemi');
+    }
+  }
+
+  static async getProfile(req, res) {
+    try {
+      const sessionUser = req.session.user;
+      const profileUser = await prisma.user.findUnique({
+        where: { id: sessionUser.id }
+      });
+
+      if (!profileUser) {
+        req.flash('error', 'Llogaria nuk u gjet.');
+        return res.redirect('/paneli');
+      }
+
+      res.render('cilesimet/profili', {
+        pageTitle: 'Cilësimet e Llogarisë - KRONEER',
+        profileUser
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e profilit:', err);
+      req.flash('error', 'Nuk u ngarkuan cilësimet e llogarisë.');
+      res.redirect('/paneli');
+    }
+  }
+
+  static async postUpdateProfile(req, res) {
+    try {
+      const userId = req.session.user && req.session.user.id;
+      if (!userId) {
+        return res.redirect('/kycu');
+      }
+
+      const { fullName, email, phone, currentPassword, newPassword } = req.body;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        req.flash('error', 'Llogaria nuk u gjet.');
+        return res.redirect('/cilesimet');
+      }
+
+      const updateData = {
+        fullName: (fullName || user.fullName).trim(),
+        email: (email || user.email).trim(),
+        phone: phone ? phone.trim() : null
+      };
+
+      if (newPassword && newPassword.trim()) {
+        if (!currentPassword) {
+          req.flash('error', 'Shkruani fjalëkalimin aktual për të ndryshuar fjalëkalimin.');
+          return res.redirect('/cilesimet');
+        }
+        const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!ok) {
+          req.flash('error', 'Fjalëkalimi aktual është i pasaktë.');
+          return res.redirect('/cilesimet');
+        }
+        if (newPassword.trim().length < 6) {
+          req.flash('error', 'Fjalëkalimi i ri duhet të ketë të paktën 6 karaktere.');
+          return res.redirect('/cilesimet');
+        }
+        const salt = await bcrypt.genSalt(10);
+        updateData.passwordHash = await bcrypt.hash(newPassword.trim(), salt);
+      }
+
+      const emailTaken = await prisma.user.findFirst({
+        where: { email: updateData.email, NOT: { id: userId } }
+      });
+      if (emailTaken) {
+        req.flash('error', 'Ky email përdoret nga një llogari tjetër.');
+        return res.redirect('/cilesimet');
+      }
+
+      const updated = await prisma.user.update({
+        where: { id: userId },
+        data: updateData
+      });
+
+      await prisma.employee.updateMany({
+        where: { userId },
+        data: {
+          email: updated.email,
+          phone: updated.phone
+        }
+      });
+
+      req.session.user = {
+        ...req.session.user,
+        fullName: updated.fullName,
+        email: updated.email
+      };
+
+      await ActivityService.log({
+        userId,
+        userName: updated.fullName,
+        actionType: 'Ndryshuar',
+        entityType: 'Përdorues',
+        entityId: userId,
+        description: `Përdoruesi ${updated.fullName} përditësoi të dhënat e llogarisë së vet.`
+      });
+
+      req.flash('success', 'Të dhënat e llogarisë suaj u ruajtën.');
+      res.redirect('/cilesimet');
+    } catch (err) {
+      console.error('Gabim në ruajtjen e profilit:', err);
+      req.flash('error', 'Nuk u ruajtën të dhënat e llogarisë.');
+      res.redirect('/cilesimet');
     }
   }
 }

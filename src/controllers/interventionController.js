@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
+const { canAssignBonus } = require('../middleware/roles');
 
 const TRACKING_SECRET = process.env.SESSION_SECRET || 'kroneer_tracking_secret_2026';
 
@@ -237,7 +238,9 @@ class InterventionController {
             const empId = typeof w === 'object' ? parseInt(w.id) : parseInt(w);
             const role = typeof w === 'object' && w.role ? w.role : 'Monter';
             const cashGiven = typeof w === 'object' && w.cashGiven ? parseFloat(w.cashGiven) : 0;
-            const bonusGiven = typeof w === 'object' && w.bonusGiven ? parseFloat(w.bonusGiven) : 0;
+            const bonusGiven = (canAssignBonus(req.session.user) && typeof w === 'object' && w.bonusGiven)
+              ? parseFloat(w.bonusGiven)
+              : 0;
 
             if (empId) {
               await prisma.interventionWorker.create({
@@ -399,7 +402,7 @@ class InterventionController {
       }
 
       const cash = parseFloat(cashGiven) || 0;
-      const bonus = parseFloat(bonusGiven) || 0;
+      const bonus = canAssignBonus(req.session.user) ? (parseFloat(bonusGiven) || 0) : 0;
 
       await prisma.interventionWorker.create({
         data: {

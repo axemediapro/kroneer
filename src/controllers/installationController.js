@@ -1,7 +1,29 @@
+const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const QRCode = require('qrcode');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
+
+const TRACKING_SECRET = process.env.SESSION_SECRET || 'kroneer_lift_tracking_secret_2026';
+
+function generateLiftTrackingToken(installationId, serialNumber) {
+  const data = `lift_${installationId}_${serialNumber}_kroneer_secure`;
+  const hash = crypto.createHmac('sha256', TRACKING_SECRET).update(data).digest('hex').substring(0, 16);
+  return Buffer.from(`${installationId}-${hash}`).toString('base64url');
+}
+
+function verifyLiftTrackingToken(token) {
+  try {
+    if (!token) return null;
+    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    const [idStr, hash] = decoded.split('-');
+    const id = parseInt(idStr);
+    if (!id || isNaN(id)) return null;
+    return id;
+  } catch (e) {
+    return null;
+  }
+}
 
 const DEFAULT_CHECKLIST = [
   { key: 'chk_shaft', title: 'Kontrolli i boshtit (dimensionet, vertikaliteti)' },
@@ -71,10 +93,14 @@ class InstallationController {
       });
 
       const statuses = ['Në Pritje', 'Në Instalim', 'Në Testim', 'Përfunduar'];
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-      // Gjenerimi i QR Code për çdo numër serik (skanueshëm nga ekipi në terren)
+      // Gjenerimi i QR Code dhe Tokenit Publik për çdo instalim
       for (const inst of installations) {
-        inst.qrCodeDataUrl = await QRCode.toDataURL(inst.serialNumber, {
+        const token = generateLiftTrackingToken(inst.id, inst.serialNumber);
+        inst.trackingToken = token;
+        inst.trackingUrl = `${baseUrl}/track/lift/${token}`;
+        inst.qrCodeDataUrl = await QRCode.toDataURL(inst.trackingUrl, {
           width: 220,
           margin: 1.5,
           color: { dark: '#0f172a', light: '#ffffff' }
@@ -186,19 +212,53 @@ class InstallationController {
         return res.redirect('/instalimet');
       }
 
-      const qrCodeDataUrl = await QRCode.toDataURL(installation.serialNumber, {
-        width: 240,
+      const trackingToken = generateLiftTrackingToken(installation.id, installation.serialNumber);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const trackingUrl = `${baseUrl}/track/lift/${trackingToken}`;
+
+      const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl, {
+        width: 280,
         margin: 1.5,
         color: { dark: '#0f172a', light: '#ffffff' }
       });
 
+      // Kontrollo nëse ekziston procesverbal dorëzimi ose kontratë mirëmbajtjeje për këtë lift
+      const [handover, maintenanceContract, serviceTickets, elevatorModelData] = await Promise.all([
+        prisma.handover.findFirst({
+          where: { serialNumber: installation.serialNumber }
+        }),
+        prisma.maintenanceContract.findFirst({
+          where: { serialNumber: installation.serialNumber },
+          include: { visits: { orderBy: { visitDate: 'desc' } }, technician: true }
+        }),
+        prisma.serviceTicket.findMany({
+          where: { serialNumber: installation.serialNumber },
+          orderBy: { reportedDate: 'desc' },
+          take: 5
+        }),
+        prisma.elevator.findFirst({
+          where: {
+            OR: [
+              { model: installation.elevatorModel },
+              { code: installation.elevatorModel }
+            ]
+          }
+        })
+      ]);
+
       res.render('instalimet/detajet', {
-        pageTitle: `Instalimi: ${installation.elevatorModel} (${installation.serialNumber}) - KRONEER`,
+        pageTitle: `Instalimi & Pasaporta: ${installation.elevatorModel} (${installation.serialNumber}) - KRONEER`,
         installation,
-        qrCodeDataUrl
+        trackingToken,
+        trackingUrl,
+        qrCodeDataUrl,
+        handover,
+        maintenanceContract,
+        serviceTickets,
+        elevatorModelData
       });
     } catch (err) {
-      console.error(err);
+      console.error('Gabim në shfaqjen e detajeve të instalimit:', err);
       res.redirect('/instalimet');
     }
   }
@@ -213,7 +273,7 @@ class InstallationController {
       });
 
       if (!item) {
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
           return res.status(404).json({ success: false, error: 'Artikulli nuk u gjet.' });
         }
         return res.redirect(`/instalimet/${installationId}`);
@@ -245,7 +305,7 @@ class InstallationController {
         installationStatus = 'Në Testim';
       }
 
-      const updated = await prisma.installation.update({
+      await prisma.installation.update({
         where: { id: installationId },
         data: {
           progressPercent,
@@ -282,6 +342,188 @@ class InstallationController {
       res.redirect(`/instalimet/${req.params.id}`);
     }
   }
+
+  // ==========================================
+  // PORTALI PUBLIK ENKRIPTUAR PËR KLIENTIN (LIVE TRACKING & LIFECYCLE)
+  // ==========================================
+  static async getPublicLiftTracking(req, res) {
+    try {
+      const { token } = req.params;
+      const verifiedId = verifyLiftTrackingToken(token);
+
+      let installation = null;
+
+      if (verifiedId) {
+        installation = await prisma.installation.findUnique({
+          where: { id: verifiedId },
+          include: {
+            project: { include: { customer: true, contract: true } },
+            technician: true,
+            checklistItems: { orderBy: { id: 'asc' } }
+          }
+        });
+      }
+
+      // Fallback nëse kërkohet me serialNumber direkt (p.sh. /track/lift/KR-SN-2026-00431)
+      if (!installation && token) {
+        installation = await prisma.installation.findFirst({
+          where: { serialNumber: token.trim() },
+          include: {
+            project: { include: { customer: true, contract: true } },
+            technician: true,
+            checklistItems: { orderBy: { id: 'asc' } }
+          }
+        });
+      }
+
+      if (!installation) {
+        return res.status(404).render('partials/error', {
+          layout: 'layouts/public',
+          pageTitle: 'Lifti nuk u gjet - KRONEER',
+          statusCode: 404,
+          errorMessage: 'Linku i kërkuar nuk është i vlefshëm ose ky lift nuk ekziston në bazën e të dhënave KRONEER.'
+        });
+      }
+
+      const canonicalToken = generateLiftTrackingToken(installation.id, installation.serialNumber);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const trackingUrl = `${baseUrl}/track/lift/${canonicalToken}`;
+
+      const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl, {
+        width: 300,
+        margin: 1.5,
+        color: { dark: '#0f172a', light: '#ffffff' }
+      });
+
+      // Ngarko të gjitha të dhënat e ciklit jetësor pas instalimit
+      const [handover, maintenanceContract, serviceTickets, elevatorModelData, company] = await Promise.all([
+        prisma.handover.findFirst({
+          where: { serialNumber: installation.serialNumber }
+        }),
+        prisma.maintenanceContract.findFirst({
+          where: { serialNumber: installation.serialNumber },
+          include: {
+            visits: { orderBy: { visitDate: 'desc' }, take: 15 },
+            technician: true
+          }
+        }),
+        prisma.serviceTicket.findMany({
+          where: { serialNumber: installation.serialNumber },
+          orderBy: { reportedDate: 'desc' },
+          take: 10
+        }),
+        prisma.elevator.findFirst({
+          where: {
+            OR: [
+              { model: installation.elevatorModel },
+              { code: installation.elevatorModel }
+            ]
+          },
+          include: { media: true }
+        }),
+        prisma.companySettings.findFirst()
+      ]);
+
+      res.render('public/lift-tracking', {
+        layout: 'layouts/public',
+        pageTitle: `Gjendja Live e Liftit (SN: ${installation.serialNumber}) — KRONEER Real-Time Tracking`,
+        installation,
+        handover,
+        maintenanceContract,
+        serviceTickets,
+        elevatorModelData,
+        company,
+        trackingToken: canonicalToken,
+        trackingUrl,
+        qrCodeDataUrl,
+        activeTab: req.query.tab || 'progresi'
+      });
+    } catch (err) {
+      console.error('Gabim në ngarkimin e portalit publik të liftit:', err);
+      res.status(500).render('partials/error', {
+        layout: 'layouts/public',
+        pageTitle: 'Gabim në sistem',
+        statusCode: 500,
+        errorMessage: 'Ndodhi një gabim gjatë ngarkimit të gjendjes së liftit.'
+      });
+    }
+  }
+
+  // Raportim i Shpejtë i Defektit direkt nga Linku Publik i Liftit
+  static async postPublicReportIssue(req, res) {
+    try {
+      const { token } = req.params;
+      const verifiedId = verifyLiftTrackingToken(token);
+
+      let installation = null;
+      if (verifiedId) {
+        installation = await prisma.installation.findUnique({
+          where: { id: verifiedId },
+          include: { project: true }
+        });
+      }
+      if (!installation && token) {
+        installation = await prisma.installation.findFirst({
+          where: { serialNumber: token.trim() },
+          include: { project: true }
+        });
+      }
+
+      if (!installation) {
+        return res.status(404).json({ success: false, error: 'Lifti nuk u gjet.' });
+      }
+
+      const { reporterName, reporterPhone, problemDescription, priority } = req.body;
+
+      if (!problemDescription || !problemDescription.trim()) {
+        req.flash('error', 'Ju lutemi përshkruani problemin e vërejtur.');
+        return res.redirect(`/track/lift/${token}`);
+      }
+
+      const ticketNumber = await NumberService.getNextNumber('service');
+
+      const fullDesc = `[Raportuar nga Portali Publik]\nPersoni: ${reporterName || 'Klient / Banor'}\nTelefoni: ${reporterPhone || 'I pacaktuar'}\nPërshkrimi: ${problemDescription.trim()}`;
+
+      const ticket = await prisma.serviceTicket.create({
+        data: {
+          number: ticketNumber,
+          customerId: installation.project.customerId,
+          serialNumber: installation.serialNumber,
+          problemDescription: fullDesc,
+          priority: priority || 'Normal',
+          status: 'Hapur',
+          reportedDate: new Date()
+        }
+      });
+
+      // Krijo njoftim për stafin administrativ
+      await prisma.notification.create({
+        data: {
+          title: `Kërkesë e Re Servisi (${ticket.number})`,
+          message: `U raportua një problem nga portali publik për liftin SN: ${installation.serialNumber} (${installation.elevatorModel}).`,
+          type: priority === 'Kritik' || priority === 'I lartë' ? 'error' : 'warning',
+          linkUrl: '/servisi-mirembajtja?tab=servisi'
+        }
+      });
+
+      await ActivityService.log({
+        userName: reporterName || 'Klient / Portali Publik',
+        actionType: 'Krijuar',
+        entityType: 'Servis',
+        entityId: ticket.id,
+        description: `Kërkesë servisi ${ticket.number} u raportua nga portali publik për liftin SN: ${installation.serialNumber}.`
+      });
+
+      req.flash('success', `Kërkesa juaj e servisit (Tiketa: ${ticket.number}) u regjistrua me sukses në sistemin KRONEER. Ekipi ynë i teknikëve do të kontaktojë së shpejti!`);
+      res.redirect(`/track/lift/${token}?tab=servisi`);
+    } catch (err) {
+      console.error('Gabim në raportimin publik të defektit:', err);
+      req.flash('error', 'Ndodhi një gabim gjatë regjistrimit të kërkesës suaj.');
+      res.redirect(`/track/lift/${req.params.token}`);
+    }
+  }
 }
 
 module.exports = InstallationController;
+module.exports.generateLiftTrackingToken = generateLiftTrackingToken;
+module.exports.verifyLiftTrackingToken = verifyLiftTrackingToken;

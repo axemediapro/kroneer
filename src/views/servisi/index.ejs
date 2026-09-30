@@ -1,14 +1,20 @@
-<div class="space-y-6" x-data="{ showStatusModal: false, selectedTicket: null, newStatus: '', newNotes: '' }">
+<div class="space-y-6" x-data="{ showStatusModal: false, selectedTicketId: null, selectedTicketNumber: '', newStatus: '', newPriority: '', newNotes: '', newTechnicianId: '' }">
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Kërkesat për Servis & Ndërhyrje Emergjente</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Regjistrimi dhe ndjekja e defekteve, alarmeve dhe tiketave teknike</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Regjistrimi, ndjekja dhe historia e defekteve dhe ndërhyrjeve teknike</p>
     </div>
-    <a href="/servisi/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
-      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-      Hap Kërkesë Servisi
-    </a>
+    <div class="flex items-center gap-2.5">
+      <a href="/servisi-mirembajtja" class="inline-flex items-center px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold rounded-lg border border-slate-300 dark:border-slate-700 transition">
+        <i data-lucide="layers" class="w-4 h-4 mr-2 text-emerald-500"></i>
+        Qendra e Unifikuar
+      </a>
+      <a href="/servisi/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+        Hap Kërkesë Servisi
+      </a>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -83,23 +89,28 @@
           <% } else { %>
             <% tickets.forEach(t => { %>
               <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition">
-                <td class="py-3.5 px-4 font-bold font-mono text-slate-900 dark:text-white">
-                  <%= t.number %>
+                <td class="py-3.5 px-4 font-bold font-mono">
+                  <a href="/servisi/<%= t.id %>" class="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1.5 font-bold">
+                    <span><%= t.number %></span>
+                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-amber-500/70"></i>
+                  </a>
                 </td>
                 <td class="py-3.5 px-4 font-medium">
                   <a href="/klientet/<%= t.customerId %>" class="hover:underline text-slate-900 dark:text-white">
                     <%= t.customer ? t.customer.companyName : '-' %>
                   </a>
                 </td>
-                <td class="py-3.5 px-4 font-mono text-xs text-amber-700 dark:text-amber-400">
+                <td class="py-3.5 px-4 font-mono text-xs text-amber-700 dark:text-amber-400 font-semibold">
                   <%= t.serialNumber || '-' %>
                 </td>
                 <td class="py-3.5 px-4 max-w-xs truncate" title="<%= t.problemDescription %>">
-                  <%= t.problemDescription %>
+                  <a href="/servisi/<%= t.id %>" class="hover:text-slate-900 dark:hover:text-white">
+                    <%= t.problemDescription %>
+                  </a>
                 </td>
                 <td class="py-3.5 px-4">
                   <span class="px-2.5 py-1 text-xs font-bold rounded-md <%= 
-                    t.priority === 'Kritik' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 border border-rose-300 dark:border-rose-800' :
+                    t.priority === 'Kritik' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 border border-rose-300 dark:border-rose-800 animate-pulse' :
                     t.priority === 'I lartë' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400' :
                     t.priority === 'Normal' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400' :
                     'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
@@ -110,7 +121,7 @@
                 <td class="py-3.5 px-4 text-xs">
                   <%= t.technician ? t.technician.fullName : 'I pacaktuar' %>
                 </td>
-                <td class="py-3.5 px-4 text-xs">
+                <td class="py-3.5 px-4 text-xs font-mono">
                   <%= new Date(t.reportedDate).toLocaleDateString('sq-AL') %>
                 </td>
                 <td class="py-3.5 px-4">
@@ -125,27 +136,33 @@
                 </td>
                 <td class="py-3.5 px-4 text-right">
                   <div class="flex items-center justify-end gap-1.5">
-                    <button type="button" onclick='openQuickView(<%- JSON.stringify({
-                      title: `Tiketa ${t.number}`,
-                      subtitle: t.customer ? t.customer.companyName : "-",
-                      statusLabel: t.status,
-                      statusClass: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                      rows: [
-                        { label: "Nr. Serik", value: t.serialNumber || "-" },
-                        { label: "Prioriteti", value: t.priority },
-                        { label: "Tekniku", value: t.technician ? t.technician.fullName : "I pacaktuar" },
-                        { label: "Raportuar", value: new Date(t.reportedDate).toLocaleDateString('sq-AL') },
-                        { label: "Përshkrimi", value: t.problemDescription }
-                      ],
-                      viewUrl: `/servisi`
-                    }).replace(/</g, '\\u003c').replace(/'/g, '&#39;') %>)' class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition" title="Pamje e Shpejtë">
+                    <!-- Direct Link to Full Detail Page -->
+                    <a 
+                      href="/servisi/<%= t.id %>" 
+                      class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900 text-amber-700 dark:text-amber-300 transition" 
+                      title="Hap Faqen e Plotë të Tiketës"
+                    >
                       <i data-lucide="eye" class="w-4 h-4"></i>
-                    </button>
+                    </a>
+
+                    <!-- Print Work Order -->
+                    <a 
+                      href="/servisi/<%= t.id %>/print" 
+                      target="_blank"
+                      class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition" 
+                      title="Printo Fletëdaljen e Servisit"
+                    >
+                      <i data-lucide="printer" class="w-4 h-4"></i>
+                    </a>
+
+                    <!-- Quick Status Update Trigger -->
                     <button 
-                      @click="selectedTicket = <%= JSON.stringify(t) %>; newStatus = '<%= t.status %>'; newNotes = '<%= t.resolutionNotes || '' %>'; showStatusModal = true" 
-                    class="px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 rounded hover:bg-amber-100 transition">
-                    Përditëso
-                  </button>
+                      type="button"
+                      @click="selectedTicketId = <%= t.id %>; selectedTicketNumber = '<%= t.number %>'; newStatus = '<%= t.status %>'; newPriority = '<%= t.priority %>'; newNotes = '<%= (t.resolutionNotes || '').replace(/'/g, '\\\'') %>'; newTechnicianId = '<%= t.technicianId || '' %>'; showStatusModal = true" 
+                      class="px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 rounded hover:bg-amber-100 transition"
+                    >
+                      Përditëso
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -157,21 +174,29 @@
   </div>
 
   <!-- Modal: Update Ticket Status -->
-  <div x-show="showStatusModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div @click.outside="showStatusModal = false" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md w-full space-y-4">
+  <div 
+    x-show="showStatusModal" 
+    x-cloak 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+    @keydown.escape.window="showStatusModal = false"
+  >
+    <div 
+      @click.outside="showStatusModal = false" 
+      class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md w-full space-y-4"
+    >
       <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
         <h3 class="text-base font-bold text-slate-900 dark:text-white">
-          Përditëso Tiketën <span class="font-mono text-amber-600" x-text="selectedTicket ? selectedTicket.number : ''"></span>
+          Përditëso Tiketën <span class="font-mono text-amber-600" x-text="selectedTicketNumber"></span>
         </h3>
-        <button @click="showStatusModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+        <button @click="showStatusModal = false" class="text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <form :action="selectedTicket ? `/servisi/${selectedTicket.id}/status` : '#'" method="POST" class="space-y-4">
+      <form :action="`/servisi/${selectedTicketId}/status`" method="POST" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Statusi i Ri</label>
-          <select name="status" x-model="newStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Statusi i Ri</label>
+          <select name="status" x-model="newStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <% statuses.forEach(st => { %>
               <option value="<%= st %>"><%= st %></option>
             <% }) %>
@@ -179,13 +204,26 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Shënime mbi Zgjidhjen / Ndërhyrjen</label>
-          <textarea name="resolutionNotes" x-model="newNotes" rows="3" placeholder="Përshkruani punën e kryer, pjesët e ndërruara ose arsyen e mbylljes..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none"></textarea>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Prioriteti</label>
+          <select name="priority" x-model="newPriority" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <% priorities.forEach(p => { %>
+              <option value="<%= p %>"><%= p %></option>
+            <% }) %>
+          </select>
         </div>
 
-        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
-          <button type="button" @click="showStatusModal = false" class="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg">Anulo</button>
-          <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg">Ruaj Ndryshimet</button>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shënimet e Zgjidhjes</label>
+          <textarea name="resolutionNotes" x-model="newNotes" rows="3" placeholder="Përshkruani veprimet e ndërmarra..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-2">
+          <button type="button" @click="showStatusModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg hover:bg-slate-200 transition">
+            Anulo
+          </button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+            Ruaj Ndryshimet
+          </button>
         </div>
       </form>
     </div>

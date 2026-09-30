@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 const NumberService = require('../services/numberService');
 const ActivityService = require('../services/activityService');
+const { canAssignBonus } = require('../middleware/roles');
 
 function getStartAndEndOfDay(dateInput) {
   const d = dateInput ? new Date(dateInput) : new Date();
@@ -1209,6 +1210,11 @@ class EmployeeController {
 
       if (!empId || !parsedAmount || parsedAmount <= 0) {
         req.flash('error', 'Ju lutem plotësoni puntorin dhe një shumë valide më të madhe se 0.');
+        return res.redirect(req.get('referer') || `/puntoret/${empId}`);
+      }
+
+      if (type === 'BONUS' && !canAssignBonus(req.session.user)) {
+        req.flash('error', 'Bonuset i cakton vetëm menaxheri i projektit ose administratori. Ju mund të regjistroni vetëm kesh.');
         return res.redirect(req.get('referer') || `/puntoret/${empId}`);
       }
 

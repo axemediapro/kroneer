@@ -29,10 +29,15 @@ class ReportController {
       const overdueAmount = overdueInvoices.reduce((s, i) => s + (i.balanceDue || 0), 0);
       const totalVat = invoices.reduce((s, i) => s + (i.vatAmount || 0), 0);
 
-      // 4. RAPORTI I PROJEKTEVE
+      // 4. RAPORTI I PROJEKTEVE (INSTALIMI & MODERNIZIMI)
       const projects = await prisma.project.findMany();
       const activeProjects = projects.filter(p => p.stage !== 'Përfunduar').length;
       const completedProjects = projects.filter(p => p.stage === 'Përfunduar').length;
+
+      const modernizationProjects = projects.filter(p => p.lineOfBusiness === 'Modernizim');
+      const modernizationActive = modernizationProjects.filter(p => p.stage !== 'Përfunduar').length;
+      const modernizationCompleted = modernizationProjects.filter(p => p.stage === 'Përfunduar').length;
+      const modernizationTotalValue = modernizationProjects.reduce((s, p) => s + (p.value || 0), 0);
 
       // 5. RAPORTI I MIRËMBAJTJES & SERVISIT
       const maintenanceContracts = await prisma.maintenanceContract.findMany();
@@ -72,6 +77,12 @@ class ReportController {
           total: projects.length,
           active: activeProjects,
           completed: completedProjects
+        },
+        modernizationReport: {
+          total: modernizationProjects.length,
+          active: modernizationActive,
+          completed: modernizationCompleted,
+          totalValue: modernizationTotalValue
         },
         maintenanceReport: {
           total: maintenanceContracts.length,
