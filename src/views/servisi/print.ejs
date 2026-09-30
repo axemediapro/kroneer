@@ -3,11 +3,14 @@
   <!-- Header with Company Info -->
   <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4">
     <div>
-      <% if (company && company.logoUrl) { %>
-        <img src="<%= company.logoUrl %>" alt="KRONEER" class="h-12 object-contain mb-2">
+      <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+      <% if (printLogo) { %>
+        <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
+          <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+        </div>
       <% } else { %>
-        <h1 class="text-2xl font-black tracking-tight text-slate-950 font-mono">KRONEER</h1>
-        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Elevator Engineering & Service</p>
+        <h1 class="text-2xl font-black tracking-tight text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h1>
+        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider"><%= typeof company !== 'undefined' && company && company.tagline ? company.tagline : 'Elevator Engineering & Service' %></p>
       <% } %>
       <div class="text-xs text-slate-600 mt-2 space-y-0.5">
         <p><strong><%= company ? company.name : 'KRONEER SH.P.K.' %></strong></p>

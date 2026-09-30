@@ -34,8 +34,8 @@
     <div class="flex items-center gap-3">
       <% const printToolbarLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : (typeof company !== 'undefined' && company && company.logoUrl ? company.logoUrl : null); %>
       <% if (printToolbarLogo) { %>
-        <div class="h-7 max-w-[110px] flex items-center justify-center">
-          <img src="<%= printToolbarLogo %>" alt="<%= company.companyName %>" class="max-h-7 w-auto object-contain filter drop-shadow">
+        <div class="h-7 max-w-[140px] flex items-center justify-center">
+          <img src="<%= printToolbarLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="max-height: 28px; width: auto; max-width: 140px; object-fit: contain;">
         </div>
       <% } else { %>
         <div class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs font-mono">K</div>

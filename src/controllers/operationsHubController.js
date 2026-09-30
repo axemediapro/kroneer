@@ -100,10 +100,19 @@ class OperationsHubController {
   static async getModernization(req, res) {
     try {
       const user = req.session.user;
-      const where = { lineOfBusiness: 'Modernizim' };
+      const where = {
+        OR: [
+          { lineOfBusiness: 'Modernizim' },
+          { name: { contains: 'Modernizim', mode: 'insensitive' } },
+          { notes: { contains: 'Modernizim', mode: 'insensitive' } }
+        ]
+      };
 
       if (user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK')) {
-        Object.assign(where, ownedProjectsWhere(user));
+        const scope = ownedProjectsWhere(user);
+        if (scope && (scope.OR || scope.teamMembers)) {
+          where.AND = [scope];
+        }
       }
 
       const projects = await prisma.project.findMany({

@@ -9,14 +9,15 @@ class ProjectController {
       const { stage, search, managerId, line } = req.query;
       const user = req.session.user;
       const isField = user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK');
-      const lineOfBusiness = line === 'te-gjitha'
-        ? ''
-        : (line === 'Modernizim' || line === 'Instalim' || line === 'Servis' || line === 'Furnizim')
-          ? line
-          : (isField ? '' : 'Instalim');
+      const lineOfBusiness = (line && line !== 'te-gjitha') ? line : '';
 
       const where = {};
-      if (lineOfBusiness) where.lineOfBusiness = lineOfBusiness;
+      if (lineOfBusiness) {
+        where.OR = [
+          { lineOfBusiness: lineOfBusiness },
+          { name: { contains: lineOfBusiness, mode: 'insensitive' } }
+        ];
+      }
 
       if (user && (user.role === 'MENAXHER_PROJEKTI' || user.role === 'TEKNIK')) {
         Object.assign(where, ownedProjectsWhere(user));

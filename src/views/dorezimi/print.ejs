@@ -4,8 +4,8 @@
     <div>
       <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
       <% if (printLogo) { %>
-        <div class="h-11 max-w-[220px] flex items-center justify-start mb-2">
-          <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" class="max-h-11 w-auto max-w-full object-contain">
+        <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
+          <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
         </div>
       <% } else { %>
         <div class="flex items-center gap-3">

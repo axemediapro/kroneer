@@ -41,10 +41,13 @@
     <div class="flex items-start justify-between border-b-2 border-slate-800 pb-4 mb-5">
       <div>
         <div class="flex items-center gap-3">
-          <% if (company && company.logoUrl) { %>
-            <img src="<%= company.logoUrl %>" alt="KRONEER" class="h-10 w-auto object-contain">
+          <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+          <% if (printLogo) { %>
+            <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
+              <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+            </div>
           <% } else { %>
-            <span class="text-2xl font-black tracking-tight text-slate-950 font-mono">KRONEER</span>
+            <span class="text-2xl font-black tracking-tight text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></span>
           <% } %>
         </div>
         <p class="text-[11px] text-slate-600 font-medium mt-1"><%= company.address || 'Prishtinë, Kosovë' %> • Tel: <%= company.phone || '+383 38 500 600' %></p>
