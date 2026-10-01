@@ -28,6 +28,23 @@
   <% elevators.forEach(e => { %>
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl hover:border-amber-500/50 transition-all flex flex-col justify-between group">
       <div>
+        <!-- Thumbnail / Gallery Image -->
+        <div class="h-40 w-full mb-4 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 relative">
+          <% if (e.media && e.media.length > 0) { %>
+            <img src="<%= e.media[0].url %>" alt="<%= e.model %>" class="w-full h-full object-cover">
+            <% if (e.media.length > 1) { %>
+              <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] px-2 py-1 rounded-md font-bold backdrop-blur-sm border border-slate-700">
+                +<%= e.media.length - 1 %> foto
+              </div>
+            <% } %>
+          <% } else { %>
+            <div class="w-full h-full flex flex-col items-center justify-center text-slate-700">
+              <i data-lucide="image" class="w-8 h-8 mb-2"></i>
+              <span class="text-[10px] font-semibold uppercase">Pa Foto</span>
+            </div>
+          <% } %>
+        </div>
+
         <!-- Badge & Code -->
         <div class="flex items-center justify-between mb-3">
           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">

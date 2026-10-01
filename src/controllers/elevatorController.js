@@ -22,6 +22,7 @@ class ElevatorController {
 
       const elevators = await prisma.elevator.findMany({
         where,
+        include: { media: { orderBy: { sortOrder: 'asc' } } },
         orderBy: { basePrice: 'asc' }
       });
 
@@ -500,26 +501,31 @@ class ElevatorController {
   static async postUploadMedia(req, res) {
     try {
       const elevatorId = parseInt(req.params.id);
-      if (!req.file) {
+      if (!req.files || req.files.length === 0) {
         req.flash('error', 'Nuk u zgjodh asnjë skedar për ngarkim.');
         return res.redirect(`/lifts/${elevatorId}`);
       }
 
-      const isVideo = req.file.mimetype && req.file.mimetype.startsWith('video/');
-      const url = `/uploads/elevators/${req.file.filename}`;
-      const count = await prisma.elevatorMedia.count({ where: { elevatorId } });
+      let count = await prisma.elevatorMedia.count({ where: { elevatorId } });
+      const caption = req.body.caption ? req.body.caption.trim() : null;
 
-      await prisma.elevatorMedia.create({
-        data: {
+      const mediaData = req.files.map(file => {
+        const isVideo = file.mimetype && file.mimetype.startsWith('video/');
+        const url = `/uploads/elevators/${file.filename}`;
+        return {
           elevatorId,
           type: isVideo ? 'video' : 'image',
           url,
-          caption: req.body.caption ? req.body.caption.trim() : null,
-          sortOrder: count
-        }
+          caption,
+          sortOrder: count++
+        };
       });
 
-      req.flash('success', 'Media u shtua me sukses në galerinë e liftit.');
+      await prisma.elevatorMedia.createMany({
+        data: mediaData
+      });
+
+      req.flash('success', `${req.files.length} skedarë u shtuan me sukses në galerinë e liftit.`);
       res.redirect(`/lifts/${elevatorId}`);
     } catch (err) {
       console.error('Gabim në ngarkimin e medias së liftit:', err);

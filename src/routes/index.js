@@ -91,7 +91,7 @@ router.get('/lifts/:id', isAuthenticated, ElevatorController.getDetail);
 router.get('/lifts/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR'), ElevatorController.getEdit);
 router.post('/lifts/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR'), ElevatorController.postEdit);
 router.post('/lifts/:id/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), ElevatorController.postDelete);
-router.post('/lifts/:id/media', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadElevatorMedia.single('media'), ElevatorController.postUploadMedia);
+router.post('/lifts/:id/media', isAuthenticated, authorizeRoles('ADMINISTRATOR'), uploadElevatorMedia.array('media', 10), ElevatorController.postUploadMedia);
 router.post('/lifts/:id/media/:mediaId/fshi', isAuthenticated, authorizeRoles('ADMINISTRATOR'), ElevatorController.postDeleteMedia);
 
 // 5. Ofertat
