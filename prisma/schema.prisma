@@ -708,6 +708,17 @@ model CompanySettings {
   bankName       String   @default("Banka Kombëtare Tregtare (BKT)")
   iban           String   @default("XK05 1901 0000 1234 5678")
   swift          String   @default("BKTKXKPR")
+  
+  // Banka 2
+  bankName2      String?
+  iban2          String?
+  swift2         String?
+  
+  // Banka 3
+  bankName3      String?
+  iban3          String?
+  swift3         String?
+
   currency       String   @default("EUR")
   vatRate        Float    @default(18)
   

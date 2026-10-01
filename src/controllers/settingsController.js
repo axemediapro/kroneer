@@ -117,7 +117,10 @@ class SettingsController {
       const {
         companyName, tagline, address, city, country,
         taxNumber, businessNumber, phone, email, website,
-        bankName, iban, swift, currency, vatRate,
+        bankName, iban, swift,
+        bankName2, iban2, swift2,
+        bankName3, iban3, swift3,
+        currency, vatRate,
         quotePrefix, contractPrefix, proformaPrefix, invoicePrefix, projectPrefix, servicePrefix, paymentPrefix
       } = req.body;
 
@@ -140,6 +143,12 @@ class SettingsController {
             bankName: bankName ? bankName.trim() : null,
             iban: iban ? iban.trim() : null,
             swift: swift ? swift.trim() : null,
+            bankName2: bankName2 ? bankName2.trim() : null,
+            iban2: iban2 ? iban2.trim() : null,
+            swift2: swift2 ? swift2.trim() : null,
+            bankName3: bankName3 ? bankName3.trim() : null,
+            iban3: iban3 ? iban3.trim() : null,
+            swift3: swift3 ? swift3.trim() : null,
             currency: currency || 'EUR',
             vatRate: parseFloat(vatRate) || 18,
             quotePrefix: quotePrefix ? quotePrefix.trim() : 'KR-O',

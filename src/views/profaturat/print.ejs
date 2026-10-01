@@ -74,6 +74,22 @@
     <div>Banka: <strong><%= company.bankName %></strong></div>
     <div>IBAN: <strong class="font-mono"><%= company.iban %></strong></div>
     <div>SWIFT: <strong class="font-mono"><%= company.swift %></strong></div>
+    
+    <% if (company.bankName2 && company.iban2) { %>
+      <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+        <div>Banka: <strong><%= company.bankName2 %></strong></div>
+        <div>IBAN: <strong class="font-mono"><%= company.iban2 %></strong></div>
+        <% if (company.swift2) { %><div>SWIFT: <strong class="font-mono"><%= company.swift2 %></strong></div><% } %>
+      </div>
+    <% } %>
+
+    <% if (company.bankName3 && company.iban3) { %>
+      <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+        <div>Banka: <strong><%= company.bankName3 %></strong></div>
+        <div>IBAN: <strong class="font-mono"><%= company.iban3 %></strong></div>
+        <% if (company.swift3) { %><div>SWIFT: <strong class="font-mono"><%= company.swift3 %></strong></div><% } %>
+      </div>
+    <% } %>
   </div>
 
   <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">

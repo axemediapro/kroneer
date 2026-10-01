@@ -236,7 +236,17 @@
         <div class="text-slate-400">Selia: <span class="text-slate-300"><%= compAddr %>, <%= compCity %></span></div>
         <div class="text-slate-400">NUI: <span class="font-mono text-slate-200"><%= compTax %></span></div>
         <div class="text-slate-400">Banka: <span class="text-slate-300"><%= company.bankName || 'BKT' %></span></div>
-        <div class="text-slate-400">IBAN: <span class="font-mono text-slate-200 text-[11px]"><%= company.iban || '-' %></span></div>
+        <div class="text-slate-400 border-b border-slate-800/50 pb-2 mb-2">IBAN: <span class="font-mono text-slate-200 text-[11px]"><%= company.iban || '-' %></span></div>
+        
+        <% if (company.bankName2 && company.iban2) { %>
+          <div class="text-slate-400">Banka (2): <span class="text-slate-300"><%= company.bankName2 %></span></div>
+          <div class="text-slate-400 border-b border-slate-800/50 pb-2 mb-2">IBAN (2): <span class="font-mono text-slate-200 text-[11px]"><%= company.iban2 %></span></div>
+        <% } %>
+        
+        <% if (company.bankName3 && company.iban3) { %>
+          <div class="text-slate-400">Banka (3): <span class="text-slate-300"><%= company.bankName3 %></span></div>
+          <div class="text-slate-400">IBAN (3): <span class="font-mono text-slate-200 text-[11px]"><%= company.iban3 %></span></div>
+        <% } %>
       </div>
     </div>
 

@@ -427,19 +427,46 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          <!-- Banka 1 -->
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës</label>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (1)</label>
             <input type="text" name="bankName" value="<%= settings.bankName || 'Banka Kombëtare Tregtare (BKT)' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
           </div>
-
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN *</label>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (1) *</label>
             <input type="text" name="iban" value="<%= settings.iban || 'XK05 1901 0000 1234 5678' %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono font-bold text-emerald-400">
           </div>
-
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC</label>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (1)</label>
             <input type="text" name="swift" value="<%= settings.swift || 'BKTKXKPR' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <!-- Banka 2 -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (2)</label>
+            <input type="text" name="bankName2" value="<%= settings.bankName2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (2)</label>
+            <input type="text" name="iban2" value="<%= settings.iban2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (2)</label>
+            <input type="text" name="swift2" value="<%= settings.swift2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <!-- Banka 3 -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (3)</label>
+            <input type="text" name="bankName3" value="<%= settings.bankName3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (3)</label>
+            <input type="text" name="iban3" value="<%= settings.iban3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (3)</label>
+            <input type="text" name="swift3" value="<%= settings.swift3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
           </div>
 
           <div>
