@@ -91,10 +91,19 @@ app.use(globalLocals);
 // 9. Rate limiting për rrugët e autentifikimit
 app.use('/kycu', authLimiter);
 
-// 10. Rrugët e aplikacionit
+// 10. Konfigurimi i Header-ave CDN / NO-CACHE për të gjitha rrugët dinamike
+// Arkitektura: STATIC -> CACHE | DYNAMIC/API/AUTH -> NO-CACHE
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// 11. Rrugët e aplikacionit
 app.use('/', routes);
 
-// 11. Menaxhimi i gabimeve
+// 12. Menaxhimi i gabimeve
 app.use(notFoundHandler);
 app.use(errorHandler);
 
