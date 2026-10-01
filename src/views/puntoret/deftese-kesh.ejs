@@ -43,8 +43,8 @@
         <div class="flex items-center gap-3">
           <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
           <% if (printLogo) { %>
-            <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
-              <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+            <div class="flex items-center justify-start mb-2">
+              <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
             </div>
           <% } else { %>
             <span class="text-2xl font-black tracking-tight text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></span>

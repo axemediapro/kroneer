@@ -14,6 +14,9 @@
       .no-print { display: none !important; }
       @page { margin: 12mm; size: A4 portrait; }
     }
+    <% const intStampH = (company && company.stampHeight) ? company.stampHeight : 60; %>
+    .int-stamp-img { max-height: <%=intStampH%>px; }
+    .int-stamp-placeholder { height: <%=intStampH%>px; }
   </style>
 </head>
 <body class="bg-white text-slate-900 font-sans p-6 text-sm max-w-4xl mx-auto">
@@ -42,8 +45,8 @@
       <div>
         <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
         <% if (printLogo) { %>
-          <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
-            <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+          <div class="flex items-center justify-start mb-2">
+            <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
           </div>
         <% } else { %>
           <span class="text-2xl font-black tracking-tight text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></span>
@@ -149,10 +152,12 @@
       <div class="text-right flex flex-col items-end">
         <p class="text-[11px] text-slate-600 font-bold mb-3">Përgjegjësi i Ekipit / Menaxheri (KRONEER):</p>
         <% if (company && company.stampUrl) { %>
-          <img src="<%= company.stampUrl %>" alt="Vula" style="max-height: <%= company.stampHeight || 60 %>px;" class="mb-1">
+          <img src="<%= company.stampUrl %>" alt="Vula" class="int-stamp-img mb-1">
+        <% } else { %>
+          <div class="int-stamp-placeholder mb-1"></div>
         <% } %>
         <div class="border-b border-slate-400 w-48 mb-1"></div>
-        <p class="text-xs font-bold text-slate-900"><%= intervention.projectManager ? intervention.projectManager.fullName : 'Menaxher Projekti KRONEER' %></p>
+        <p class="text-xs font-bold text-slate-900">KRONEER</p>
         <p class="text-[10px] text-slate-500 font-mono">Vula & Nënshkrimi Zyrtar</p>
       </div>
     </div>

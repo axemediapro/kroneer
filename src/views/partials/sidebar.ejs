@@ -68,7 +68,7 @@
         <% if (isAdmin) { %>
         <a href="/pjeset-rezerve" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors <%= navCls(currentPath.startsWith('/pjeset-rezerve')) %>">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <span>Pjesët Rezervë</span>
+          <span>Produktet/Shërbimet</span>
         </a>
         <% } %>
       </div>
@@ -104,7 +104,7 @@
       <div class="space-y-1">
         <a href="/servisi-mirembajtja" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors <%= navCls(currentPath.startsWith('/servisi-mirembajtja')) %>">
           <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span class="font-semibold text-emerald-300">Qendra e Servisit (Krejt me një vend)</span>
+          <span class="font-semibold text-emerald-300">Qendra e Servisit</span>
         </a>
         <a href="/servisi" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors <%= navCls(currentPath.startsWith('/servisi') && !currentPath.startsWith('/servisi-mirembajtja')) %>">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -114,10 +114,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <span>Kontratat e Mirëmbajtjes</span>
         </a>
-        <a href="/pjeset-rezerve" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors <%= navCls(currentPath.startsWith('/pjeset-rezerve')) %>">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <span>Pjesët Rezervë</span>
-        </a>
+
       </div>
     </div>
 

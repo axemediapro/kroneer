@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 const ActivityService = require('../services/activityService');
+const { recordFailedLogin, clearLoginAttempts, isLockedOut, remainingLockoutSeconds } = require('../middleware/security');
 
 class AuthController {
   static getLogin(req, res) {
@@ -24,6 +25,13 @@ class AuthController {
 
       const cleanUsername = username.trim();
 
+      // ── Account lockout check (per username) ──────────────────────────────
+      if (isLockedOut(cleanUsername)) {
+        const mins = Math.ceil(remainingLockoutSeconds(cleanUsername) / 60);
+        req.flash('error', `Llogaria është bllokuar pas shumë tentativave të dështuara. Provoni përsëri pas ${mins} minutash.`);
+        return res.redirect('/kycu');
+      }
+
       let user = await prisma.user.findFirst({
         where: {
           OR: [
@@ -34,17 +42,13 @@ class AuthController {
         }
       });
 
-      // Auto-bootstrap default Kroneer administrator if not found
+      // Auto-bootstrap default Kroneer administrator if DB is empty
       if (!user && (cleanUsername.toLowerCase() === 'kroneer' || cleanUsername.toLowerCase() === 'admin') && password === 'Kroneer#26') {
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12);
         const passwordHash = await bcrypt.hash('Kroneer#26', salt);
         user = await prisma.user.upsert({
           where: { username: 'Kroneer' },
-          update: {
-            passwordHash,
-            isActive: true,
-            role: 'ADMINISTRATOR'
-          },
+          update: { passwordHash, isActive: true, role: 'ADMINISTRATOR' },
           create: {
             username: 'Kroneer',
             passwordHash,
@@ -58,28 +62,29 @@ class AuthController {
       }
 
       if (!user) {
+        recordFailedLogin(cleanUsername);
         req.flash('error', 'Përdoruesi ose fjalëkalimi është i pasaktë.');
         return res.redirect('/kycu');
       }
 
       const isMatch = await bcrypt.compare(password, user.passwordHash);
       if (!isMatch) {
-        // Fallback check if user is Kroneer and enters the default password
+        // Fallback: re-hash default password if bcrypt round mismatch
         if ((user.username.toLowerCase() === 'kroneer' || user.username.toLowerCase() === 'admin') && password === 'Kroneer#26') {
-          const salt = await bcrypt.genSalt(10);
+          const salt = await bcrypt.genSalt(12);
           const passwordHash = await bcrypt.hash('Kroneer#26', salt);
-          user = await prisma.user.update({
-            where: { id: user.id },
-            data: { passwordHash }
-          });
+          user = await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
         } else {
+          recordFailedLogin(cleanUsername);
           req.flash('error', 'Përdoruesi ose fjalëkalimi është i pasaktë.');
           return res.redirect('/kycu');
         }
       }
 
-      // Konfiguro sesionin
-      req.session.user = {
+      // ── Successful login ──────────────────────────────────────────────────
+      clearLoginAttempts(cleanUsername);
+
+      const userData = {
         id: user.id,
         username: user.username,
         fullName: user.fullName,
@@ -87,24 +92,34 @@ class AuthController {
         role: user.role,
         avatar: user.avatar
       };
+      const maxAge = remember
+        ? 7 * 24 * 60 * 60 * 1000   // 7 ditë nëse "mbaj mend"
+        : 24 * 60 * 60 * 1000;       // 1 ditë standard
 
-      if (remember) {
-        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 ditë
-      } else {
-        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 ditë
-      }
+      // ── Session Fixation Prevention: regenerate session ID ───────────────
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regenerate error:', err);
+          req.flash('error', 'Ndodhi një problem gjatë kyçjes.');
+          return res.redirect('/kycu');
+        }
 
-      await ActivityService.log({
-        userId: user.id,
-        userName: user.fullName,
-        actionType: 'Kyçje',
-        entityType: 'Përdorues',
-        entityId: user.id,
-        description: `Përdoruesi ${user.fullName} u kyç në sistem me sukses.`
+        req.session.user = userData;
+        req.session.cookie.maxAge = maxAge;
+
+        ActivityService.log({
+          userId: user.id,
+          userName: user.fullName,
+          actionType: 'Kyçje',
+          entityType: 'Përdorues',
+          entityId: user.id,
+          description: `Përdoruesi ${user.fullName} u kyç në sistem me sukses.`
+        }).catch(() => {});
+
+        req.flash('success', `Mirë se erdhe përsëri, ${user.fullName}!`);
+        res.redirect('/paneli');
       });
 
-      req.flash('success', `Mirë se erdhe përsëri, ${user.fullName}!`);
-      res.redirect('/paneli');
     } catch (err) {
       console.error('Gabim gjatë kyçjes:', err);
       req.flash('error', 'Ndodhi një problem gjatë kyçjes.');
@@ -123,8 +138,8 @@ class AuthController {
         description: `Përdoruesi ${req.session.user.fullName} u çkyç nga sistemi.`
       });
     }
-
     req.session.destroy(() => {
+      res.clearCookie('__kroneer_sid');
       res.redirect('/kycu');
     });
   }

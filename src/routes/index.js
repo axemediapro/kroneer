@@ -215,11 +215,15 @@ router.post('/servisi/:id/status', isAuthenticated, authorizeRoles('ADMINISTRATO
 // 14.1 Modernizimi (Shtylla 4)
 router.get('/modernizimi', isAuthenticated, OperationsHubController.getModernization);
 
-// 15. Pjesët Rezervë
-router.get('/pjeset-rezerve', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'TEKNIK', 'MENAXHER_PROJEKTI'), SparePartController.getIndex);
-router.get('/pjeset-rezerve/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SparePartController.getCreate);
-router.post('/pjeset-rezerve/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SparePartController.postCreate);
-router.post('/pjeset-rezerve/:id/stok', isAuthenticated, authorizeRoles('ADMINISTRATOR'), SparePartController.postUpdateStock);
+// 15. Pjesët Rezervë & Magazina / Katalogu
+router.get('/pjeset-rezerve', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'TEKNIK', 'MENAXHER_PROJEKTI', 'FINANCE', 'SHITJE'), SparePartController.getIndex);
+router.get('/pjeset-rezerve/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), SparePartController.getCreate);
+router.post('/pjeset-rezerve/krijo', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), SparePartController.postCreate);
+router.post('/pjeset-rezerve/:id/stok', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI'), SparePartController.postUpdateStock);
+router.get('/pjeset-rezerve/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), SparePartController.getEdit);
+router.post('/pjeset-rezerve/:id/ndrysho', isAuthenticated, authorizeRoles('ADMINISTRATOR', 'MENAXHER_PROJEKTI', 'FINANCE'), SparePartController.postEdit);
+router.get('/api/katalogu/kerko', isAuthenticated, SparePartController.apiLiveSearchItems);
+router.get('/api/spare-parts/search', isAuthenticated, SparePartController.apiLiveSearchItems);
 
 // 16. Qendra e Dokumenteve
 router.get('/dokumentet', isAuthenticated, DocumentController.getIndex);

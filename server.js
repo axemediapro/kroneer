@@ -45,8 +45,8 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
 // 5. Body Parsers & Input Sanitization
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(sanitizeInput);
 app.use(cookieParser(process.env.SESSION_SECRET || 'kroneer_cookie_secret_2026'));
 app.use(methodOverride('_method'));

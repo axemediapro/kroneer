@@ -1,0 +1,106 @@
+<%
+  const categories = [
+    'Mekanike','Elektrike','Hidraulike','Elektronike',
+    'Dyer','Siguri','Interier','Modernizim','Shërbime Inxhinierike'
+  ];
+%>
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-400 mb-1">
+        <a href="/pjeset-rezerve" class="hover:text-amber-400">Produktet/Shërbimet</a>
+        <span>/</span>
+        <span class="text-slate-200">Ndrysho</span>
+      </div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">Ndrysho: <%= part.name %></h1>
+      <p class="text-xs text-slate-400 mt-0.5 font-mono"><%= part.partNumber %></p>
+    </div>
+    <a href="/pjeset-rezerve" class="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form action="/pjeset-rezerve/<%= part.id %>/ndrysho" method="POST" class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-sm space-y-6">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Kodi / Numri i Pjesës *</label>
+        <input type="text" name="partNumber" required value="<%= part.partNumber %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white font-mono text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Emri i Artikullit / Shërbimit *</label>
+        <input type="text" name="name" required value="<%= part.name %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Kategoria *</label>
+        <select name="category" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <% categories.forEach(c => { %>
+            <option value="<%= c %>" <%= part.category === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Lifta Kompatibilë</label>
+        <input type="text" name="compatibleElevators" value="<%= part.compatibleElevators || '' %>"
+          placeholder="p.sh. KRONEER ProPassenger 630, 1000"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Çmimi Blerës (€)</label>
+        <input type="number" step="0.01" name="purchasePrice" value="<%= part.purchasePrice || 0 %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Çmimi Shitës (€) *</label>
+        <input type="number" step="0.01" name="sellingPrice" required value="<%= part.sellingPrice || 0 %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Sasia në Stok</label>
+        <input type="number" name="stockQty" min="0" value="<%= part.stockQty %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Pragu Minimal i Stokut (Alarm)</label>
+        <input type="number" name="minStockQty" min="1" value="<%= part.minStockQty %>"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Furnitori</label>
+        <input type="text" name="supplier" value="<%= part.supplier || '' %>"
+          placeholder="p.sh. Wittur, Fermator"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-300 mb-2">Vendndodhja në Magazinë (Rafti)</label>
+        <input type="text" name="location" value="<%= part.location || '' %>"
+          placeholder="p.sh. Rafti A-04, Sektori Elektrik"
+          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+    </div>
+
+    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+      <a href="/pjeset-rezerve" class="px-5 py-2.5 text-sm font-medium text-slate-300 bg-slate-700 rounded-lg hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-5 py-2.5 text-sm font-medium text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-lg transition shadow-sm flex items-center gap-2">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Ruaj Ndryshimet
+      </button>
+    </div>
+  </form>
+</div>

@@ -3,8 +3,8 @@
   <div>
     <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
     <% if (printLogo) { %>
-      <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
-        <img src="<%= printLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
       </div>
     <% } else { %>
       <div class="flex items-center gap-3 mb-2">

@@ -22,13 +22,16 @@
   const defaultClosing = `Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.`;
 %>
 
+<!-- Wrapper flex-col: content fills page, signature/footer pushes to bottom -->
+<div style="display:flex; flex-direction:column; min-height:247mm;">
+
 <!-- Koka Zyrtare e Kontratës -->
 <div class="avoid-break flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
   <div>
     <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
     <% if (printLogo) { %>
-      <div style="height: 48px; max-width: 240px;" class="flex items-center justify-start mb-2">
-        <img src="<%= printLogo %>" alt="<%= compName %>" style="height: 48px; width: auto; max-width: 240px; object-fit: contain; display: block;">
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= compName %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
       </div>
     <% } else { %>
       <div class="flex items-center gap-3 mb-2">
@@ -59,6 +62,8 @@
   <%= contract.contractTitle || 'KONTRATË PËR FURNIZIMIN, MONTIMIN DHE MIRËMBAJTJEN E SISTEMEVE TË LIFTEVE' %>
 </div>
 
+<!-- Main content grows to fill page; signature floats to bottom -->
+<div style="flex:1;">
 <div class="space-y-2.5 text-[11px] leading-snug text-slate-800 mb-5">
   
   <!-- Preambula -->
@@ -67,47 +72,47 @@
   </p>
 
   <!-- Neni 1 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article1Title || 'NENI 1: OBJEKTI I KONTRATËS' %></h4>
-  <p class="leading-snug">
-    <%= contract.article1Text || defaultArt1 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article1Title || 'NENI 1: OBJEKTI I KONTRATËS' %></h4>
+    <p class="leading-snug"><%= contract.article1Text || defaultArt1 %></p>
+  </div>
 
   <!-- Neni 2 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article2Title || 'NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS' %></h4>
-  <p class="leading-snug">
-    <%= contract.article2Text || defaultArt2 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article2Title || 'NENI 2: VLERA E KONTRATËS DHE KUSHTET E PAGESËS' %></h4>
+    <p class="leading-snug"><%= contract.article2Text || defaultArt2 %></p>
+  </div>
 
   <!-- Neni 3 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article3Title || 'NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA' %></h4>
-  <p class="leading-snug">
-    <%= contract.article3Text || defaultArt3 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article3Title || 'NENI 3: AFATET E EKZEKUTIMIT DHE GARANCIA' %></h4>
+    <p class="leading-snug"><%= contract.article3Text || defaultArt3 %></p>
+  </div>
 
   <!-- Neni 4 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article4Title || 'NENI 4: MIRËMBAJTJA & SHËRBIMI' %></h4>
-  <p class="leading-snug">
-    <%= contract.article4Text || defaultArt4 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article4Title || 'NENI 4: MIRËMBAJTJA & SHËRBIMI' %></h4>
+    <p class="leading-snug"><%= contract.article4Text || defaultArt4 %></p>
+  </div>
 
   <!-- Neni 5 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE' %></h4>
-  <p class="leading-snug whitespace-pre-line">
-    <%= contract.article5Text || defaultArt5 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E PALËVE' %></h4>
+    <p class="leading-snug whitespace-pre-line"><%= contract.article5Text || defaultArt5 %></p>
+  </div>
 
   <!-- Neni 6 -->
-  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE' %></h4>
-  <p class="leading-snug">
-    <%= contract.article6Text || defaultArt6 %>
-  </p>
+  <div class="avoid-break">
+    <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & DISPOZITAT PËRFUNDIMTARE' %></h4>
+    <p class="leading-snug"><%= contract.article6Text || defaultArt6 %></p>
+  </div>
 
   <!-- Klauzola Speciale -->
   <% if (contract.specialTerms) { %>
-    <h4 class="font-bold text-slate-950 uppercase pt-1">KLAUZOLA SPECIALE TË DAKORDUARA</h4>
-    <p class="leading-snug whitespace-pre-line bg-slate-50 p-2.5 rounded border border-slate-200">
-      <%= contract.specialTerms %>
-    </p>
+    <div class="avoid-break">
+      <h4 class="font-bold text-slate-950 uppercase pt-1">KLAUZOLA SPECIALE TË DAKORDUARA</h4>
+      <p class="leading-snug whitespace-pre-line bg-slate-50 p-2.5 rounded border border-slate-200"><%= contract.specialTerms %></p>
+    </div>
   <% } %>
 
   <!-- Dispozita Përfundimtare -->
@@ -116,16 +121,19 @@
   </p>
 
 </div>
+</div><!-- /flex:1 content area -->
 
-<!-- Nënshkrimet Zyrtare -->
+<!-- Nënshkrimet Zyrtare – margin-top:auto e shtyn në fund të faqes nëse ka hapësirë -->
 <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
-<div class="avoid-break pt-6 border-t border-slate-300 text-xs mb-6">
+<% const stampMaxW = Math.min(320, Math.round(stampH * 2.5)); %>
+<style>.stamp-box { height: <%= stampH %>px; min-height: <%= stampH %>px; } .stamp-img { height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= stampMaxW %>px; }</style>
+<div class="avoid-break pt-6 border-t border-slate-300 text-xs mb-6" style="margin-top:auto; break-before:auto;">
   <div class="grid grid-cols-2 gap-12 text-center">
     <div class="flex flex-col items-center">
       <p class="font-bold text-slate-900 mb-1">Për Shitësin (<%= compName %>):</p>
-      <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="flex items-end justify-center mb-1">
+      <div class="stamp-box flex items-end justify-center mb-1">
         <% if (company && company.stampUrl) { %>
-          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi <%= compName %>" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
+          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi" class="stamp-img w-auto object-contain filter drop-shadow-sm">
         <% } %>
       </div>
       <div class="w-56 mx-auto border-b border-slate-900 pb-1">
@@ -135,7 +143,7 @@
 
     <div class="flex flex-col items-center">
       <p class="font-bold text-slate-900 mb-1">Për Blerësin (<%= clientName %>):</p>
-      <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="mb-1"></div>
+      <div class="stamp-box mb-1"></div>
       <div class="w-56 mx-auto border-b border-slate-900 pb-1">
         <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
       </div>
@@ -180,3 +188,5 @@
     </div>
   <% } %>
 </div>
+
+</div><!-- /flex-col wrapper -->

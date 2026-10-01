@@ -46,7 +46,6 @@
         <input type="date" name="dueDate" value="<%= new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
       </div>
 
-      <!-- MODAL: Shto Klient të Ri (i shpejtë) -->
       <%- include('../partials/quick-customer-modal') %>
     </div>
   </div>
@@ -55,11 +54,44 @@
     items: [
       { name: 'Pajisje dhe Shërbime Lifti KRONEER', description: 'Furnizim dhe montim sipas specifikacionit teknik', quantity: 1, unitPrice: 25000, discount: 0 }
     ],
+    searches: [{ query: '', results: [], open: false, loading: false, timer: null, rect: null }],
     addItem() {
       this.items.push({ name: '', description: '', quantity: 1, unitPrice: 0, discount: 0 });
+      this.searches.push({ query: '', results: [], open: false, loading: false, timer: null, rect: null });
     },
     removeItem(idx) {
-      if (this.items.length > 1) this.items.splice(idx, 1);
+      if (this.items.length > 1) {
+        this.items.splice(idx, 1);
+        this.searches.splice(idx, 1);
+      }
+    },
+    async searchProducts(idx, el) {
+      const s = this.searches[idx];
+      const q = this.items[idx].name;
+      clearTimeout(s.timer);
+      if (el) s.rect = el.getBoundingClientRect();
+      if (!q || q.length < 1) { s.results = []; s.open = false; return; }
+      s.loading = true;
+      s.timer = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/katalogu/kerko?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          s.results = data.success ? data.items : [];
+          s.open = s.results.length > 0;
+        } catch(e) { s.results = []; s.open = false; }
+        s.loading = false;
+      }, 280);
+    },
+    selectProduct(idx, prod) {
+      this.items[idx].name = prod.name;
+      this.items[idx].unitPrice = prod.sellingPrice || 0;
+      this.items[idx].description = prod.code + (prod.description && prod.description !== prod.code ? ' · ' + prod.description : '');
+      this.searches[idx].open = false;
+    },
+    ddStyle(idx) {
+      const r = this.searches[idx] && this.searches[idx].rect;
+      if (!r) return '';
+      return `position:fixed;top:${r.bottom + 4}px;left:${r.left}px;width:${r.width}px;z-index:9999;`;
     },
     subtotal() {
       return this.items.reduce((s, it) => s + (parseFloat(it.quantity || 1) * parseFloat(it.unitPrice || 0)), 0);
@@ -100,8 +132,58 @@
           <template x-for="(item, index) in items" :key="index">
             <tr>
               <td class="p-2 space-y-1">
-                <input type="text" x-model="item.name" required placeholder="Emri i artikullit / shërbimit" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none">
-                <input type="text" x-model="item.description" placeholder="Përshkrim" class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
+                <!-- Autocomplete Name Field -->
+                <div class="relative" @keydown.escape="searches[index].open = false" @click.outside="searches[index].open = false">
+                  <div class="relative">
+                    <input
+                      type="text"
+                      x-model="item.name"
+                      x-ref="nameInput"
+                      @input="searchProducts(index, $el)"
+                      @focus="searchProducts(index, $el)"
+                      required
+                      placeholder="Kërko produkt / shërbim ose shtyp emrin…"
+                      autocomplete="off"
+                      class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none focus:border-amber-400 pr-7"
+                    >
+                    <span x-show="searches[index] && searches[index].loading" class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg class="w-3 h-3 animate-spin text-amber-400" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    </span>
+                  </div>
+                  <!-- Dropdown -->
+                  <div
+                    x-show="searches[index] && searches[index].open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    :style="ddStyle(index)"
+                    class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto"
+                    style="display:none;"
+                  >
+                    <template x-for="prod in searches[index].results" :key="prod.id">
+                      <button
+                        type="button"
+                        @mousedown.prevent="selectProduct(index, prod)"
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-800 text-left transition"
+                      >
+                        <span
+                          class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                          :class="prod.isService ? 'bg-sky-500/20 text-sky-300' : prod.isModernization ? 'bg-purple-500/20 text-purple-300' : 'bg-amber-500/15 text-amber-400'"
+                          x-text="prod.isService ? 'Shërbim' : prod.isModernization ? 'Modernizim' : 'Pjesë'"
+                        ></span>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-xs font-bold text-white truncate" x-text="prod.name"></div>
+                          <div class="text-[10px] text-slate-400 font-mono" x-text="prod.code + ' · Stok: ' + prod.stockQty"></div>
+                        </div>
+                        <span class="shrink-0 text-xs font-black text-amber-400 font-mono" x-text="'€' + (prod.sellingPrice || 0).toFixed(2)"></span>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+                <input type="text" x-model="item.description" placeholder="Përshkrim (opsional)" class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
               </td>
               <td class="p-2 text-center">
                 <input type="number" x-model.number="item.quantity" min="1" step="1" class="w-16 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-center focus:outline-none">

@@ -93,7 +93,7 @@ class ServiceController {
           orderBy: { fullName: 'asc' }
         }),
         prisma.companySettings.findFirst(),
-        prisma.activityLog.findMany({
+        prisma.activity.findMany({
           where: {
             entityType: 'Servis',
             entityId: ticket.id
