@@ -1,0 +1,215 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono tracking-tight">PUNTORËT & STAFI</h1>
+      <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+        <%= stats.total %> Puntorë
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Regjistri i punonjësve, menaxhimi i kontratave dhe orareve zyrtare të punës</p>
+  </div>
+
+  <div class="flex items-center gap-2.5 flex-wrap">
+    <a href="/prezenca" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-2 shadow transition-all">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Orari & Prezenca (Live Clock)</span>
+    </a>
+
+    <a href="/puntoret/krijo" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      <span>Regjistro Puntor të Ri</span>
+    </a>
+  </div>
+</div>
+
+<!-- Kartelat e Statistikave Ditore -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Gjithsej Puntorë</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-black text-slate-100 font-mono"><%= stats.total %></span>
+      <span class="text-[11px] text-slate-500">të regjistruar</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <div class="flex items-center justify-between">
+      <span class="text-slate-400 text-xs font-semibold block mb-1">Në Punë Sot</span>
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-black text-emerald-400 font-mono"><%= stats.workingNow %></span>
+      <span class="text-[11px] text-emerald-500/80">aktivë tani</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Në Pauzë</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-black text-amber-400 font-mono"><%= stats.onBreakNow %></span>
+      <span class="text-[11px] text-amber-500/80">pauzë dreke/kafe</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Përfunduan Turnin</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-black text-cyan-400 font-mono"><%= stats.completedToday %></span>
+      <span class="text-[11px] text-cyan-500/80">sot</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl col-span-2 sm:col-span-1">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Puntorë Aktivë</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-black text-slate-200 font-mono"><%= stats.active %></span>
+      <span class="text-[11px] text-slate-500">në staf</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filtra dhe Kërkimi -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 mb-6 shadow-xl">
+  <form action="/puntoret" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 text-xs">
+    <div class="sm:col-span-5">
+      <input type="text" name="kerko" value="<%= filters.kerko %>" placeholder="Kërko me emër, mbiemër, kod, telefon, pozitë..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400">
+    </div>
+
+    <div class="sm:col-span-3">
+      <select name="departamenti" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjitha Departamentet</option>
+        <% departments.forEach(dep => { %>
+          <option value="<%= dep %>" <%= filters.departamenti === dep ? 'selected' : '' %>><%= dep %></option>
+        <% }); %>
+      </select>
+    </div>
+
+    <div class="sm:col-span-2">
+      <select name="statusi" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjitha Statuset</option>
+        <option value="Aktiv" <%= filters.statusi === 'Aktiv' ? 'selected' : '' %>>Aktiv</option>
+        <option value="Pushim Vjetor" <%= filters.statusi === 'Pushim Vjetor' ? 'selected' : '' %>>Pushim Vjetor</option>
+        <option value="Pushim Mjekësor" <%= filters.statusi === 'Pushim Mjekësor' ? 'selected' : '' %>>Pushim Mjekësor</option>
+        <option value="Pezulluar" <%= filters.statusi === 'Pezulluar' ? 'selected' : '' %>>Pezulluar</option>
+        <option value="Joaktiv" <%= filters.statusi === 'Joaktiv' ? 'selected' : '' %>>Joaktiv</option>
+      </select>
+    </div>
+
+    <div class="sm:col-span-2 flex gap-2">
+      <button type="submit" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20">
+        Filtro
+      </button>
+      <a href="/puntoret" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Tabela e Puntorëve -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold font-mono">
+        <tr>
+          <th class="py-3.5 px-4">Kodi</th>
+          <th class="py-3.5 px-4">Puntori & Kontakti</th>
+          <th class="py-3.5 px-4">Pozita & Departamenti</th>
+          <th class="py-3.5 px-4">Orari Zyrtar</th>
+          <th class="py-3.5 px-4">Statusi Sot</th>
+          <th class="py-3.5 px-4">Gjendja</th>
+          <th class="py-3.5 px-4 text-right">Veprime</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/60">
+        <% if (employees && employees.length > 0) { %>
+          <% employees.forEach(emp => { %>
+            <% const todayAtt = emp.attendances && emp.attendances[0] ? emp.attendances[0] : null; %>
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <a href="/puntoret/<%= emp.id %>" class="hover:underline"><%= emp.code %></a>
+              </td>
+              
+              <td class="py-3.5 px-4">
+                <a href="/puntoret/<%= emp.id %>" class="font-bold text-slate-100 hover:text-amber-400 text-sm block">
+                  <%= emp.firstName %> <%= emp.lastName %>
+                </a>
+                <div class="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                  <% if (emp.phone) { %><span><%= emp.phone %></span><% } %>
+                  <% if (emp.phone && emp.email) { %><span>•</span><% } %>
+                  <% if (emp.email) { %><span class="text-slate-500"><%= emp.email %></span><% } %>
+                </div>
+              </td>
+
+              <td class="py-3.5 px-4">
+                <span class="font-semibold text-slate-200 block"><%= emp.position %></span>
+                <span class="text-[10px] text-amber-500/90"><%= emp.department %></span>
+              </td>
+
+              <td class="py-3.5 px-4">
+                <span class="font-mono text-slate-300 font-semibold"><%= emp.shiftStart %> - <%= emp.shiftEnd %></span>
+                <span class="text-[10px] text-slate-500 block">Pauza: <%= emp.breakMinutes %> min</span>
+              </td>
+
+              <td class="py-3.5 px-4">
+                <% if (!todayAtt) { %>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                    Pa Regjistrim
+                  </span>
+                <% } else if (todayAtt.status === 'Në Punë') { %>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Në Punë (<%= todayAtt.checkIn ? new Date(todayAtt.checkIn).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' }) : '-' %>)
+                  </span>
+                <% } else if (todayAtt.status === 'Në Pauzë') { %>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    Në Pauzë
+                  </span>
+                <% } else if (todayAtt.status === 'Përfunduar') { %>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    Përfunduar (<%= todayAtt.workedHours %> orë)
+                  </span>
+                <% } else { %>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
+                    <%= todayAtt.status %>
+                  </span>
+                <% } %>
+              </td>
+
+              <td class="py-3.5 px-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase <%= emp.status === 'Aktiv' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : (emp.status === 'Pushim Vjetor' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20') %>">
+                  <%= emp.status %>
+                </span>
+              </td>
+
+              <td class="py-3.5 px-4 text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <a href="/puntoret/<%= emp.id %>" title="Shiko Profilin & Prezencën" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </a>
+                  <a href="/puntoret/<%= emp.id %>/ndrysho" title="Ndrysho të dhënat" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400 text-xs">
+              <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <p class="font-bold text-slate-300">Nuk u gjet asnjë puntor me këto filtra.</p>
+              <p class="text-slate-500 mt-1">Regjistroni një puntor të ri për të filluar menaxhimin e stafit dhe prezencës.</p>
+              <a href="/puntoret/krijo" class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all">
+                + Regjistro Puntor të Ri
+              </a>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

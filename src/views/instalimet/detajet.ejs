@@ -1,0 +1,387 @@
+<div class="space-y-6">
+  <!-- Top Breadcrumb & Actions Bar -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/instalimet" class="hover:text-amber-600 dark:hover:text-amber-400 transition-colors">Qendra e Instalimeve</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200 font-mono font-medium">SN: <%= installation.serialNumber %></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <%= installation.elevatorModel %>
+        </h1>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold <%= 
+          installation.status === 'Përfunduar' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800' :
+          installation.status === 'Në Testim' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800' :
+          installation.status === 'Në Instalim' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 border border-amber-300 dark:border-amber-800' :
+          'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600'
+        %>">
+          <span class="w-1.5 h-1.5 rounded-full mr-1.5 <%= installation.status === 'Përfunduar' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse' %>"></span>
+          <%= installation.status %>
+        </span>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Projekti: <a href="/projektet/<%= installation.projectId %>" class="font-medium text-amber-600 dark:text-amber-400 hover:underline"><%= installation.project.name %></a> 
+        • Klienti: <span class="text-slate-700 dark:text-slate-300 font-medium"><%= installation.project.customer ? installation.project.customer.companyName : '-' %></span>
+      </p>
+    </div>
+
+    <!-- Top Action Buttons -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- QR Code Modal Button -->
+      <div x-data="{ qrModalOpen: false }" class="relative">
+        <button 
+          type="button" 
+          @click="qrModalOpen = true"
+          title="Shiko & Shkarko QR Code të Enkriptuar për Kabinë"
+          class="inline-flex items-center px-3.5 py-2 text-sm font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 shadow-sm transition"
+        >
+          <i data-lucide="qr-code" class="w-4 h-4 mr-2 text-amber-500"></i>
+          QR Pass
+        </button>
+
+        <!-- QR Modal -->
+        <div 
+          x-show="qrModalOpen" 
+          x-cloak 
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+          @keydown.escape.window="qrModalOpen = false"
+        >
+          <div 
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-4"
+            @click.away="qrModalOpen = false"
+          >
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="qr-code" class="w-5 h-5 text-amber-500"></i>
+                <h3 class="font-bold text-slate-900 dark:text-white">QR Code i Liftit (Pasaporta & Raportimi)</h3>
+              </div>
+              <button @click="qrModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <div class="flex flex-col items-center justify-center py-4 space-y-3">
+              <div class="p-3 bg-white rounded-xl shadow-md border border-slate-200">
+                <img src="<%= qrCodeDataUrl %>" alt="QR Code Lift Tracking" class="w-52 h-52 object-contain" />
+              </div>
+              <div class="text-center">
+                <div class="text-sm font-bold text-slate-900 dark:text-white"><%= installation.elevatorModel %></div>
+                <div class="text-xs font-mono text-slate-500">SN: <%= installation.serialNumber %></div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
+                  Ky QR Code vendoset në kabinën e liftit ose paneline komandues. Klienti dhe teknikët mund ta skanojnë me telefon.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <a 
+                href="<%= qrCodeDataUrl %>" 
+                download="KRONEER_QR_<%= installation.serialNumber %>.png"
+                class="inline-flex items-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm transition"
+              >
+                <i data-lucide="download" class="w-4 h-4 mr-1.5"></i> Shkarko Imazhin
+              </a>
+              <button 
+                type="button" 
+                @click="qrModalOpen = false" 
+                class="px-4 py-2 text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg transition"
+              >
+                Mbyll
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Client Portal Preview -->
+      <a 
+        href="<%= trackingUrl %>" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="inline-flex items-center px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 text-sm font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-sm transition group"
+      >
+        <i data-lucide="external-link" class="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform"></i>
+        Portali i Klientit (Live)
+      </a>
+
+      <!-- Handover Process Button -->
+      <% if (installation.progressPercent === 100 || installation.status === 'Përfunduar') { %>
+        <% if (handover) { %>
+          <a href="/dorezimi/<%= handover.id %>" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+            <i data-lucide="file-check" class="w-4 h-4 mr-2"></i>
+            Procesverbali i Dorëzimit
+          </a>
+        <% } else { %>
+          <a href="/dorezimi/krijo?projectId=<%= installation.projectId %>&installationId=<%= installation.id %>" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition animate-bounce">
+            <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
+            Krijo Dorëzimin Teknik
+          </a>
+        <% } %>
+      <% } %>
+
+      <a href="/instalimet" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+        Kthehu
+      </a>
+    </div>
+  </div>
+
+  <!-- Public Encrypted Real-Time Tracking Link Card -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 shadow-xl p-5 text-white" x-data="{ copied: false }">
+    <div class="absolute -top-24 -right-24 w-60 h-60 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+      <div class="space-y-1">
+        <div class="flex items-center space-x-2">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1 text-emerald-400"></i>
+            Link i Enkriptuar për Klientin (SHA-256)
+          </span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-ping"></span> Live Real-Time
+          </span>
+        </div>
+        <h2 class="text-lg font-bold text-white tracking-tight">Sistemi Publik i Monitorimit & Pasaportës së Liftit</h2>
+        <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+          Dërgojani këtë link klientit apo administratorit të objektit. Ata mund të shohin live gjendjen e montimit, të gjitha 13 fazat teknike, dhe pas përfundimit: pasaportën teknike, garancinë, orarin e mirëmbajtjes dhe të raportojnë defekte direkt pa pasur nevojë të kyçen.
+        </p>
+      </div>
+
+      <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="flex items-center bg-slate-950/80 border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-mono text-indigo-300 max-w-full sm:max-w-xs truncate select-all">
+          <i data-lucide="link" class="w-3.5 h-3.5 mr-2 shrink-0 text-slate-400"></i>
+          <span class="truncate"><%= trackingUrl %></span>
+        </div>
+        <button 
+          type="button" 
+          @click="navigator.clipboard.writeText('<%= trackingUrl %>'); copied = true; setTimeout(() => copied = false, 3000)"
+          class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/30 transition transform active:scale-95 shrink-0"
+        >
+          <template x-if="!copied">
+            <span class="flex items-center">
+              <i data-lucide="copy" class="w-3.5 h-3.5 mr-1.5"></i> Kopjo Linkun
+            </span>
+          </template>
+          <template x-if="copied">
+            <span class="flex items-center text-emerald-300">
+              <i data-lucide="check" class="w-3.5 h-3.5 mr-1.5"></i> U Kopjua!
+            </span>
+          </template>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress & Overview Card -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gjendja e Montimit</span>
+        <div class="flex items-center space-x-3 mt-1">
+          <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight"><%= installation.progressPercent %>%</span>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full <%= 
+            installation.progressPercent === 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' :
+            installation.status === 'Në Instalim' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400' :
+            'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400'
+          %>">
+            <%= installation.status %>
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 text-xs text-slate-500 dark:text-slate-400">
+        <div>
+          <span class="block text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider text-[10px]">Ekipi & Tekniku:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200 text-sm"><%= installation.teamLead || (installation.technician ? installation.technician.fullName : 'Ekipi KRONEER') %></span>
+        </div>
+        <div>
+          <span class="block text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider text-[10px]">Data e Fillimit:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200 text-sm"><%= new Date(installation.startDate).toLocaleDateString('sq-AL') %></span>
+        </div>
+        <div>
+          <span class="block text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider text-[10px]">Afati i Synuar:</span>
+          <span class="font-semibold text-slate-800 dark:text-slate-200 text-sm"><%= installation.targetDate ? new Date(installation.targetDate).toLocaleDateString('sq-AL') : 'I hapur' %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic Progress Bar -->
+    <div class="w-full bg-slate-100 dark:bg-slate-700/80 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-slate-700">
+      <div 
+        class="h-full rounded-full transition-all duration-700 ease-out <%= installation.progressPercent === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20' : 'bg-gradient-to-r from-amber-500 to-amber-600 shadow-md shadow-amber-500/20' %>" 
+        style="width: <%= installation.progressPercent %>%"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Main Grid: 13 Checklist Steps & Lifecycle Summary -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    
+    <!-- Left Column (2 Cols): 13-Point Engineering Checklist -->
+    <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/30">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center">
+            <i data-lucide="clipboard-check" class="w-5 h-5 mr-2 text-amber-500"></i>
+            Lista e Kontrollit Inxhinierik (13 Hapa Standardë KRONEER)
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Klikoni mbi secilën pikë për ta shënuar si të përfunduar ose të papërfunduar. Progresi llogaritet automatikisht në kohë reale.
+          </p>
+        </div>
+        <span class="inline-flex items-center self-start sm:self-auto text-xs font-bold px-3 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 rounded-full shrink-0">
+          <%= installation.checklistItems.filter(i => i.isCompleted).length %> nga <%= installation.checklistItems.length %> të Përfunduara
+        </span>
+      </div>
+
+      <div class="divide-y divide-slate-100 dark:divide-slate-700/60">
+        <% installation.checklistItems.forEach((item, index) => { %>
+          <div class="p-4 flex items-start sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
+            <div class="flex items-start sm:items-center space-x-3.5">
+              <span class="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0 <%= item.isCompleted ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' %>">
+                <%= index + 1 %>
+              </span>
+              <div>
+                <p class="text-sm font-semibold <%= item.isCompleted ? 'text-slate-900 dark:text-white line-through opacity-80' : 'text-slate-900 dark:text-white' %>">
+                  <%= item.itemTitle %>
+                </p>
+                <% if (item.isCompleted && item.completedAt) { %>
+                  <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center">
+                    <i data-lucide="check" class="w-3.5 h-3.5 mr-1"></i>
+                    Përfunduar më <%= new Date(item.completedAt).toLocaleString('sq-AL') %> <%= item.completedBy ? `nga ${item.completedBy}` : '' %>
+                  </p>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Form Toggle Button -->
+            <form action="/instalimet/<%= installation.id %>/checklist-toggle" method="POST" class="shrink-0">
+              <input type="hidden" name="checklistItemId" value="<%= item.id %>">
+              <button 
+                type="submit" 
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition inline-flex items-center <%= item.isCompleted ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600' %>"
+              >
+                <% if (item.isCompleted) { %>
+                  <i data-lucide="check-circle" class="w-4 h-4 mr-1.5 text-emerald-600 dark:text-emerald-400"></i> Përfunduar
+                <% } else { %>
+                  <i data-lucide="circle" class="w-4 h-4 mr-1.5 text-slate-400"></i> Shëno si të Përfunduar
+                <% } %>
+              </button>
+            </form>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Right Column (1 Col): Post-Installation Hub, Passport & Maintenance Status -->
+    <div class="space-y-6">
+      
+      <!-- Lifecycle Status Card (Dorëzimi & Mirëmbajtja) -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-4">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
+          <i data-lucide="shield" class="w-4 h-4 mr-2 text-indigo-500"></i>
+          Gjendja Pas Instalimit
+        </h3>
+
+        <!-- Handover Info -->
+        <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-300">Procesverbali i Dorëzimit</span>
+            <% if (handover) { %>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">I Nënshkruar</span>
+            <% } else { %>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">Në Pritje</span>
+            <% } %>
+          </div>
+          <% if (handover) { %>
+            <p class="text-xs text-slate-500">
+              Dorëzuar më <%= new Date(handover.handoverDate).toLocaleDateString('sq-AL') %> me <%= handover.warrantyMonths %> muaj garanci.
+            </p>
+            <div class="pt-1 flex gap-2">
+              <a href="/dorezimi/<%= handover.id %>" class="text-xs text-amber-600 hover:underline font-semibold flex items-center">
+                <i data-lucide="eye" class="w-3 h-3 mr-1"></i> Shiko Procesverbalin
+              </a>
+            </div>
+          <% } else { %>
+            <p class="text-xs text-slate-500">
+              Pas përfundimit të 13 hapave, gjenerohet procesverbali zyrtar i testimit dhe pranim-dorëzimit.
+            </p>
+          <% } %>
+        </div>
+
+        <!-- Maintenance Contract Info -->
+        <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-300">Kontrata e Mirëmbajtjes</span>
+            <% if (maintenanceContract) { %>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"><%= maintenanceContract.status %></span>
+            <% } else { %>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">Pa Kontratë</span>
+            <% } %>
+          </div>
+          <% if (maintenanceContract) { %>
+            <p class="text-xs text-slate-500">
+              Paketa: <strong class="text-slate-700 dark:text-slate-300"><%= maintenanceContract.packageType %></strong> • <%= maintenanceContract.visitsPerYear %> vizita/vit.
+            </p>
+            <a href="/mirembajtja/<%= maintenanceContract.id %>" class="text-xs text-indigo-600 hover:underline font-semibold inline-flex items-center pt-1">
+              <i data-lucide="tool" class="w-3 h-3 mr-1"></i> Shiko Kontratën e Mirëmbajtjes
+            </a>
+          <% } else { %>
+            <p class="text-xs text-slate-500">
+              Pas dorëzimit, aktivizohet kontrata e mirëmbajtjes periodike me vizita mujore/tremujore.
+            </p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Technical Passport Data Card -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
+          <i data-lucide="cpu" class="w-4 h-4 mr-2 text-amber-500"></i>
+          Pasaporta Teknike e Liftit
+        </h3>
+
+        <div class="text-xs space-y-2.5 divide-y divide-slate-100 dark:divide-slate-700/60">
+          <div class="flex justify-between items-center pt-1">
+            <span class="text-slate-500">Modeli / Kodi:</span>
+            <span class="font-bold text-slate-800 dark:text-slate-200"><%= installation.elevatorModel %></span>
+          </div>
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-slate-500">Numri Serik (SN):</span>
+            <span class="font-mono font-bold text-amber-600 dark:text-amber-400"><%= installation.serialNumber %></span>
+          </div>
+          <% if (elevatorModelData) { %>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-slate-500">Kapaciteti / Pesha:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200"><%= elevatorModelData.capacityKg ? `${elevatorModelData.capacityKg} kg (${elevatorModelData.capacityPersons || Math.round(elevatorModelData.capacityKg/75)} persona)` : '630 kg (8 persona)' %></span>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-slate-500">Shpejtësia:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200"><%= elevatorModelData.speed ? `${elevatorModelData.speed} m/s` : '1.0 m/s' %></span>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-slate-500">Stacionet / Katet:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200"><%= elevatorModelData.floors || '8 Kate (R+7)' %></span>
+            </div>
+          <% } else { %>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-slate-500">Standardi i Sigurisë:</span>
+              <span class="font-semibold text-emerald-600 dark:text-emerald-400">EN 81-20 / EN 81-50 (CE)</span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Technical Notes -->
+      <% if (installation.notes) { %>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">Shënime Teknike</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+            <%= installation.notes %>
+          </p>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</div>

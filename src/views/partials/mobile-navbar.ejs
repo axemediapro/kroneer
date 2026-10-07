@@ -1,0 +1,62 @@
+<!-- Mobile Bottom Navigation Bar (Visible only on mobile / tablet < lg) -->
+<nav id="mobile-bottom-navbar" class="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/90 shadow-[0_-10px_35px_rgba(0,0,0,0.5)] px-2 pt-1.5 pb-safe transition-all">
+  <%
+    const isFieldNav = typeof isFieldStaff !== 'undefined' && isFieldStaff;
+  %>
+  <div class="max-w-md mx-auto grid grid-cols-5 items-end text-center">
+
+    <a href="/paneli" class="flex flex-col items-center justify-center py-1 group transition-colors <%= currentPath === '/paneli' || currentPath === '/menaxheri' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= currentPath === '/paneli' || currentPath === '/menaxheri' ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Paneli</span>
+    </a>
+
+    <% if (isFieldNav) { %>
+    <a href="/intervenimet" class="flex flex-col items-center justify-center py-1 group transition-colors <%= currentPath.startsWith('/intervenimet') ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= currentPath.startsWith('/intervenimet') ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="wrench" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Intervenimet</span>
+    </a>
+    <% } else { %>
+    <a href="/klientet" class="flex flex-col items-center justify-center py-1 group transition-colors <%= currentPath.startsWith('/klientet') ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= currentPath.startsWith('/klientet') ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="users" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Klientët</span>
+    </a>
+    <% } %>
+
+    <button type="button" id="mobile-search-btn" class="flex flex-col items-center justify-center -mt-4 group focus:outline-none">
+      <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-500 text-slate-950 flex items-center justify-center shadow-lg shadow-amber-500/40 border-[3px] border-slate-900 group-hover:scale-105 group-active:scale-95 transition-all">
+        <i data-lucide="search" class="w-5 h-5 stroke-[2.5]"></i>
+      </div>
+      <span class="text-[10px] font-bold text-amber-400 mt-1 tracking-tight">Kërko</span>
+    </button>
+
+    <% if (isFieldNav) { %>
+    <a href="/projektet" class="flex flex-col items-center justify-center py-1 group transition-colors <%= currentPath.startsWith('/projektet') ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= currentPath.startsWith('/projektet') ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="building-2" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Projektet</span>
+    </a>
+    <% } else { %>
+    <a href="/faturat" class="flex flex-col items-center justify-center py-1 group transition-colors <%= (currentPath.startsWith('/faturat') || currentPath.startsWith('/profaturat')) ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= (currentPath.startsWith('/faturat') || currentPath.startsWith('/profaturat')) ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="receipt" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Faturat</span>
+    </a>
+    <% } %>
+
+    <a href="/cilesimet" class="flex flex-col items-center justify-center py-1 group transition-colors <%= currentPath.startsWith('/cilesimet') ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200' %>">
+      <div class="p-1 rounded-lg transition-transform group-active:scale-90 <%= currentPath.startsWith('/cilesimet') ? 'bg-amber-500/15' : '' %>">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+      </div>
+      <span class="text-[10px] font-semibold mt-0.5 tracking-tight">Cilësimet</span>
+    </a>
+
+  </div>
+</nav>

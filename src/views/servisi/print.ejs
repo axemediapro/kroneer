@@ -1,0 +1,151 @@
+<div class="space-y-6 text-slate-800">
+  
+  <!-- Header with Company Info -->
+  <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4">
+    <div>
+      <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+      <% if (printLogo) { %>
+        <div class="flex items-center justify-start mb-2">
+          <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+        </div>
+      <% } else { %>
+        <h1 class="text-2xl font-black tracking-tight text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h1>
+        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider"><%= typeof company !== 'undefined' && company && company.tagline ? company.tagline : 'Elevator Engineering & Service' %></p>
+      <% } %>
+      <div class="text-xs text-slate-600 mt-2 space-y-0.5">
+        <p><strong><%= company ? company.name : 'KRONEER SH.P.K.' %></strong></p>
+        <p><%= company ? company.address : 'Prishtinë, Kosovë' %></p>
+        <p>Tel: <%= company ? company.phone : '+383 38 500 600' %> • Email: <%= company ? company.email : 'service@kroneer.com' %></p>
+      </div>
+    </div>
+
+    <div class="text-right">
+      <div class="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-bold uppercase rounded mb-2">
+        RAPORT SERVISI & NDËRHYRJEJE
+      </div>
+      <h2 class="text-xl font-mono font-black text-slate-900">TIKETA: <%= ticket.number %></h2>
+      <p class="text-xs text-slate-500 mt-1">Data: <strong><%= new Date(ticket.reportedDate).toLocaleDateString('sq-AL') %></strong></p>
+      <p class="text-xs text-slate-500">Statusi: <strong class="uppercase text-slate-900"><%= ticket.status %></strong></p>
+    </div>
+  </div>
+
+  <!-- Client & Elevator Grid -->
+  <div class="grid grid-cols-2 gap-4 text-xs">
+    <div class="p-3.5 rounded-lg border border-slate-300 bg-slate-50 space-y-1.5">
+      <span class="font-bold uppercase tracking-wider text-[10px] text-slate-500 block">TË DHËNAT E KLIENTIT</span>
+      <p class="text-sm font-bold text-slate-950"><%= ticket.customer ? ticket.customer.companyName : '-' %></p>
+      <% if (ticket.customer) { %>
+        <p>Kontakti: <%= ticket.customer.contactPerson || '-' %></p>
+        <p>Telefoni: <%= ticket.customer.phone || '-' %></p>
+        <p>Lokacioni: <%= [ticket.customer.address, ticket.customer.city].filter(Boolean).join(', ') %></p>
+      <% } %>
+    </div>
+
+    <div class="p-3.5 rounded-lg border border-slate-300 bg-slate-50 space-y-1.5">
+      <span class="font-bold uppercase tracking-wider text-[10px] text-slate-500 block">TË DHËNAT E ASHENSORIT & NDËRHYRJES</span>
+      <p>Numri Serik (SN): <strong class="font-mono font-bold text-slate-950"><%= ticket.serialNumber || 'N/A' %></strong></p>
+      <p>Modeli: <strong><%= ticket.elevator ? ticket.elevator.model : 'Standard KRONEER' %></strong></p>
+      <p>Prioriteti: <strong class="uppercase text-slate-950"><%= ticket.priority %></strong></p>
+      <p>Shërbimi: <strong>KRONEER</strong></p>
+    </div>
+  </div>
+
+  <!-- Problem Description Section -->
+  <div class="border border-slate-300 rounded-lg overflow-hidden">
+    <div class="bg-slate-100 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-slate-300">
+      1. PËRSHKRIMI I DEFEKTIT DHE KËRKESËS
+    </div>
+    <div class="p-2.5 text-xs leading-relaxed whitespace-pre-line min-h-[40px]">
+      <%= ticket.problemDescription %>
+    </div>
+  </div>
+
+  <!-- Technical Resolution & Actions Taken -->
+  <div class="border border-slate-300 rounded-lg overflow-hidden">
+    <div class="bg-slate-100 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-slate-300">
+      2. VEPRIMET E NDËRMARRA & ZGJIDHJA TEKNIKE
+    </div>
+    <div class="p-2.5 text-xs leading-relaxed whitespace-pre-line min-h-[60px]">
+      <%= ticket.resolutionNotes || 'Ndërhyrje teknike, kontrolli i mekanizmave të sigurisë, kalibrimi i sistemit VVVF dhe testimet operacionale të lëvizjes.' %>
+    </div>
+  </div>
+
+  <!-- Parts Used Table -->
+  <div class="border border-slate-300 rounded-lg overflow-hidden text-xs">
+    <div class="bg-slate-100 px-4 py-2 font-bold uppercase tracking-wider border-b border-slate-300">
+      3. PJESËT REZERVË TË PËRDORURA
+    </div>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-slate-200 bg-slate-50 text-[11px] text-slate-600">
+          <th class="p-2 w-12 text-center">Nr.</th>
+          <th class="p-2">Emërtimi i Pjesës / Kodi</th>
+          <th class="p-2 w-20 text-center">Sasia</th>
+          <th class="p-2 w-36">Vërejtje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% const usedParts = (ticket.partsUsed || '').split(/\r?\n/).filter(part => part.trim()); %>
+        <% if (usedParts.length) { %>
+          <% usedParts.forEach((part, index) => { %>
+            <tr class="border-b border-slate-200">
+              <td class="p-2 text-center font-mono"><%= index + 1 %>.</td>
+              <td class="p-2" colspan="3"><%= part %></td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr class="border-b border-slate-200">
+            <td class="p-2 text-center font-mono">-</td>
+            <td class="p-2" colspan="3">Nuk u përdorën pjesë rezervë.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="border border-slate-300 rounded-lg overflow-hidden">
+    <div class="bg-slate-100 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-slate-300">4. REZULTATI I TESTIMIT</div>
+    <div class="p-2.5 text-xs leading-relaxed whitespace-pre-line min-h-[40px]"><%= ticket.testResults || 'Nuk është regjistruar rezultat testimi.' %></div>
+  </div>
+
+  <!-- Final Signatures & Stamping -->
+  <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+  <% const stampMaxW = Math.min(320, Math.round(stampH * 2.5)); %>
+  <style>
+    .srv-stamp-box { height: <%=stampH%>px; min-height: <%=stampH%>px; }
+    .srv-stamp-img { height: <%=stampH%>px; max-height: <%=stampH%>px; max-width: <%=stampMaxW%>px; }
+    .srv-client-box { height: <%=stampH%>px; min-height: <%=stampH%>px; }
+  </style>
+  <div class="pt-8 grid grid-cols-2 gap-12 text-xs">
+
+    <!-- E majta: KRONEER (me vulë automatike) -->
+    <div class="flex flex-col items-center text-center">
+      <p class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-3">TEKNIKU INXHINIER / KRONEER</p>
+      <div class="srv-stamp-box flex items-end justify-center mb-1">
+        <% if (company && company.stampUrl) { %>
+          <img src="<%= company.stampUrl %>" alt="Vula KRONEER" class="srv-stamp-img w-auto object-contain filter drop-shadow-sm">
+        <% } %>
+      </div>
+      <div class="w-52 border-t border-slate-400 pt-1 mt-1">
+        <p class="font-bold text-slate-900">KRONEER</p>
+        <p class="text-[10px] text-slate-500">Vula & Nënshkrimi Zyrtar</p>
+      </div>
+    </div>
+
+    <!-- E djathta: Klienti -->
+    <div class="flex flex-col items-center text-center">
+      <p class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-3">PRANOI KLIENTI / PËRFAQËSUESI</p>
+      <div class="srv-client-box mb-1 flex items-center justify-center">
+        <% if (ticket.clientSignature) { %>
+          <img src="<%= ticket.clientSignature %>" alt="Nënshkrimi i klientit" style="max-height: <%= stampH %>px; max-width: 100%; object-fit: contain;">
+        <% } %>
+      </div>
+      <div class="w-52 border-t border-slate-400 pt-1 mt-1">
+        <p class="font-bold text-slate-900"><%= ticket.clientSignerName || (ticket.customer ? (ticket.customer.contactPerson || ticket.customer.companyName) : 'Klienti') %></p>
+        <p class="text-[10px] text-slate-500">Nënshkrimi & Vula<% if (ticket.clientSignedAt) { %> · <%= new Date(ticket.clientSignedAt).toLocaleDateString('sq-AL') %><% } %></p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

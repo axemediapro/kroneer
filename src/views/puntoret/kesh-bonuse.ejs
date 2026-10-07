@@ -1,0 +1,248 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight">
+        Kesh & Bonuset e Punëtorëve
+      </h1>
+      <span class="font-mono text-xs font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= stats.totalCount %> Transaksione
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">
+      Regjistri i avancave në kesh, mëditjeve në terren dhe bonuseve të performancës/montimit për të gjithë stafin.
+    </p>
+  </div>
+
+  <div class="flex items-center gap-2.5 flex-wrap">
+    <button onclick="document.getElementById('modal-shto-kesh').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+      <span>+ REGJISTRO KESH / BONUS</span>
+    </button>
+
+    <a href="/puntoret" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span>Lista e Puntorëve</span>
+    </a>
+  </div>
+</div>
+
+<!-- Statistikat Financiare Përmbledhëse -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Totali i Keshit / Avancave</span>
+    <span class="text-2xl font-black text-amber-400 font-mono"><%= formatCurrency(stats.totalCash) %></span>
+    <span class="text-[10px] text-slate-500 block mt-1">Pagesa & mëditje kesh</span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Totali i Bonuseve</span>
+    <span class="text-2xl font-black text-emerald-400 font-mono"><%= formatCurrency(stats.totalBonus) %></span>
+    <span class="text-[10px] text-slate-500 block mt-1">Bonuse montimi & projektesh</span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Zbritje / Ndalesa</span>
+    <span class="text-2xl font-black text-rose-400 font-mono"><%= formatCurrency(stats.totalDeduction) %></span>
+    <span class="text-[10px] text-slate-500 block mt-1">Kompensime & zbritje</span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <span class="text-slate-400 text-xs font-semibold block mb-1">Gjithsej Shpërndarë</span>
+    <span class="text-2xl font-black text-slate-100 font-mono"><%= formatCurrency(stats.grandTotal) %></span>
+    <span class="text-[10px] text-slate-500 block mt-1">Kesh + Bonuse total</span>
+  </div>
+</div>
+
+<!-- Filtrat dhe Tabela -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden mb-6">
+  <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40">
+    <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Regjistri i Transaksioneve Financiare
+    </h3>
+
+    <form action="/puntoret/financat/kesh-bonuse" method="GET" class="flex items-center gap-2 text-xs flex-wrap">
+      <select name="tipi" class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjitha llojet</option>
+        <option value="KESH_AVANC" <%= filters.tipi === 'KESH_AVANC' ? 'selected' : '' %>>Kesh / Avancë</option>
+        <option value="BONUS" <%= filters.tipi === 'BONUS' ? 'selected' : '' %>>Bonus</option>
+        <option value="ZBRITJE" <%= filters.tipi === 'ZBRITJE' ? 'selected' : '' %>>Zbritje</option>
+      </select>
+
+      <select name="puntoriId" class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjithë punëtorët</option>
+        <% employees.forEach(e => { %>
+          <option value="<%= e.id %>" <%= filters.puntoriId == e.id ? 'selected' : '' %>><%= e.firstName %> <%= e.lastName %> (<%= e.code %>)</option>
+        <% }); %>
+      </select>
+
+      <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold border border-slate-700">
+        Filtro
+      </button>
+    </form>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-mono">
+        <tr>
+          <th class="py-3 px-4">Nr. Transaksionit</th>
+          <th class="py-3 px-4">Punëtori / Pozita</th>
+          <th class="py-3 px-4">Lloji & Kategoria</th>
+          <th class="py-3 px-4">Përshkrimi / Projekti</th>
+          <th class="py-3 px-4">Data</th>
+          <th class="py-3 px-4">Shuma</th>
+          <th class="py-3 px-4">Regjistruar nga</th>
+          <th class="py-3 px-4 text-right">Veprime</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/60">
+        <% if (transactions && transactions.length > 0) { %>
+          <% transactions.forEach(t => { %>
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="py-3 px-4 font-mono font-bold text-amber-400">
+                <%= t.number %>
+              </td>
+              <td class="py-3 px-4">
+                <a href="/puntoret/<%= t.employeeId %>" class="font-bold text-slate-200 hover:text-amber-400 transition-colors block">
+                  <%= t.employee.firstName %> <%= t.employee.lastName %>
+                </a>
+                <span class="text-[10px] text-slate-500 font-mono"><%= t.employee.code %> • <%= t.employee.position %></span>
+              </td>
+              <td class="py-3 px-4">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase <%= t.type === 'BONUS' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (t.type === 'ZBRITJE' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30') %>">
+                  <%= t.type === 'BONUS' ? 'BONUS' : (t.type === 'ZBRITJE' ? 'ZBRITJE' : 'KESH') %>
+                </span>
+                <span class="text-[11px] text-slate-400 block mt-0.5"><%= t.category || '-' %></span>
+              </td>
+              <td class="py-3 px-4">
+                <span class="text-slate-200 font-medium block"><%= t.title %></span>
+                <% if (t.project) { %>
+                  <span class="text-[10px] text-amber-400/90 font-mono">Prj: <%= t.project.name %> (<%= t.project.number %>)</span>
+                <% } %>
+                <% if (t.notes) { %>
+                  <span class="text-[10px] text-slate-500 block italic"><%= t.notes %></span>
+                <% } %>
+              </td>
+              <td class="py-3 px-4 font-mono text-slate-300">
+                <%= formatDate(t.date) %>
+              </td>
+              <td class="py-3 px-4 font-mono text-sm font-black <%= t.type === 'BONUS' ? 'text-emerald-400' : (t.type === 'ZBRITJE' ? 'text-rose-400' : 'text-amber-400') %>">
+                <%= t.type === 'ZBRITJE' ? '-' : '+' %><%= t.amount.toFixed(2) %> €
+              </td>
+              <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                <%= t.recordedBy || 'Admin' %>
+              </td>
+              <td class="py-3 px-4 text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <a href="/puntoret/transaksionet/<%= t.id %>/print" target="_blank" title="Printo Dëftesë" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                  </a>
+
+                  <form action="/puntoret/transaksionet/<%= t.id %>/fshi" method="POST" onsubmit="return confirm('A jeni të sigurt që dëshironi të fshini këtë transaksion?')">
+                    <button type="submit" title="Fshi" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 transition-colors">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="py-10 text-center text-slate-500 text-xs">
+              Nuk u gjet asnjë transaksion i regjistruar sipas filtrave.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Shto Kesh / Bonus -->
+<div id="modal-shto-kesh" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        Regjistro Pagesë Kesh / Bonus
+      </h3>
+      <button type="button" onclick="document.getElementById('modal-shto-kesh').classList.add('hidden')" class="text-slate-400 hover:text-slate-200">
+        ✕
+      </button>
+    </div>
+
+    <form action="/puntoret/transaksionet" method="POST" class="space-y-4 text-xs">
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Punëtori *</label>
+        <select name="employeeId" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+          <option value="">-- Zgjidh Punëtorin --</option>
+          <% employees.forEach(e => { %>
+            <option value="<%= e.id %>"><%= e.firstName %> <%= e.lastName %> (<%= e.code %>) - <%= e.position %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Lloji i Pagesës *</label>
+          <select name="type" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+            <option value="KESH_AVANC">Kesh / Avancë</option>
+            <% if (typeof canAssignBonus !== 'undefined' && canAssignBonus) { %>
+            <option value="BONUS">Bonus</option>
+            <% } %>
+            <option value="PAGESE_KESH">Pagesë Kesh (Mëditje)</option>
+            <option value="ZBRITJE">Zbritje / Ndalesë</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Shuma (€) *</label>
+          <input type="number" step="0.01" min="0.5" name="amount" required placeholder="p.sh. 150.00" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl font-mono text-amber-400 font-bold focus:outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Kategoria</label>
+          <input type="text" name="category" placeholder="p.sh. Bonus Montimi, Mëditje Terreni" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Data</label>
+          <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Lidhur me Projektin (Opsionale)</label>
+        <select name="projectId" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+          <option value="">-- Pa projekt të caktuar --</option>
+          <% projects.forEach(p => { %>
+            <option value="<%= p.id %>"><%= p.name %> (<%= p.number %>)</option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Përshkrimi / Arsyetimi</label>
+        <input type="text" name="title" placeholder="p.sh. Avancë kesh për montimin e liftit në Prishtinë" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Shënime Shtesë</label>
+        <textarea name="notes" rows="2" placeholder="Shënime të brendshme..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="document.getElementById('modal-shto-kesh').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">
+          Anulo
+        </button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20">
+          Ruaj & Gjenero Dëftesë
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

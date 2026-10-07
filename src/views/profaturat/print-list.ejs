@@ -1,0 +1,106 @@
+<!-- Koka Zyrtare e Raportit të Profaturave -->
+<div class="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="h-11 flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company.companyName %>" class="max-h-11 w-auto max-w-full object-contain">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= company.companyName %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600 space-y-0.5">
+      <div><%= company.address %>, <%= company.city %> • NUI: <%= company.taxNumber %></div>
+      <div>Tel: <%= company.phone %> • Email: <%= company.email %></div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      RAPORTI I PROFATURAVE
+    </span>
+    <div class="text-xs text-slate-600 mt-1">Data e Gjenerimit: <strong class="text-slate-900"><%= formatDate(new Date()) %></strong></div>
+    <% if (customer) { %>
+      <div class="text-xs text-amber-700 font-bold mt-1">Klienti: <%= customer.companyName %></div>
+    <% } %>
+  </div>
+</div>
+
+<% if (customer) { %>
+  <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs flex justify-between items-center">
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block mb-1">TË DHËNAT E KLIENTIT:</span>
+      <h3 class="text-sm font-bold text-slate-900"><%= customer.companyName %> (<%= customer.code %>)</h3>
+      <div class="text-slate-700 mt-0.5">Adresa: <%= customer.address || '-' %>, <%= customer.city || '-' %> • NUI: <%= customer.taxNumber || '-' %></div>
+    </div>
+    <div class="text-right font-mono text-xs space-y-1">
+      <div>Gjithsej Profatura: <strong><%= proformas.length %></strong></div>
+    </div>
+  </div>
+<% } %>
+
+<!-- Tabela e Profaturave -->
+<table class="w-full text-left text-xs border border-slate-300 mb-6">
+  <thead class="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
+    <tr>
+      <th class="p-2.5 border-r border-slate-300 text-center w-10">Nr.</th>
+      <th class="p-2.5 border-r border-slate-300 w-28">Numri</th>
+      <% if (!customer) { %>
+        <th class="p-2.5 border-r border-slate-300">Klienti</th>
+      <% } %>
+      <th class="p-2.5 border-r border-slate-300 text-center w-24">Data</th>
+      <th class="p-2.5 border-r border-slate-300 text-center w-24">Afati</th>
+      <th class="p-2.5 border-r border-slate-300 text-right w-28">Totali (€)</th>
+      <th class="p-2.5 border-r border-slate-300 text-right w-24">Paguar (€)</th>
+      <th class="p-2.5 border-r border-slate-300 text-center w-24">Etapat</th>
+      <th class="p-2.5 text-center w-20">Statusi</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-200">
+    <% if (proformas && proformas.length > 0) { %>
+      <% proformas.forEach((pf, idx) => { %>
+        <tr>
+          <td class="p-2 text-center font-mono border-r border-slate-200 text-slate-600"><%= idx + 1 %></td>
+          <td class="p-2 font-mono font-bold text-slate-900 border-r border-slate-200"><%= pf.number %></td>
+          <% if (!customer) { %>
+            <td class="p-2 border-r border-slate-200 text-slate-800"><%= pf.customer.companyName %></td>
+          <% } %>
+          <td class="p-2 text-center border-r border-slate-200 text-slate-700 font-mono"><%= formatDate(pf.date) %></td>
+          <td class="p-2 text-center border-r border-slate-200 text-slate-700 font-mono"><%= formatDate(pf.dueDate) %></td>
+          <td class="p-2 text-right font-mono font-bold text-slate-900 border-r border-slate-200"><%= formatCurrency(pf.totalAmount) %></td>
+          <td class="p-2 text-right font-mono text-emerald-600 border-r border-slate-200"><%= formatCurrency(pf.paidAmount) %></td>
+          <td class="p-2 text-center font-mono text-[11px] border-r border-slate-200">
+            <%= pf.items ? pf.items.filter(i => i.isPaid).length : 0 %> / <%= pf.items ? pf.items.length : 0 %>
+          </td>
+          <td class="p-2 text-center text-[10px] font-bold">
+            <%= pf.status %>
+          </td>
+        </tr>
+      <% }); %>
+    <% } else { %>
+      <tr>
+        <td colspan="<%= customer ? 8 : 9 %>" class="p-6 text-center text-slate-500">Nuk ka profatura të regjistruara për këtë përzgjedhje.</td>
+      </tr>
+    <% } %>
+  </tbody>
+  <tfoot class="bg-slate-50 font-bold border-t-2 border-slate-300">
+    <tr>
+      <td colspan="<%= customer ? 4 : 5 %>" class="p-2.5 text-right uppercase text-[10px] text-slate-600">TOTALET E PËRGJITHSHME:</td>
+      <td class="p-2.5 text-right font-mono text-slate-950"><%= formatCurrency(totalAmount) %></td>
+      <td class="p-2.5 text-right font-mono text-emerald-600"><%= formatCurrency(totalPaid) %></td>
+      <td colspan="2"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="text-[10px] text-slate-500 text-center pt-8 border-t border-slate-200">
+  Ky raport është gjeneruar automatikisht nga sistemi ERP & CRM KRONEER më <%= new Date().toLocaleDateString('sq-AL') %>.
+</div>

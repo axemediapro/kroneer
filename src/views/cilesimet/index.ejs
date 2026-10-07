@@ -1,0 +1,947 @@
+<!-- Koka e Faqes -->
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+      <span class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">Konfigurimi & Administrimi</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight mt-1">
+      CILËSIMET E SISTEMIT
+    </h1>
+    <p class="text-xs text-slate-400 mt-1">Konfigurimi i të dhënave zyrtare të KRONEER, numërimit automatik dhe llogarive të stafit</p>
+  </div>
+</div>
+
+<!-- Alpine Container për Tabs dhe Modale -->
+<div x-data="{ 
+  activeTab: '<%= activeTab || "kompania" %>',
+  isCreateUserModalOpen: false,
+  isEditUserModalOpen: false,
+  editUserData: { id: null, fullName: '', username: '', email: '', phone: '', role: 'SHITJE' },
+  openEditModal(user) {
+    this.editUserData = { ...user };
+    this.isEditUserModalOpen = true;
+  }
+}" class="space-y-6">
+
+  <!-- Tab Navigation -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-x-auto shadow-lg">
+    <button type="button" @click="activeTab = 'kompania'" :class="activeTab === 'kompania' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent'" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <span>Kompania & Banka</span>
+    </button>
+    <button type="button" @click="activeTab = 'prefiksat'" :class="activeTab === 'prefiksat' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent'" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+      <span>Prefiksat e Numërimit</span>
+    </button>
+    <button type="button" @click="activeTab = 'perdoruesit'" :class="activeTab === 'perdoruesit' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent'" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      <span>Përdoruesit & Rolet (<%= users.length %>)</span>
+    </button>
+    <button type="button" @click="activeTab = 'sistemi'" :class="activeTab === 'sistemi' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent'" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+      <span>Sistemi & Baza e të Dhënave</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: Kompania & Banka -->
+  <div x-show="activeTab === 'kompania'" x-cloak class="space-y-6">
+
+    <!-- Karta e Menaxhimit të Logove dhe Vulës & Nënshkrimit të Kompanisë -->
+    <div class="space-y-6" x-data="{
+      darkBgLogoPreview: '<%= settings && settings.logoDarkBgUrl ? settings.logoDarkBgUrl : "" %>',
+      darkBgLogoFile: '',
+      darkBgLogoSize: '',
+      
+      standardLogoPreview: '<%= settings && settings.logoUrl ? settings.logoUrl : "" %>',
+      standardLogoFile: '',
+      standardLogoSize: '',
+
+      stampPreview: '<%= settings && settings.stampUrl ? settings.stampUrl : "" %>',
+      stampFile: '',
+      stampSize: '',
+      stampHeight: <%= settings && settings.stampHeight ? settings.stampHeight : 80 %>,
+
+      handleDarkBgLogoSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.darkBgLogoFile = file.name;
+        this.darkBgLogoSize = (file.size / 1024).toFixed(1) + ' KB';
+        const reader = new FileReader();
+        reader.onload = (e) => { this.darkBgLogoPreview = e.target.result; };
+        reader.readAsDataURL(file);
+      },
+
+      handleStandardLogoSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.standardLogoFile = file.name;
+        this.standardLogoSize = (file.size / 1024).toFixed(1) + ' KB';
+        const reader = new FileReader();
+        reader.onload = (e) => { this.standardLogoPreview = e.target.result; };
+        reader.readAsDataURL(file);
+      },
+
+      handleStampSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.stampFile = file.name;
+        this.stampSize = (file.size / 1024).toFixed(1) + ' KB';
+        const reader = new FileReader();
+        reader.onload = (e) => { this.stampPreview = e.target.result; };
+        reader.readAsDataURL(file);
+      }
+    }">
+      
+      <!-- Seksioni me 3 Kolona: Logo Dark UI, Logo Dokumentesh, dhe Vula & Nënshkrimi (.PNG) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Karta 1: Logoja e Bardhë / për Sfond të Errët (Dark UI) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-sm">
+                  🌙
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    Logoja e Bardhë (Dark UI)
+                  </h3>
+                  <p class="text-[11px] text-slate-400">Për Sidebar, Faqen e Kyçjes & Panel</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Box (Sfond Dark) -->
+            <div class="bg-slate-950 border-2 border-dashed border-slate-800 rounded-xl h-36 flex flex-col items-center justify-center p-3 relative mb-4">
+              <template x-if="darkBgLogoPreview">
+                <div class="flex flex-col items-center justify-center h-full w-full">
+                  <img :src="darkBgLogoPreview" alt="Dark UI Logo Preview" class="max-h-16 max-w-[75%] w-auto object-contain filter drop-shadow">
+                  <span class="mt-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    ✓ E optimizuar për Dark Mode
+                  </span>
+                </div>
+              </template>
+              <template x-if="!darkBgLogoPreview">
+                <div class="text-center space-y-1 text-slate-400">
+                  <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-base font-bold font-mono">
+                    K
+                  </div>
+                  <p class="font-bold text-slate-300 text-xs">Nuk është ngarkuar</p>
+                  <p class="text-[10px] text-slate-500">Përdoret emblema standarde</p>
+                </div>
+              </template>
+            </div>
+
+            <!-- Forma e Ngarkimit -->
+            <form action="/cilesimet/logo" method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="returnUrl" value="/cilesimet?tab=kompania">
+              <input type="hidden" name="variant" value="dark_bg">
+
+              <div>
+                <label class="block font-semibold text-slate-300 text-xs mb-1">
+                  Skedari (.SVG, .PNG, .WEBP):
+                </label>
+                <input type="file" name="logo" accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/*" required @change="handleDarkBgLogoSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 file:cursor-pointer">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <span>Ruaj</span>
+                </button>
+
+                <% if (settings && settings.logoDarkBgUrl) { %>
+                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon e bardhë?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Fshi</span>
+                  </button>
+                <% } %>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Karta 2: Logoja Kryesore / për Sfond të Bardhë (Dokumente & Printim A4) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                  ☀️
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    Logoja e Dokumenteve
+                  </h3>
+                  <p class="text-[11px] text-slate-400">Për Fatura, Oferta, Kontrata & PDF</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Box (Sfond i Bardhë A4) -->
+            <div class="bg-white border-2 border-dashed border-slate-300 rounded-xl h-36 flex flex-col items-center justify-center p-3 relative mb-4">
+              <template x-if="standardLogoPreview">
+                <div class="flex flex-col items-center justify-center h-full w-full">
+                  <img :src="standardLogoPreview" alt="Document Logo Preview" class="max-h-16 max-w-[75%] w-auto object-contain filter drop-shadow">
+                  <span class="mt-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ✓ E optimizuar për A4
+                  </span>
+                </div>
+              </template>
+              <template x-if="!standardLogoPreview">
+                <div class="text-center space-y-1 text-slate-500">
+                  <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-300 text-slate-800 flex items-center justify-center mx-auto text-base font-bold font-mono">
+                    K
+                  </div>
+                  <p class="font-bold text-slate-700 text-xs">Nuk është ngarkuar</p>
+                  <p class="text-[10px] text-slate-500">Përdoret logo standarde</p>
+                </div>
+              </template>
+            </div>
+
+            <!-- Forma e Ngarkimit -->
+            <form action="/cilesimet/logo" method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="returnUrl" value="/cilesimet?tab=kompania">
+              <input type="hidden" name="variant" value="standard">
+
+              <div>
+                <label class="block font-semibold text-slate-300 text-xs mb-1">
+                  Skedari (.SVG, .PNG, .WEBP):
+                </label>
+                <input type="file" name="logo" accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/*" required @change="handleStandardLogoSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 file:cursor-pointer">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <span>Ruaj</span>
+                </button>
+
+                <% if (settings && settings.logoUrl) { %>
+                  <button type="submit" formaction="/cilesimet/logo/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini logon për dokumente?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Fshi</span>
+                  </button>
+                <% } %>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Karta 3: Vula & Nënshkrimi Zyrtar (.PNG) me Kontrollues Madhësie / Zoom -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-sm">
+                  🖋️
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    Vula & Nënshkrimi (.PNG)
+                  </h3>
+                  <p class="text-[11px] text-slate-400">Për të gjitha PDF-të e KRONEER</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Auto-Signature</span>
+            </div>
+
+            <!-- Preview Box me Lartësi Dinamike sipas Slider-it -->
+            <div class="bg-white border-2 border-dashed border-blue-300 rounded-xl p-3 min-h-[140px] flex flex-col items-center justify-center relative overflow-hidden" style="background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px); background-size: 8px 8px;">
+              <template x-if="stampPreview">
+                <div class="flex flex-col items-center justify-center w-full py-1">
+                  <img :src="stampPreview" alt="Stamp & Signature Preview" :style="'height: ' + stampHeight + 'px; max-height: ' + stampHeight + 'px;'" class="w-auto object-contain filter drop-shadow-sm transition-all duration-150">
+                  <div class="mt-2.5 flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                      ✓ Aktive në PDF
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-900 text-amber-400 border border-slate-700" x-text="'Lartësia: ' + stampHeight + 'px'"></span>
+                  </div>
+                </div>
+              </template>
+              <template x-if="!stampPreview">
+                <div class="text-center space-y-1 text-slate-500 py-2">
+                  <div class="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mx-auto text-base">
+                    📜
+                  </div>
+                  <p class="font-bold text-slate-700 text-xs">Nuk është ngarkuar vula & nënshkrimi</p>
+                  <p class="text-[10px] text-slate-500">Mbetet vija standarde për nënshkrim manual</p>
+                </div>
+              </template>
+            </div>
+
+            <!-- Kontrolluesi i Madhësisë (Slider & Presets) -->
+            <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <span>📏 Madhësia / Lartësia:</span>
+                </span>
+                <span class="font-mono font-black text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" x-text="stampHeight + ' px'"></span>
+              </div>
+
+              <!-- Slider -->
+              <input type="range" min="40" max="240" step="5" x-model="stampHeight" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+
+              <!-- Butona të Shpejtë (Presets) -->
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                <button type="button" @click="stampHeight = 55" :class="stampHeight == 55 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">55px</button>
+                <button type="button" @click="stampHeight = 80" :class="stampHeight == 80 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">80px (Std)</button>
+                <button type="button" @click="stampHeight = 110" :class="stampHeight == 110 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">110px</button>
+                <button type="button" @click="stampHeight = 140" :class="stampHeight == 140 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">140px (Madhe)</button>
+                <button type="button" @click="stampHeight = 180" :class="stampHeight == 180 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">180px (XL)</button>
+                <button type="button" @click="stampHeight = 220" :class="stampHeight == 220 ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded text-[10px] border border-slate-800 transition-colors">220px (Max)</button>
+              </div>
+
+              <!-- Buton i Shpejtë për Ruajtjen e Madhësisë -->
+              <form action="/cilesimet/vula/madhesia" method="POST" class="pt-1.5 flex items-center justify-between border-t border-slate-800/80">
+                <input type="hidden" name="returnUrl" value="/cilesimet?tab=kompania">
+                <input type="hidden" name="stampHeight" :value="stampHeight">
+                <span class="text-[10px] text-slate-400">Rregulloni dhe ruani madhësinë:</span>
+                <button type="submit" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[11px] border border-amber-500/40 transition-colors flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  <span>Ruaj Madhësinë</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Forma e Ngarkimit të Vulës & Nënshkrimit -->
+            <form action="/cilesimet/vula" method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="returnUrl" value="/cilesimet?tab=kompania">
+              <input type="hidden" name="stampHeight" :value="stampHeight">
+
+              <div>
+                <label class="block font-semibold text-slate-300 text-xs mb-1">
+                  Skedari Transparent (.PNG, .WEBP):
+                </label>
+                <input type="file" name="stamp" accept=".png,.webp,.svg,.jpg,.jpeg,image/png,image/*" required @change="handleStampSelect" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-500 file:text-slate-950 hover:file:bg-blue-400 file:cursor-pointer">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <span>Ngarko Vulën e Re</span>
+                </button>
+
+                <% if (settings && settings.stampUrl) { %>
+                  <button type="submit" formaction="/cilesimet/vula/fshi" formmethod="POST" onclick="return confirm('A jeni të sigurt që dëshironi ta fshini vulën dhe nënshkrimin zyrtar?');" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 text-xs flex items-center gap-1 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Fshi</span>
+                  </button>
+                <% } %>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Këshilla Informative -->
+      <div class="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2.5">
+        <span class="text-amber-400 font-bold mt-0.5">ℹ️ Këshillë:</span>
+        <span class="leading-relaxed">Për <strong>Vula & Nënshkrimi</strong>, rekomandohet skedar në format <strong>.PNG me sfond transparent</strong> (ose .WEBP). Sistemi do ta vendosë automatikisht mbi/te seksioni i nënshkrimit dhe vulës së KRONEER në <strong>Fatura, Oferta, Kontrata, Mirëmbajtje, Dorëzim, Dëftesa Pagesash dhe Raportet Zyrtare</strong>.</span>
+      </div>
+    </div>
+
+    <form action="/cilesimet/kompania" method="POST" class="space-y-6">
+      <input type="hidden" name="returnTab" value="kompania">
+
+      <!-- Informacioni Bazë i Kompanisë -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+              🏢
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-100">Të Dhënat Kryesore të Kompanisë</h2>
+              <p class="text-xs text-slate-400">Këto të dhëna shfaqen në të gjitha faturat, ofertat, kontratat dhe printimet zyrtare</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Kompanisë *</label>
+            <input type="text" name="companyName" value="<%= settings.companyName || 'KRONEER' %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-bold">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Sllogani / Nëntitulli</label>
+            <input type="text" name="tagline" value="<%= settings.tagline || 'Professional Elevator Solutions' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri Fiskal (NIPT) *</label>
+            <input type="text" name="taxNumber" value="<%= settings.taxNumber || '330123456' %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Biznesit</label>
+            <input type="text" name="businessNumber" value="<%= settings.businessNumber || '70123456' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Adresa e Selisë</label>
+            <input type="text" name="address" value="<%= settings.address || 'Rruga Dëshmorët e Kombit, Nr. 45' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Qyteti & Shteti</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" name="city" value="<%= settings.city || 'Prishtinë' %>" placeholder="Qyteti" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+              <input type="text" name="country" value="<%= settings.country || 'Kosovë' %>" placeholder="Shteti" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Telefoni i Kontaktit</label>
+            <input type="text" name="phone" value="<%= settings.phone || '+383 38 500 600' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Email Zyrtar</label>
+            <input type="email" name="email" value="<%= settings.email || 'info@kroneer-lifts.com' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Faqja e Internetit (Web)</label>
+            <input type="text" name="website" value="<%= settings.website || 'www.kroneer-lifts.com' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+        </div>
+      </div>
+
+      <!-- Të Dhënat Bankare & Financiare -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+              💳
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-100">Llogaria Bankare & Parametrat Financiarë</h2>
+              <p class="text-xs text-slate-400">Detajet për pranimin e pagesave me transfertë bankare dhe kalkulimin e TVSH-së</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          <!-- Banka 1 -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (1)</label>
+            <input type="text" name="bankName" value="<%= settings.bankName || 'Banka Kombëtare Tregtare (BKT)' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (1) *</label>
+            <input type="text" name="iban" value="<%= settings.iban || 'XK05 1901 0000 1234 5678' %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono font-bold text-emerald-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (1)</label>
+            <input type="text" name="swift" value="<%= settings.swift || 'BKTKXKPR' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <!-- Banka 2 -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (2)</label>
+            <input type="text" name="bankName2" value="<%= settings.bankName2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (2)</label>
+            <input type="text" name="iban2" value="<%= settings.iban2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (2)</label>
+            <input type="text" name="swift2" value="<%= settings.swift2 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <!-- Banka 3 -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Emri i Bankës (3)</label>
+            <input type="text" name="bankName3" value="<%= settings.bankName3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Numri i Llogarisë / IBAN (3)</label>
+            <input type="text" name="iban3" value="<%= settings.iban3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Kodi SWIFT / BIC (3)</label>
+            <input type="text" name="swift3" value="<%= settings.swift3 || '' %>" placeholder="Opsionale" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Monedha Kryesore e Sistemit</label>
+            <select name="currency" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+              <option value="EUR" <%= settings.currency === 'EUR' ? 'selected' : '' %>>EUR (€) — Euro</option>
+              <option value="USD" <%= settings.currency === 'USD' ? 'selected' : '' %>>USD ($) — Dollar Amerikan</option>
+              <option value="ALL" <%= settings.currency === 'ALL' ? 'selected' : '' %>>ALL (Lek) — Lek Shqiptar</option>
+              <option value="CHF" <%= settings.currency === 'CHF' ? 'selected' : '' %>>CHF — Franga Zvicerane</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Norma Standarde e TVSH (%)</label>
+            <input type="number" step="0.5" min="0" max="100" name="vatRate" value="<%= settings.vatRate !== undefined ? settings.vatRate : 18 %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono font-bold">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>RUAJ TË DHËNAT E KOMPANISË</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TAB 2: Prefiksat e Numërimit Automatik -->
+  <div x-show="activeTab === 'prefiksat'" x-cloak class="space-y-6">
+    <form action="/cilesimet/kompania" method="POST" class="space-y-6">
+      <input type="hidden" name="returnTab" value="prefiksat">
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold font-mono">
+              #
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-100">Prefiksat e Numërimit të Dokumenteve</h2>
+              <p class="text-xs text-slate-400">Përcaktoni kodet automatike që gjenerohen me vitin dhe numrin serik për çdo modul</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-xs">
+          <!-- Oferta -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">1. Ofertat</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-O-2026-0001</span>
+            </div>
+            <input type="text" name="quotePrefix" value="<%= settings.quotePrefix || 'KR-O' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Kontratat -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">2. Kontratat</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-K-2026-0001</span>
+            </div>
+            <input type="text" name="contractPrefix" value="<%= settings.contractPrefix || 'KR-K' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Faturat -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">3. Faturat Zyrtare</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-F-2026-0001</span>
+            </div>
+            <input type="text" name="invoicePrefix" value="<%= settings.invoicePrefix || 'KR-F' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Projektet -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">4. Projektet</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-PRJ-2026-0001</span>
+            </div>
+            <input type="text" name="projectPrefix" value="<%= settings.projectPrefix || 'KR-PRJ' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Pagesat -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">5. Pagesat (Fletë-pagesat)</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-PAG-2026-0001</span>
+            </div>
+            <input type="text" name="paymentPrefix" value="<%= settings.paymentPrefix || 'KR-PAG' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Servisi -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">6. Kërkesat për Servis</span>
+              <span class="font-mono text-[11px] text-amber-400">p.sh. KR-SRV-2026-0001</span>
+            </div>
+            <input type="text" name="servicePrefix" value="<%= settings.servicePrefix || 'KR-SRV' %>" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>RUAJ PREFIKSAT E DOKUMENTEVE</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TAB 3: Përdoruesit & Rolet -->
+  <div x-show="activeTab === 'perdoruesit'" x-cloak class="space-y-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <!-- Toolbar i Përdoruesve -->
+      <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-950/40">
+        <div>
+          <h2 class="text-base font-bold text-slate-100">Llogaritë e Përdoruesve & Rolet</h2>
+          <p class="text-xs text-slate-400">Menaxhoni qasjen e stafit sipas departamenteve: Administrator, Shitje, Financë, Menaxher Projekti, Teknik</p>
+        </div>
+        <button type="button" @click="isCreateUserModalOpen = true" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          <span>Shto Përdorues të Ri</span>
+        </button>
+      </div>
+
+      <!-- Tabela e Përdoruesve -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 bg-slate-950/60 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+              <th class="p-4">Përdoruesi</th>
+              <th class="p-4">Username & Email</th>
+              <th class="p-4">Telefoni</th>
+              <th class="p-4">Roli</th>
+              <th class="p-4">Statusi</th>
+              <th class="p-4 text-right">Veprime</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-xs">
+            <% users.forEach(u => { %>
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <!-- Emri dhe Inicialet -->
+                <td class="p-4 font-semibold text-slate-100 flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                    <%= u.fullName ? u.fullName.charAt(0) : 'U' %>
+                  </div>
+                  <div>
+                    <span class="block font-bold text-slate-200"><%= u.fullName %></span>
+                    <span class="text-[10px] text-slate-500">ID: #<%= u.id %></span>
+                  </div>
+                </td>
+
+                <!-- Username & Email -->
+                <td class="p-4">
+                  <span class="font-mono text-slate-300 font-bold block">@<%= u.username %></span>
+                  <span class="text-slate-400 text-[11px]"><%= u.email %></span>
+                </td>
+
+                <!-- Telefoni -->
+                <td class="p-4 text-slate-300">
+                  <%= u.phone || '-' %>
+                </td>
+
+                <!-- Roli me Badge -->
+                <td class="p-4">
+                  <% if (u.role === 'ADMINISTRATOR') { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                      ADMINISTRATOR
+                    </span>
+                  <% } else if (u.role === 'SHITJE') { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      SHITJE & CRM
+                    </span>
+                  <% } else if (u.role === 'FINANCE') { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      FINANCË
+                    </span>
+                  <% } else if (u.role === 'MENAXHER_PROJEKTI') { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                      MENAXHER PROJEKTI
+                    </span>
+                  <% } else { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                      TEKNIK
+                    </span>
+                  <% } %>
+                </td>
+
+                <!-- Statusi Aktiv/Joaktiv -->
+                <td class="p-4">
+                  <% if (u.isActive) { %>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Aktiv
+                    </span>
+                  <% } else { %>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                      <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Joaktiv
+                    </span>
+                  <% } %>
+                </td>
+
+                <!-- Veprimet -->
+                <td class="p-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <!-- Toggle Status Button -->
+                    <% if (u.username !== 'admin') { %>
+                      <form action="/cilesimet/perdoruesit/<%= u.id %>/status" method="POST" class="inline">
+                        <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors" title="<%= u.isActive ? 'Çaktivizo' : 'Aktivizo' %>">
+                          <%= u.isActive ? 'Çaktivizo' : 'Aktivizo' %>
+                        </button>
+                      </form>
+                    <% } %>
+
+                    <!-- Butoni Ndrysho (Edit Modal) -->
+                    <button type="button" @click='openEditModal(<%= JSON.stringify({ id: u.id, fullName: u.fullName, username: u.username, email: u.email, phone: u.phone || "", role: u.role }) %>)' class="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold border border-amber-500/30 transition-colors">
+                      Ndrysho
+                    </button>
+
+                    <!-- Butoni Fshi (Delete) -->
+                    <% if (u.username !== 'admin' && currentUser && currentUser.id !== u.id) { %>
+                      <form action="/cilesimet/perdoruesit/<%= u.id %>/fshi" method="POST" class="inline" onsubmit="return confirm('A jeni të sigurt që dëshironi ta fshini përdoruesin <%= u.fullName %>?');">
+                        <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold border border-rose-500/30 transition-colors" title="Fshi Përdoruesin">
+                          Fshi
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Sistemi & Baza e të Dhënave -->
+  <div x-show="activeTab === 'sistemi'" x-cloak class="space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">KLIENTË GJITHSEJ</span>
+        <div class="text-2xl font-black text-slate-100 font-mono"><%= systemStats.customerCount %></div>
+        <span class="text-[11px] text-amber-400 mt-1 block">Kompani & Kontakte CRM</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">LIFTA TË KONFIGURUAR</span>
+        <div class="text-2xl font-black text-slate-100 font-mono"><%= systemStats.elevatorCount %></div>
+        <span class="text-[11px] text-amber-400 mt-1 block">Modele & Specifikime</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">OFERTA & KONTRATA</span>
+        <div class="text-2xl font-black text-slate-100 font-mono"><%= systemStats.quotationCount + systemStats.contractCount %></div>
+        <span class="text-[11px] text-cyan-400 mt-1 block"><%= systemStats.quotationCount %> Oferta | <%= systemStats.contractCount %> Kontrata</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">FATURA & SHPENZIME</span>
+        <div class="text-2xl font-black text-slate-100 font-mono"><%= systemStats.invoiceCount + systemStats.expenseCount %></div>
+        <span class="text-[11px] text-emerald-400 mt-1 block"><%= systemStats.invoiceCount %> Fatura | <%= systemStats.expenseCount %> Shpenzime</span>
+      </div>
+    </div>
+
+    <!-- Të dhënat teknike të mjedisit -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3">Informacioni Teknik i Platformës</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-mono">
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Aplikacioni</span>
+          <span class="text-slate-200 font-bold">KRONEER ERP & CRM v1.0.0</span>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Mjedisi Node.js</span>
+          <span class="text-amber-400 font-bold"><%= systemStats.nodeVersion %> (<%= systemStats.platform %>)</span>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Baza e të Dhënave</span>
+          <span class="text-emerald-400 font-bold">SQLite 3 / Prisma ORM</span>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Koha e serverit aktiv (Uptime)</span>
+          <span class="text-slate-200 font-bold"><%= Math.floor(systemStats.uptime / 60) %> minuta (<%= systemStats.uptime %> sekonda)</span>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Pjesë Rezervë në Magazinë</span>
+          <span class="text-cyan-400 font-bold"><%= systemStats.sparePartCount %> artikuj</span>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block text-[10px] uppercase">Projekte Aktive</span>
+          <span class="text-purple-400 font-bold"><%= systemStats.projectCount %> projekte ndërtimi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backup & Restore i Bazës së të Dhënave -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4" x-data="{ restoreOpen: false, fileName: '', confirmText: '' }">
+      <h3 class="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3">Backup & Restore i të Dhënave</h3>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Krijo Backup (.json)</h4>
+          <p class="text-[11px] text-slate-400">Shkarkon një skedar .json me krejt të dhënat e sistemit (klientë, oferta, kontrata, fatura, projekte, etj.).</p>
+          <a href="/cilesimet/backup" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-all">
+            <i data-lucide="download" class="w-4 h-4"></i> Shkarko Backup
+          </a>
+        </div>
+
+        <div class="p-4 bg-slate-950 rounded-xl border border-rose-900/50 space-y-2">
+          <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Restore nga Backup (.json)</h4>
+          <p class="text-[11px] text-slate-400">
+            <span class="font-bold text-rose-400">Kujdes:</span> kjo veprim FSHIN krejt të dhënat aktuale të sistemit dhe i zëvendëson me përmbajtjen e skedarit të ngarkuar. Veprimi nuk kthehet mbrapsht.
+          </p>
+          <button type="button" @click="restoreOpen = true" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg transition-all">
+            <i data-lucide="upload" class="w-4 h-4"></i> Restore nga Skedar
+          </button>
+        </div>
+      </div>
+
+      <!-- MODAL: Konfirmimi i Restore -->
+      <div x-show="restoreOpen" x-cloak class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.away="restoreOpen = false" class="w-full max-w-lg bg-slate-900 border border-rose-900/60 rounded-2xl shadow-2xl overflow-hidden">
+          <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+            <h3 class="text-sm font-bold text-rose-400 flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i> Restore i Bazës së të Dhënave
+            </h3>
+            <button type="button" @click="restoreOpen = false" class="text-slate-400 hover:text-slate-200 text-sm">✕</button>
+          </div>
+
+          <form action="/cilesimet/restore" method="POST" enctype="multipart/form-data" class="p-5 space-y-4 text-xs" @submit="if (confirmText !== 'RESTORO') { $event.preventDefault(); }">
+            <p class="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 font-semibold">
+              Kjo do të FSHIJË përgjithmonë krejt të dhënat aktuale (klientë, oferta, fatura, projekte, etj.) dhe do t'i zëvendësojë me përmbajtjen e skedarit .json të ngarkuar.
+            </p>
+
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Skedari Backup (.json) *</label>
+              <input type="file" name="backupFile" accept=".json,application/json" required @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-rose-400 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-rose-500 file:text-slate-950 hover:file:bg-rose-400 file:cursor-pointer">
+              <p class="text-[10px] text-slate-500 mt-1" x-show="fileName" x-text="'Zgjedhur: ' + fileName"></p>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Për të konfirmuar, shkruani <span class="font-mono text-rose-400">RESTORO</span> *</label>
+              <input type="text" x-model="confirmText" placeholder="RESTORO" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-rose-400 font-mono">
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+              <button type="button" @click="restoreOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700">
+                Anulo
+              </button>
+              <button type="submit" :disabled="confirmText !== 'RESTORO'" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-lg transition-all">
+                Konfirmo Restore
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Shto Përdorues të Ri -->
+  <div x-show="isCreateUserModalOpen" x-cloak class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div @click.away="isCreateUserModalOpen = false" class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+          <span>➕</span> Regjistro Përdorues të Ri
+        </h3>
+        <button type="button" @click="isCreateUserModalOpen = false" class="text-slate-400 hover:text-slate-200 text-sm">✕</button>
+      </div>
+
+      <form action="/cilesimet/perdoruesit/krijo" method="POST" class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Emri dhe Mbiemri *</label>
+          <input type="text" name="fullName" required placeholder="p.sh. Alban Berisha" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Username *</label>
+            <input type="text" name="username" required placeholder="p.sh. alban.b" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Fjalëkalimi *</label>
+            <input type="password" name="password" required placeholder="Të paktën 6 karaktere" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Email Zyrtar *</label>
+            <input type="email" name="email" required placeholder="alban@kroneer.com" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Telefoni</label>
+            <input type="text" name="phone" placeholder="+383 44 123 456" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Roli në Sistem *</label>
+          <select name="role" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+            <option value="SHITJE">Shitje & CRM (Ofertues)</option>
+            <option value="FINANCE">Financë & Kontabilitet (Fatura / Pagesa)</option>
+            <option value="MENAXHER_PROJEKTI">Menaxher Projekti & Instalimi</option>
+            <option value="TEKNIK">Teknik & Mirëmbajtje</option>
+            <option value="ADMINISTRATOR">Administrator (Qasje e Plotë)</option>
+          </select>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+          <button type="button" @click="isCreateUserModalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700">
+            Anulo
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20">
+            Regjistro Përdoruesin
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Ndrysho Përdoruesin Ekzistues -->
+  <div x-show="isEditUserModalOpen" x-cloak class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div @click.away="isEditUserModalOpen = false" class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+          <span>✏️</span> Modifiko Përdoruesin: <span class="text-amber-400" x-text="editUserData.fullName"></span>
+        </h3>
+        <button type="button" @click="isEditUserModalOpen = false" class="text-slate-400 hover:text-slate-200 text-sm">✕</button>
+      </div>
+
+      <form :action="'/cilesimet/perdoruesit/' + editUserData.id + '/ndrysho'" method="POST" class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Emri dhe Mbiemri *</label>
+          <input type="text" name="fullName" x-model="editUserData.fullName" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Email Zyrtar *</label>
+            <input type="email" name="email" x-model="editUserData.email" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Telefoni</label>
+            <input type="text" name="phone" x-model="editUserData.phone" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Roli në Sistem</label>
+          <select name="role" x-model="editUserData.role" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+            <option value="SHITJE">Shitje & CRM (Ofertues)</option>
+            <option value="FINANCE">Financë & Kontabilitet (Fatura / Pagesa)</option>
+            <option value="MENAXHER_PROJEKTI">Menaxher Projekti & Instalimi</option>
+            <option value="TEKNIK">Teknik & Mirëmbajtje</option>
+            <option value="ADMINISTRATOR">Administrator (Qasje e Plotë)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Fjalëkalimi i Ri (Lëreni bosh nëse nuk dëshironi ta ndryshoni)</label>
+          <input type="password" name="password" placeholder="Fjalëkalimi i ri (opsionale)" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+          <button type="button" @click="isEditUserModalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700">
+            Anulo
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20">
+            Ruaj Ndryshimet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

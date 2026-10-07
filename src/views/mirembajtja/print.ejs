@@ -1,0 +1,145 @@
+<%
+  const clientName = contract.customer.companyName || `${contract.customer.firstName || ''} ${contract.customer.lastName || ''}`.trim() || 'Klienti';
+  const cAddress = contract.customer.address || '-';
+  const cCity = contract.customer.city || 'Kosovë';
+  const cTax = contract.customer.taxNumber || contract.customer.businessNumber || '-';
+  const cBuilding = contract.customer.buildingName || 'Objekti i Porositësit';
+  const elevModel = contract.elevator ? (contract.elevator.model || contract.elevator.name) : 'Sisteme Lifti KRONEER';
+  const sn = contract.serialNumber || 'KR-SN-LIFT';
+  const priceFormatted = parseFloat(contract.priceAnnual || 0).toLocaleString('de-DE', {minimumFractionDigits: 2});
+  const sDate = contract.startDate ? new Date(contract.startDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  const eDate = contract.endDate ? new Date(contract.endDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
+  
+  const compName = company.companyName || 'KRONEER';
+  const compAddr = company.address || 'Prishtinë';
+  const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+  const compTax = company.taxNumber || '330123456';
+  
+  const defaultPreamble = `Kjo Kontratë lidhet ndërmjet ${compName} me seli në ${compAddr}, ${compCity}, NUI: ${compTax} (në vijim: "Ofruesi i Shërbimit"), dhe ${clientName} me seli në ${cAddress}, ${cCity}, NUI: ${cTax} (në vijim: "Porositësi").`;
+  const defaultArt1 = `Ofruesi i shërbimit merr përsipër mirëmbajtjen teknike preventive dhe korrektive të ashensorit ${elevModel} me numër serik ${sn}, i instaluar në objektin "${cBuilding}", ${cCity}.`;
+  const defaultArt2 = `Vlera vjetore e shërbimit të mirëmbajtjes është €${priceFormatted} (përfshirë TVSH). Pagesa do të kryhet në baza të rregullta sipas marrëveshjes.`;
+  const defaultArt3 = `Kontrata hyn në fuqi më ${sDate} dhe është e vlefshme deri më ${eDate}. Frekuenca e vizitave të rregullta të servisimit do të jetë ${contract.frequency || 'Mujore'}.`;
+  const defaultArt4 = `Ofruesi i shërbimit obligohet të kryejë kontrolle teknike periodike sipas standardit evropian EN 13015, të sigurojë gatishmëri emergjente 24 orë në 7 ditë të javës për zhbllokimin e pasagjerëve, dhe të përdorë pjesë këmbimi origjinale të certifikuara.`;
+  const defaultArt5 = `Porositësi merr përsipër të lejojë qasje të papenguar të teknikëve në ambientet e liftit, të mos lejojë ndërhyrje nga persona të paautorizuar, dhe të njoftojë menjëherë qendrën e shërbimit në rast të ndonjë parregullsie.`;
+  const defaultArt6 = `Çdo ndryshim apo ndërprerje e kontratës bëhet me njoftim me shkrim 30 ditë përpara. Mosmarrëveshjet do të zgjidhen me mirëkuptim, ose në Gjykatën kompetente në Prishtinë.`;
+  const defaultClosing = `Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.`;
+%>
+
+<!-- Koka Zyrtare e Kontratës së Mirëmbajtjes -->
+<div class="avoid-break flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= compName %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= compName %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline || 'Professional Elevator Solutions' %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600">
+      <%= compAddr %>, <%= compCity %> • NUI: <%= compTax %>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      KONTRATË SERVISIMI & MIRËMBAJTJEJE
+    </span>
+    <div class="text-lg font-black font-mono text-slate-950"><%= contract.number %></div>
+    <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(contract.createdAt) %></strong></div>
+  </div>
+</div>
+
+<div class="text-center font-bold uppercase tracking-wider text-sm mb-4 border-b border-slate-300 pb-1.5 text-slate-950">
+  <%= contract.contractTitle || 'KONTRATË PËR MIRËMBAJTJEN PERIODIKE DHE SERVISIMIN E LIFTEVE' %>
+</div>
+
+<div class="space-y-2.5 text-[11px] leading-snug text-slate-800 mb-5">
+  
+  <!-- Preambula -->
+  <p class="leading-snug">
+    <%= contract.preambleText || defaultPreamble %>
+  </p>
+
+  <!-- Neni 1 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article1Title || 'NENI 1: OBJEKTI I MIRËMBAJTJES' %></h4>
+  <p class="leading-snug">
+    <%= contract.article1Text || defaultArt1 %>
+  </p>
+
+  <!-- Neni 2 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article2Title || 'NENI 2: ÇMIMI DHE KUSHTET E PAGESËS' %></h4>
+  <p class="leading-snug">
+    <%= contract.article2Text || defaultArt2 %>
+  </p>
+
+  <!-- Neni 3 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article3Title || 'NENI 3: KOHËZGJATJA DHE FREKUENCA E VIZITAVE' %></h4>
+  <p class="leading-snug">
+    <%= contract.article3Text || defaultArt3 %>
+  </p>
+
+  <!-- Neni 4 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article4Title || 'NENI 4: DETYRIMET E KOMPANISË & SHËRBIMI 24/7' %></h4>
+  <p class="leading-snug">
+    <%= contract.article4Text || defaultArt4 %>
+  </p>
+
+  <!-- Neni 5 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E POROSITËSIT' %></h4>
+  <p class="leading-snug whitespace-pre-line">
+    <%= contract.article5Text || defaultArt5 %>
+  </p>
+
+  <!-- Neni 6 -->
+  <h4 class="font-bold text-slate-950 uppercase pt-1"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & ZGJIDHJA E MOSMARRËVESHJEVE' %></h4>
+  <p class="leading-snug">
+    <%= contract.article6Text || defaultArt6 %>
+  </p>
+
+  <!-- Kushte të Veçanta -->
+  <% if (contract.specialTerms || contract.notes) { %>
+    <h4 class="font-bold text-slate-950 uppercase pt-1">KUSHTE DHE SPECIFIKIME TË VEÇANTA</h4>
+    <p class="leading-snug whitespace-pre-line bg-slate-50 p-2.5 rounded border border-slate-200">
+      <%= contract.specialTerms || contract.notes %>
+    </p>
+  <% } %>
+
+  <!-- Dispozita Përfundimtare -->
+  <p class="pt-1 italic text-slate-600">
+    <%= contract.closingTerms || defaultClosing %>
+  </p>
+
+</div>
+
+<!-- Nënshkrimet Zyrtare -->
+<% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+<div class="avoid-break grid grid-cols-2 gap-12 pt-6 border-t border-slate-300 text-xs text-center">
+  <div class="flex flex-col items-center">
+    <p class="font-bold text-slate-900 mb-1">Për Ofruesin (<%= compName %>):</p>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="flex items-end justify-center mb-1">
+      <% if (company && company.stampUrl) { %>
+        <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi <%= compName %>" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
+      <% } %>
+    </div>
+    <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+      <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
+    </div>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <p class="font-bold text-slate-900 mb-1">Për Porositësin (<%= clientName %>):</p>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="mb-1"></div>
+    <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+      <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
+    </div>
+  </div>
+</div>

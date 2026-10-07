@@ -1,0 +1,244 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black text-slate-100 font-mono">LËSHO FATURË TË RE</h1>
+      <span class="font-mono text-sm font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-lg">
+        <%= nextNumber %>
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Llogaritje automatike e TVSH-së 18% dhe balancit për pagesë</p>
+  </div>
+  <a href="/faturat" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+    Anulo
+  </a>
+</div>
+
+<form action="/faturat/krijo" method="POST" id="invoice-form" class="space-y-6">
+  
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+      Të Dhënat e Faturimit
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs" x-data="quickCustomerModal()">
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <option value="">-- Zgjidh Klientin --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.companyName %> (<%= c.code %>)</option>
+            <% }); %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Data e Faturës *</label>
+        <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Afati i Pagesës (Due Date) *</label>
+        <input type="date" name="dueDate" value="<%= new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+      </div>
+
+      <%- include('../partials/quick-customer-modal') %>
+    </div>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl" x-data="{
+    items: [
+      { name: 'Pajisje dhe Shërbime Lifti KRONEER', description: 'Furnizim dhe montim sipas specifikacionit teknik', quantity: 1, unitPrice: 25000, discount: 0 }
+    ],
+    searches: [{ query: '', results: [], open: false, loading: false, timer: null, rect: null }],
+    addItem() {
+      this.items.push({ name: '', description: '', quantity: 1, unitPrice: 0, discount: 0 });
+      this.searches.push({ query: '', results: [], open: false, loading: false, timer: null, rect: null });
+    },
+    removeItem(idx) {
+      if (this.items.length > 1) {
+        this.items.splice(idx, 1);
+        this.searches.splice(idx, 1);
+      }
+    },
+    async searchProducts(idx, el) {
+      const s = this.searches[idx];
+      const q = this.items[idx].name;
+      clearTimeout(s.timer);
+      if (el) s.rect = el.getBoundingClientRect();
+      if (!q || q.length < 1) { s.results = []; s.open = false; return; }
+      s.loading = true;
+      s.timer = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/katalogu/kerko?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          s.results = data.success ? data.items : [];
+          s.open = s.results.length > 0;
+        } catch(e) { s.results = []; s.open = false; }
+        s.loading = false;
+      }, 280);
+    },
+    selectProduct(idx, prod) {
+      this.items[idx].name = prod.name;
+      this.items[idx].unitPrice = prod.sellingPrice || 0;
+      this.items[idx].description = prod.code + (prod.description && prod.description !== prod.code ? ' · ' + prod.description : '');
+      this.searches[idx].open = false;
+    },
+    ddStyle(idx) {
+      const r = this.searches[idx] && this.searches[idx].rect;
+      if (!r) return '';
+      return `position:fixed;top:${r.bottom + 4}px;left:${r.left}px;width:${r.width}px;z-index:9999;`;
+    },
+    subtotal() {
+      return this.items.reduce((s, it) => s + (parseFloat(it.quantity || 1) * parseFloat(it.unitPrice || 0)), 0);
+    },
+    totalDiscount() {
+      return this.items.reduce((s, it) => s + parseFloat(it.discount || 0), 0);
+    },
+    netSubtotal() {
+      return Math.max(0, this.subtotal() - this.totalDiscount());
+    },
+    vat() {
+      return Math.round(this.netSubtotal() * 0.18 * 100) / 100;
+    },
+    total() {
+      return this.netSubtotal() + this.vat();
+    }
+  }">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Artikujt e Faturës</h3>
+      <button type="button" @click="addItem()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs">
+        + Shto Artikull
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 text-slate-400 uppercase font-bold text-[10px]">
+          <tr>
+            <th class="p-3 w-1/2">Artikulli / Përshkrimi</th>
+            <th class="p-3 text-center">Sasia</th>
+            <th class="p-3 text-right">Çmimi (€)</th>
+            <th class="p-3 text-right">Zbritja (€)</th>
+            <th class="p-3 text-right">Totali (€)</th>
+            <th class="p-3 text-center"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <template x-for="(item, index) in items" :key="index">
+            <tr>
+              <td class="p-2 space-y-1">
+                <!-- Autocomplete Name Field -->
+                <div class="relative" @keydown.escape="searches[index].open = false" @click.outside="searches[index].open = false">
+                  <div class="relative">
+                    <input
+                      type="text"
+                      x-model="item.name"
+                      x-ref="nameInput"
+                      @input="searchProducts(index, $el)"
+                      @focus="searchProducts(index, $el)"
+                      required
+                      placeholder="Kërko produkt / shërbim ose shtyp emrin…"
+                      autocomplete="off"
+                      class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none focus:border-amber-400 pr-7"
+                    >
+                    <span x-show="searches[index] && searches[index].loading" class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg class="w-3 h-3 animate-spin text-amber-400" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    </span>
+                  </div>
+                  <!-- Dropdown -->
+                  <div
+                    x-show="searches[index] && searches[index].open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    :style="ddStyle(index)"
+                    class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto"
+                    style="display:none;"
+                  >
+                    <template x-for="prod in searches[index].results" :key="prod.id">
+                      <button
+                        type="button"
+                        @mousedown.prevent="selectProduct(index, prod)"
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-800 text-left transition"
+                      >
+                        <span
+                          class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                          :class="prod.isService ? 'bg-sky-500/20 text-sky-300' : prod.isModernization ? 'bg-purple-500/20 text-purple-300' : 'bg-amber-500/15 text-amber-400'"
+                          x-text="prod.isService ? 'Shërbim' : prod.isModernization ? 'Modernizim' : 'Pjesë'"
+                        ></span>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-xs font-bold text-white truncate" x-text="prod.name"></div>
+                          <div class="text-[10px] text-slate-400 font-mono" x-text="prod.code + ' · Stok: ' + prod.stockQty"></div>
+                        </div>
+                        <span class="shrink-0 text-xs font-black text-amber-400 font-mono" x-text="'€' + (prod.sellingPrice || 0).toFixed(2)"></span>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+                <input type="text" x-model="item.description" placeholder="Përshkrim (opsional)" class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
+              </td>
+              <td class="p-2 text-center">
+                <input type="number" x-model.number="item.quantity" min="1" step="1" class="w-16 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-center focus:outline-none">
+              </td>
+              <td class="p-2 text-right">
+                <input type="number" x-model.number="item.unitPrice" min="0" step="10" class="w-24 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-right focus:outline-none">
+              </td>
+              <td class="p-2 text-right">
+                <input type="number" x-model.number="item.discount" min="0" step="10" class="w-20 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-emerald-400 text-right focus:outline-none">
+              </td>
+              <td class="p-2 font-mono font-bold text-slate-100 text-right" x-text="'€' + ((item.quantity * item.unitPrice) - item.discount).toLocaleString('de-DE', {minimumFractionDigits: 2})"></td>
+              <td class="p-2 text-center">
+                <button type="button" @click="removeItem(index)" class="text-slate-500 hover:text-rose-400 p-1">
+                  &times;
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Përmbledhja Financiare -->
+    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+      <div class="w-72 space-y-2 text-xs">
+        <div class="flex justify-between text-slate-400">
+          <span>Nëntotali neto:</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + netSubtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>TVSH (18%):</span>
+          <span class="font-mono font-bold text-slate-200" x-text="'€' + vat().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+        <div class="pt-2 border-t-2 border-amber-500/40 flex justify-between">
+          <span class="font-black text-slate-100 text-sm">TOTALI I FATURËS:</span>
+          <span class="text-xl font-black text-amber-400 font-mono" x-text="'€' + total().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+        </div>
+      </div>
+    </div>
+
+    <input type="hidden" name="items" :value="JSON.stringify(items)">
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <label class="block text-xs font-semibold text-slate-300 mb-2">Shënime</label>
+    <textarea name="notes" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400"></textarea>
+  </div>
+
+  <div class="flex items-center justify-end gap-3">
+    <a href="/faturat" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+      Anulo
+    </a>
+    <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+      LËSHO FATURËN
+    </button>
+  </div>
+
+</form>

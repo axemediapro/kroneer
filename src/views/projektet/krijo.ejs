@@ -1,0 +1,129 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-400 mb-1">
+        <a href="/projektet" class="hover:text-amber-400">Projektet</a>
+        <span>/</span>
+        <span class="text-slate-200">Hap Projekt të Ri</span>
+      </div>
+      <h1 class="text-2xl font-black text-slate-100 font-mono tracking-tight">Hap Projekt të Ri Inxhinierik & Cakto Ekipin</h1>
+    </div>
+    <a href="/projektet" class="px-4 py-2 text-xs font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form action="/projektet/krijo" method="POST" class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Numri i Projektit</label>
+        <input type="text" name="number" value="<%= nextNumber %>" readonly class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-mono focus:outline-none cursor-not-allowed">
+        <p class="text-[10px] text-slate-500 mt-1 font-mono">Gjenerohet automatikisht nga sistemi KRONEER</p>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Emri i Projektit / Ndërtesës *</label>
+        <input type="text" name="name" required placeholder="p.sh. Kompleksi Rezidencial 'Dardania' Blloku B" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div x-data="quickCustomerModal()">
+        <label class="block font-semibold text-slate-300 mb-2">Klienti / Investitori</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+            <option value="">-- Pa Klient Specifik --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.companyName %> (<%= c.city || 'Kosovë' %>)</option>
+            <% }) %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <!-- Menaxheri i Projektit -->
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Menaxheri i Projektit (Përgjegjësi) *</label>
+        <select name="projectManagerId" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="">-- Zgjidh Menaxherin e Projektit --</option>
+          <% if (typeof managers !== 'undefined' && managers) { %>
+            <% managers.forEach(m => { %>
+              <option value="<%= m.id %>" <%= (currentUser && currentUser.id === m.id) ? 'selected' : '' %>><%= m.fullName %> (<%= m.role %>)</option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Faza Fillestare</label>
+        <select name="stage" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+          <option value="Planifikim" selected>Planifikim</option>
+          <option value="Inxhinieri">Inxhinieri</option>
+          <option value="Prodhim">Prodhim</option>
+          <option value="Transport">Transport</option>
+          <option value="Instalim">Instalim</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Numri i Lifteve</label>
+        <input type="number" name="elevatorCount" min="1" value="1" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Numri i Kateve / Ndalesave</label>
+        <input type="number" name="floorsCount" min="1" value="8" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Vlera e Projektit (€)</label>
+        <input type="number" step="0.01" name="value" placeholder="45000" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-mono focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Data e Fillimit</label>
+        <input type="date" name="startDate" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Afati i Synuar i Përfundimit</label>
+        <input type="date" name="targetCompletionDate" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <!-- Ekipi i Monterëve / Punëtorëve -->
+      <div class="md:col-span-2 bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+        <label class="block font-bold text-amber-400 uppercase tracking-wider mb-2">Cakto Ekipin e Punëtorëve / Monterëve për këtë Projekt:</label>
+        <p class="text-[11px] text-slate-400 mb-3">Zgjidhni punëtorët dhe monterët që do të jenë të angazhuar në këtë projekt (mund t'i ndryshoni më vonë):</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
+          <% if (typeof employees !== 'undefined' && employees) { %>
+            <% employees.forEach(emp => { %>
+              <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-amber-500/40 cursor-pointer transition-colors">
+                <input type="checkbox" name="teamMembers" value="<%= emp.id %>" class="rounded text-amber-500 focus:ring-amber-400 bg-slate-950 border-slate-700">
+                <div class="truncate">
+                  <span class="font-bold text-slate-200 block text-xs truncate"><%= emp.firstName %> <%= emp.lastName %></span>
+                  <span class="text-[10px] text-slate-500 font-mono truncate block"><%= emp.position %></span>
+                </div>
+              </label>
+            <% }); %>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block font-semibold text-slate-300 mb-2">Shënime & Specifikime Teknike</label>
+        <textarea name="notes" rows="3" placeholder="Shënime për boshtin e ashensorit, kushtet e objektit, kërkesat e arkitektit..." class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400"></textarea>
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-slate-800 flex justify-end items-center gap-3">
+      <a href="/projektet" class="px-5 py-2.5 text-xs font-semibold text-slate-300 bg-slate-800 rounded-xl hover:bg-slate-700 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-6 py-2.5 text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-xl transition shadow-lg shadow-amber-500/20 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Hap Projektin
+      </button>
+    </div>
+  </form>
+</div>

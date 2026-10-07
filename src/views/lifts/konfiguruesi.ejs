@@ -1,0 +1,502 @@
+<div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+      <span class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">Inxhinieri & Përllogaritje Çmimi</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight mt-1">
+      KONFIGURUESI I LIFTIT KRONEER
+    </h1>
+    <p class="text-xs text-slate-400 mt-1">Konfiguroni në 10 hapa teknikë dhe përllogaritni automatikisht koston dhe specifikimet</p>
+  </div>
+</div>
+
+<% if (selectedElevator) { %>
+  <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
+    <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <p class="text-xs text-amber-200">
+      Duke konfiguruar bazuar në modelin <strong><%= selectedElevator.model %></strong> (<%= selectedElevator.code %>) — çmimi bazë i katalogut: <strong><%= formatCurrency(selectedElevator.basePrice) %></strong>. Parametrat fillestarë janë vendosur automatikisht sipas këtij modeli; ndryshimi i tyre rillogarit çmimin.
+    </p>
+  </div>
+<% } %>
+
+<script>
+  window.SELECTED_ELEVATOR = <%- selectedElevator ? JSON.stringify({
+    id: selectedElevator.id,
+    type: selectedElevator.type,
+    capacityKg: selectedElevator.capacityKg,
+    speed: selectedElevator.speed,
+    basePrice: selectedElevator.basePrice
+  }).replace(/</g, '\\u003c') : 'null' %>;
+</script>
+
+<!-- Shirit Navigimi i 10 Hapave -->
+<div class="mb-8 overflow-x-auto pb-2">
+  <div class="flex items-center gap-2 min-w-[900px]">
+    <% const stepTitles = [
+      '1. Lloji', '2. Kapaciteti', '3. Shpejtësia', '4. Objekti', '5. Sistemi', 
+      '6. Dyert', '7. Kabina', '8. Interieri', '9. Opsionet', '10. Instalimi'
+    ]; %>
+    <% for(let s = 1; s <= 10; s++) { %>
+      <button 
+        type="button" 
+        id="step-nav-<%= s %>" 
+        class="flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all text-center whitespace-nowrap <%= s === 1 ? 'border-amber-400 text-amber-400 bg-amber-500/10' : 'border-slate-800 text-slate-400 bg-slate-900' %>"
+      >
+        <%= stepTitles[s - 1] %>
+      </button>
+    <% } %>
+  </div>
+</div>
+
+<!-- Layout Kryesor: Hapat (Majtas) + Paneli Financiar (Djathtas) -->
+<form id="elevator-configurator-form" action="/lifts/konfiguruesi/ruaj" method="POST">
+  
+  <!-- Fusha të fshehura për dërgim -->
+  <input type="hidden" name="basePrice" id="hidden-basePrice" value="22500">
+  <input type="hidden" name="optionsPrice" id="hidden-optionsPrice" value="0">
+  <input type="hidden" name="installationPrice" id="hidden-installationPrice" value="3500">
+  <input type="hidden" name="transportPrice" id="hidden-transportPrice" value="900">
+  <input type="hidden" name="discount" id="hidden-discount" value="1500">
+  <input type="hidden" name="subtotal" id="hidden-subtotal" value="25400">
+  <input type="hidden" name="vatAmount" id="hidden-vatAmount" value="4572">
+  <input type="hidden" name="calculatedPrice" id="hidden-calculatedPrice" value="29972">
+  <input type="hidden" name="selectedOptions" id="hidden-selectedOptionsJson" value="[]">
+  <input type="hidden" name="elevatorId" value="<%= selectedElevator ? selectedElevator.id : '' %>">
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Kolona e Majtë: 10 Hapat e Formularit (2 Kolona) -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl min-h-[460px] flex flex-col justify-between">
+        
+        <div>
+          <!-- HAPI 1: ZGJIDH LLOJIN E LIFTIT -->
+          <div id="step-content-1" class="space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">1</span>
+              Hapi 1: ZGJIDH LLOJIN E LIFTIT
+            </h3>
+            <p class="text-xs text-slate-400">Përzgjidhni kategorinë kryesore të liftit sipas destinimit të objektit:</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <% const liftTypes = [
+                { name: 'Lift pasagjerësh', desc: 'Për ndërtesa banimi dhe qendra biznesi', icon: 'users' },
+                { name: 'Lift shtëpiak', desc: 'Homelift 220V kompakt për vila private', icon: 'home' },
+                { name: 'Lift panoramik', desc: 'Kabinë xhami 360° për hotele dhe qendra tregtare', icon: 'eye' },
+                { name: 'Lift mallrash', desc: 'Industrial me ngarkesë të lartë për magazina', icon: 'truck' },
+                { name: 'Lift spitalor', desc: 'Për shtretër mjekësorë me dyer të gjera', icon: 'plus-circle' },
+                { name: 'Lift shërbimi', desc: 'Për karroca pastrimi dhe shërbim dhome', icon: 'briefcase' },
+                { name: 'Lift automobilash', desc: 'Platformë për garazhe nëntokësore', icon: 'navigation' },
+                { name: 'Platformë ngritëse', desc: 'Për persona me nevoja të veçanta', icon: 'shield' }
+              ]; %>
+              <% liftTypes.forEach((lt, idx) => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="elevatorType" value="<%= lt.name %>" <%= selectedElevator ? (selectedElevator.type === lt.name ? 'checked' : '') : (idx === 0 ? 'checked' : '') %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all hover:border-slate-700">
+                    <span class="font-bold text-slate-200 text-sm block"><%= lt.name %></span>
+                    <span class="text-xs text-slate-400 block mt-1"><%= lt.desc %></span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 2: KAPACITETI -->
+          <div id="step-content-2" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">2</span>
+              Hapi 2: KAPACITETI (KG / PERSONA)
+            </h3>
+            <p class="text-xs text-slate-400">Përzgjidhni ngarkesën nominale të certifikuar:</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              <% const capacities = [
+                { kg: 300, p: 4 }, { kg: 450, p: 6 }, { kg: 630, p: 8 },
+                { kg: 800, p: 10 }, { kg: 1000, p: 13 }, { kg: 1275, p: 17 },
+                { kg: 1600, p: 21 }, { kg: 2000, p: 26 }, { kg: 2500, p: 33 }
+              ]; %>
+              <% capacities.forEach(c => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="capacityKg" value="<%= c.kg %>" <%= selectedElevator ? (selectedElevator.capacityKg === c.kg ? 'checked' : '') : (c.kg === 630 ? 'checked' : '') %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all text-center">
+                    <span class="font-mono text-lg font-black text-slate-100 block"><%= c.kg %> KG</span>
+                    <span class="text-xs text-slate-400 block mt-0.5"><%= c.p %> Persona</span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 3: SHPEJTËSIA -->
+          <div id="step-content-3" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
+              Hapi 3: SHPEJTËSIA E LËVIZJES (m/s)
+            </h3>
+            <p class="text-xs text-slate-400">Zgjidhni shpejtësinë sipas lartësisë së ndërtesës:</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <% const speeds = [
+                { s: '0.63', desc: 'Vila & Objekte të ulëta (1-4 kate)' },
+                { s: '1.0', desc: 'Ndërtesa standarde (5-10 kate)' },
+                { s: '1.6', desc: 'Shpejtësi e lartë (10-18 kate)' },
+                { s: '2.0', desc: 'Kulla & Qendra biznesi (18+ kate)' }
+              ]; %>
+              <% speeds.forEach(sp => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="speed" value="<%= sp.s %>" <%= selectedElevator ? (parseFloat(sp.s) === parseFloat(selectedElevator.speed) ? 'checked' : '') : (sp.s === '1.0' ? 'checked' : '') %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all text-center">
+                    <span class="font-mono text-xl font-black text-amber-400 block"><%= sp.s %> m/s</span>
+                    <span class="text-[11px] text-slate-400 block mt-1"><%= sp.desc %></span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 4: OBJEKTI (KATE & DIMENSIONE BOSHTI) -->
+          <div id="step-content-4" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">4</span>
+              Hapi 4: PARAMETRAT E OBJEKTIT & BOSHTIT
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Numri i Kateve</label>
+                <input type="number" id="floorsCount" name="floorsCount" value="6" min="1" max="50" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Numri i Ndalesave</label>
+                <input type="number" name="stopsCount" value="6" min="1" max="50" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Lartësia e Udhëtimit (m)</label>
+                <input type="number" name="travelHeight" value="18.0" step="0.5" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Gjerësia e Boshtit (mm)</label>
+                <input type="number" name="shaftWidth" value="1650" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Thellësia e Boshtit (mm)</label>
+                <input type="number" name="shaftDepth" value="1750" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Thellësia e Gropës (Pit mm)</label>
+                <input type="number" name="pitDepth" value="1200" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+              </div>
+            </div>
+          </div>
+
+          <!-- HAPI 5: SISTEMI I LËVIZJES -->
+          <div id="step-content-5" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">5</span>
+              Hapi 5: SISTEMI I LËVIZJES DHE MAKINA
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <% const driveSystems = [
+                { name: 'MRL (Pa dhomë makinerie)', desc: 'Motori instalohet brenda boshtit në krye. Kursim maksimal i hapësirës.' },
+                { name: 'Me dhomë makinerie (MR)', desc: 'Dhoma tradicionale e vendosur mbi bosht ose anash.' },
+                { name: 'Gearless Sinkron Permanent Magnet', desc: 'Efiçiencë A+++, zhurmë minimale dhe udhëtim ultra i butë.' },
+                { name: 'Me reduktor (Geared)', desc: 'Sistem tradicional i fortë për ngarkesa shumë të rënda industriale.' }
+              ]; %>
+              <% driveSystems.forEach((ds, idx) => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="driveSystem" value="<%= ds.name %>" <%= selectedElevator ? (selectedElevator.driveSystem === ds.name ? 'checked' : '') : (idx === 0 ? 'checked' : '') %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all">
+                    <span class="font-bold text-slate-200 text-sm block"><%= ds.name %></span>
+                    <span class="text-xs text-slate-400 block mt-1"><%= ds.desc %></span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 6: DYERT -->
+          <div id="step-content-6" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">6</span>
+              Hapi 6: DYERT E KABINËS DHE KATEVE
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <% const doors = [
+                { name: 'Automatike Teleskopike (Hapje Anësore)', desc: 'E përkryer për boshte me gjerësi të kufizuar (800mm - 1200mm)' },
+                { name: 'Hapje Qendrore 2/4-kanatëshe', desc: 'Simetrike dhe elegante, ideale për hyrje-dalje të shpejtë (900mm+)' },
+                { name: 'Dyer Xhami Panoramike', desc: 'Xham i tejdukshëm i sigurisë me kornizë inoksi' },
+                { name: 'Rezistente ndaj Zjarrit EI-120', desc: 'Të certifikuara për mbrojtje kundër zjarrit për 120 minuta' }
+              ]; %>
+              <% doors.forEach((dr, idx) => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="doorType" value="<%= dr.name %>" <%= selectedElevator ? (selectedElevator.doorType === dr.name ? 'checked' : '') : (idx === 0 ? 'checked' : '') %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all">
+                    <span class="font-bold text-slate-200 text-sm block"><%= dr.name %></span>
+                    <span class="text-xs text-slate-400 block mt-1"><%= dr.desc %></span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 7: KABINA -->
+          <div id="step-content-7" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">7</span>
+              Hapi 7: MODELI I KABINËS
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <% const cabins = [
+                { name: 'Standarde Inox', desc: 'Inox Saten AISI 304 me linja moderne' },
+                { name: 'Premium Gold / Black', desc: 'Inox titan i praruar me ar ose i zi mat' },
+                { name: 'Xham Panoramik', desc: 'Strukturë me xham të kalitur tripleks' },
+                { name: 'E Personalizuar', desc: 'Kombinim mermeri, druri arre dhe inoksi' },
+                { name: 'Spitalore Antibakteriale', desc: 'Inox AISI 316 pa kënde të vdekura' }
+              ]; %>
+              <% cabins.forEach((cb, idx) => { %>
+                <label class="cursor-pointer">
+                  <input type="radio" name="cabinFinish" value="<%= cb.name %>" <%= idx === 0 ? 'checked' : '' %> class="peer sr-only">
+                  <div class="p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-amber-400 peer-checked:bg-amber-500/10 transition-all text-center">
+                    <span class="font-bold text-slate-200 text-sm block"><%= cb.name %></span>
+                    <span class="text-xs text-slate-400 block mt-1"><%= cb.desc %></span>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 8: INTERIERI (Dysheme, Tavan, Drita, Pasqyrë, Dorezë) -->
+          <div id="step-content-8" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">8</span>
+              Hapi 8: ELEMENTET E INTERIERIT
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Dyshemeja</label>
+                <select name="floorFinish" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                  <option value="Granit Natyror">Granit Natyror</option>
+                  <option value="Mermer i Bardhë">Mermer i Bardhë Carrara</option>
+                  <option value="Gomë Industriale">Gomë Industriale me Pika</option>
+                  <option value="Llamarinë Inoksi">Llamarinë Inoksi me Damarë</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Tavani & Ndriçimi</label>
+                <select name="ceilingFinish" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                  <option value="LED Spote Ultra-Slim">LED Spote Ultra-Slim</option>
+                  <option value="Tavan Qiell me Yje Fibër Optike">Tavan Qiell me Yje Fibër Optike</option>
+                  <option value="Ndriçim Linear i Fshehur">Ndriçim Linear i Fshehur</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Pasqyra</label>
+                <select name="mirror" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                  <option value="Gjysmë Pasqyrë e Pasme">Gjysmë Pasqyrë e Pasme</option>
+                  <option value="Pasqyrë e Plotë nga Dyshemeja në Tavan">Pasqyrë e Plotë nga Dyshemeja në Tavan</option>
+                  <option value="Pa Pasqyrë">Pa Pasqyrë</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Doreza Mbajtëse</label>
+                <select name="handrail" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                  <option value="Inoks i Rrumbullakët Saten">Inoks i Rrumbullakët Saten</option>
+                  <option value="Inoks Këndor me Ndriçim LED">Inoks Këndor me Ndriçim LED</option>
+                  <option value="Dorezë Ari Titan">Dorezë Ari Titan</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- HAPI 9: OPSIONET & SIGURIA -->
+          <div id="step-content-9" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">9</span>
+              Hapi 9: OPSIONET SHTESË & SIGURIA
+            </h3>
+            <p class="text-xs text-slate-400">Zgjidhni pajisjet dhe sistemet shtesë të sigurisë dhe komunikimit:</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+              <% options.forEach(opt => { %>
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer text-xs">
+                  <input 
+                    type="checkbox" 
+                    name="selectedOptions" 
+                    value="<%= opt.code %>" 
+                    data-price="<%= opt.price %>" 
+                    data-name="<%= opt.name %>"
+                    class="mt-0.5 w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0"
+                  >
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-slate-200"><%= opt.name %></span>
+                      <span class="font-mono font-bold text-amber-400">+<%= formatCurrency(opt.price) %></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5"><%= opt.description %></p>
+                  </div>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- HAPI 10: INSTALIMI & KONFIRMIMI -->
+          <div id="step-content-10" class="hidden space-y-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">10</span>
+              Hapi 10: SHËRBIMET E INSTALIMIT & LIDHJA ME KLIENTIN
+            </h3>
+
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 text-xs mb-4">
+              <label class="flex items-center gap-2 text-slate-300">
+                <input type="checkbox" checked disabled class="w-4 h-4 text-emerald-400 rounded">
+                <span>Transporti i Sigurt në Kantier me vinç</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300">
+                <input type="checkbox" checked disabled class="w-4 h-4 text-emerald-400 rounded">
+                <span>Instalimi dhe Montimi Profesional nga inxhinierët KRONEER</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300">
+                <input type="checkbox" checked disabled class="w-4 h-4 text-emerald-400 rounded">
+                <span>Testimi dinamik me ngarkesë të plotë dhe Inspektimi teknik</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300">
+                <input type="checkbox" checked disabled class="w-4 h-4 text-emerald-400 rounded">
+                <span>Vënia në funksion dhe Trajnimi i stafit</span>
+              </label>
+            </div>
+
+            <!-- Zgjedhja e Klientit për Krijim Oferte të Menjëhershme -->
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
+                Dëshironi të gjeneroni direkt Ofertë Zyrtare për këtë konfigurim?
+              </label>
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-xs text-slate-200 cursor-pointer">
+                  <input type="checkbox" name="createQuotation" value="true" checked class="w-4 h-4 text-amber-500 rounded">
+                  <span class="font-bold">Po, krijo Ofertë të re me numër automatik dhe lidhe me klientin:</span>
+                </label>
+                <div class="flex items-center gap-2" x-data="quickCustomerModal()">
+                  <select name="customerId" x-ref="customerSelect" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                    <option value="">-- Zgjidh Klientin --</option>
+                    <% customers.forEach(c => { %>
+                      <option value="<%= c.id %>"><%= c.companyName %> (<%= c.code %>) - <%= c.city || 'Kosovë' %></option>
+                    <% }); %>
+                  </select>
+                  <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+                  <%- include('../partials/quick-customer-modal') %>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Butonat e Navigimit Prapa / Para -->
+        <div class="pt-6 border-t border-slate-800 flex items-center justify-between mt-6">
+          <button 
+            type="button" 
+            id="config-prev-btn" 
+            class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all disabled:opacity-40 disabled:pointer-events-none"
+          >
+            &larr; Hapi i Mëparshëm
+          </button>
+          
+          <button 
+            type="button" 
+            id="config-next-btn" 
+            class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all"
+          >
+            Vazhdo te Hapi Tjetër &rarr;
+          </button>
+
+          <button 
+            type="submit" 
+            id="config-submit-btn" 
+            class="hidden px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition-all"
+          >
+            RUAJ DHE GJENERO OFERTËN
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Kolona e Djathtë: PËRLLLOGARITJA E ÇMIMIT (1 Kolonë) -->
+    <div class="space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl sticky top-24">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+          <div>
+            <h3 class="text-sm font-black text-slate-100 font-mono tracking-wider uppercase">PËRLLLOGARITJA E ÇMIMIT</h3>
+            <p class="text-[10px] text-amber-400">Llogaritje dinamike në kohë reale</p>
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-mono font-bold">€</div>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span>Lift bazë:</span>
+            <span id="summary-base-price" class="font-mono font-bold text-slate-200">€22,500</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-400">
+            <span>Opsione:</span>
+            <span id="summary-options-price" class="font-mono font-bold text-slate-200">€0</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-400">
+            <span>Instalim:</span>
+            <span id="summary-install-price" class="font-mono font-bold text-slate-200">€3,500</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-400">
+            <span>Transport:</span>
+            <span id="summary-transport-price" class="font-mono font-bold text-slate-200">€900</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-400">
+            <span>Zbritje:</span>
+            <span id="summary-discount-price" class="font-mono font-bold text-emerald-400">-€1,500</span>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-slate-300 font-semibold">
+            <span>NËNTOTAL:</span>
+            <span id="summary-subtotal-price" class="font-mono font-bold text-slate-100">€25,400</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-400">
+            <span>TVSH (18%):</span>
+            <span id="summary-vat-price" class="font-mono font-bold text-slate-200">€4,572.00</span>
+          </div>
+
+          <div class="pt-4 border-t-2 border-amber-500/40 flex items-center justify-between">
+            <span class="text-sm font-black text-slate-100 tracking-wider">TOTALI:</span>
+            <span id="summary-total-price" class="text-2xl font-black text-amber-400 font-mono">€29,972.00</span>
+          </div>
+        </div>
+
+        <!-- Zbritje e Modifikueshme -->
+        <div class="mt-6 pt-4 border-t border-slate-800">
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">Zbritje e Negociuar (€):</label>
+          <input type="number" id="discountInput" value="1500" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 focus:outline-none focus:border-amber-400">
+        </div>
+
+        <!-- Blueprint Schematic Preview -->
+        <div class="mt-6 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-slate-400 space-y-1">
+          <div class="text-amber-400 font-bold border-b border-slate-800 pb-1 flex items-center justify-between">
+            <span>SKEMA TEKNIKE KRONEER</span>
+            <span>EN 81-20</span>
+          </div>
+          <div class="flex justify-between"><span>Tensioni:</span><span class="text-slate-200">380V / 3 Faza</span></div>
+          <div class="flex justify-between"><span>Efiçienca:</span><span class="text-emerald-400 font-bold">Klasa A+++</span></div>
+          <div class="flex justify-between"><span>Kontrollori:</span><span class="text-slate-200">VVVF Inverter</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</form>
+
+<script src="/js/configurator.min.js?v=3"></script>

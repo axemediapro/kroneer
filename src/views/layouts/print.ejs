@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dokument Zyrtar - KRONEER' %></title>
+  
+  <link rel="stylesheet" href="/css/style.css?v=6">
+  
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; color: #000 !important; font-size: 10pt; }
+      .page-a4 { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; min-height: 100vh !important; display: flex !important; flex-direction: column !important; }
+    }
+    /* Mos e ndaj këtë element mes dy faqeve të PDF-së */
+    .avoid-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* Kontrata: A4 container duhet të jetë flex kolonë */
+    .page-a4 {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans p-4 sm:p-8">
+
+  <!-- Print Toolbar (Top) -->
+  <div class="no-print max-w-4xl mx-auto mb-6 flex items-center justify-between bg-slate-900 text-slate-100 p-4 rounded-xl shadow-lg border border-slate-800">
+    <div class="flex items-center gap-3">
+      <% const printToolbarLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : (typeof company !== 'undefined' && company && company.logoUrl ? company.logoUrl : null); %>
+      <% if (printToolbarLogo) { %>
+        <div class="h-7 max-w-[140px] flex items-center justify-center">
+          <img src="<%= printToolbarLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="max-height: 28px; width: auto; max-width: 140px; object-fit: contain;">
+        </div>
+      <% } else { %>
+        <div class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs font-mono">K</div>
+      <% } %>
+      <div>
+        <h2 class="text-sm font-bold">Pamja Zyrtare e Printimit (Format A4)</h2>
+        <p class="text-xs text-slate-400">Gati për printim ose ruajtje si PDF • <%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button type="button" id="btn-download-pdf" onclick="downloadPDF()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-lg shadow transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span>Shkarko Direkt si PDF</span>
+      </button>
+      <button type="button" onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-lg border border-slate-700 shadow transition-all flex items-center gap-2">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        <span>Printo (A4)</span>
+      </button>
+      <button type="button" onclick="window.history.back()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-lg border border-slate-700 transition-all">
+        Kthehu Prapa
+      </button>
+    </div>
+  </div>
+
+  <!-- A4 Document Body -->
+  <div class="page-a4 max-w-4xl mx-auto bg-white border border-slate-300 shadow-xl rounded-lg p-8 sm:p-12 text-slate-900">
+    <%- body %>
+  </div>
+
+  <!-- Dynamic PDF Script Loader -->
+  <script>
+    async function waitForImagesToLoad(container) {
+      const imgs = Array.from(container.querySelectorAll('img'));
+      await Promise.all(imgs.map(async (img) => {
+        try {
+          if (typeof img.decode === 'function') {
+            await img.decode();
+            return;
+          }
+        } catch (err) {}
+        if (img.complete && img.naturalWidth > 0) return;
+        await new Promise((resolve) => {
+          img.addEventListener('load', resolve, { once: true });
+          img.addEventListener('error', resolve, { once: true });
+        });
+      }));
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    async function ensureHtml2Pdf() {
+      if (typeof html2pdf === 'function') return true;
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js';
+        s.async = true;
+        s.onload = () => resolve(true);
+        s.onerror = (e) => reject(e);
+        document.head.appendChild(s);
+      });
+    }
+
+    async function prepareSvgsForPdf(container) {
+      const imgs = Array.from(container.querySelectorAll('img'));
+      const cleanups = [];
+
+      for (const img of imgs) {
+        const src = img.currentSrc || img.getAttribute('src') || '';
+        if (!src) continue;
+        const isSvg = src.toLowerCase().includes('.svg') || src.startsWith('data:image/svg+xml');
+        if (!isSvg) continue;
+
+        try {
+          let svgContent = '';
+          try {
+            const res = await fetch(src);
+            if (res.ok) {
+              svgContent = await res.text();
+            }
+          } catch (e) {}
+
+          const offscreenImg = new Image();
+          offscreenImg.crossOrigin = 'anonymous';
+
+          let canvasW = 2400;
+          let canvasH = 430;
+
+          if (svgContent) {
+            const vbMatch = svgContent.match(/viewBox=["']\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*["']/i);
+            let w = 2987.45;
+            let h = 534.8;
+            if (vbMatch) {
+              w = parseFloat(vbMatch[3]) || 2987.45;
+              h = parseFloat(vbMatch[4]) || 534.8;
+            }
+            svgContent = svgContent.replace(/width\s*:\s*100%\s*;?/gi, '');
+            svgContent = svgContent.replace(/height\s*:\s*auto\s*;?/gi, '');
+            svgContent = svgContent.replace(/<svg\b([^>]*?)>/i, (match, attrs) => {
+              let cleanAttrs = attrs.replace(/\b(width|height)=["'][^"']*["']/gi, '');
+              return `<svg width="${w}" height="${h}" ${cleanAttrs}>`;
+            });
+
+            canvasW = Math.round(w);
+            canvasH = Math.round(h);
+
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const blobUrl = URL.createObjectURL(blob);
+            await new Promise((res, rej) => {
+              offscreenImg.onload = res;
+              offscreenImg.onerror = rej;
+              offscreenImg.src = blobUrl;
+            });
+            URL.revokeObjectURL(blobUrl);
+          } else {
+            await new Promise((res, rej) => {
+              if (img.complete && img.naturalWidth > 0) return res();
+              offscreenImg.onload = res;
+              offscreenImg.onerror = rej;
+              offscreenImg.src = src;
+            });
+            canvasW = Math.round(offscreenImg.naturalWidth || 2987);
+            canvasH = Math.round(offscreenImg.naturalHeight || 535);
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = canvasW;
+          canvas.height = canvasH;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(offscreenImg, 0, 0, canvasW, canvasH);
+
+          const pngDataUrl = canvas.toDataURL('image/png');
+          if (pngDataUrl && pngDataUrl.length > 100) {
+            const originalSrc = img.src;
+            img.src = pngDataUrl;
+
+            await new Promise((resolve) => {
+              if (img.complete && img.naturalWidth > 0) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            });
+
+            cleanups.push(() => {
+              img.src = originalSrc;
+            });
+          }
+        } catch (err) {
+          console.warn('Gabim gjatë rasterizimit të SVG për PDF:', err);
+        }
+      }
+
+      return () => {
+        cleanups.forEach(fn => {
+          try { fn(); } catch (_) {}
+        });
+      };
+    }
+
+    async function downloadPDF() {
+      const btn = document.getElementById('btn-download-pdf');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> Duke përgatitur PDF...';
+      btn.disabled = true;
+
+      try {
+        await ensureHtml2Pdf();
+      } catch (err) {
+        console.warn('html2pdf nuk u ngarkua, po përdoret printimi standard...', err);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        window.print();
+        return;
+      }
+
+      const element = document.querySelector('.page-a4');
+      const filename = (document.title || 'Dokument_KRONEER')
+        .replace(/[^a-zA-Z0-9_\-]/g, '_')
+        .replace(/_+/g, '_') + '.pdf';
+
+      let cleanupSvgs = () => {};
+      try {
+        cleanupSvgs = await prepareSvgsForPdf(element);
+        await waitForImagesToLoad(element);
+
+        const opt = {
+          margin: [6, 6, 6, 6],
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            scrollY: 0,
+            imageTimeout: 15000
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'], avoid: ['img', '.avoid-break'] }
+        };
+
+        await html2pdf().set(opt).from(element).save();
+      } catch (err) {
+        console.error('PDF error:', err);
+        window.print();
+      } finally {
+        cleanupSvgs();
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>

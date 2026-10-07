@@ -1,0 +1,99 @@
+<!-- Koka Zyrtare e Fletë-Shpenzimit -->
+<div class="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= company.companyName %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600 space-y-0.5">
+      <div><%= company.address %>, <%= company.city %> • NUI: <%= company.taxNumber %></div>
+      <div>Tel: <%= company.phone %> • Email: <%= company.email %></div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      FLETË-SHPENZIM / VOUCHER
+    </span>
+    <div class="text-lg font-black font-mono text-slate-950"><%= expense.number %></div>
+    <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(expense.date) %></strong></div>
+  </div>
+</div>
+
+<!-- Të Dhënat Kryesore të Pagesës -->
+<div class="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-6 text-xs space-y-3">
+  <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block">PËRSHKRIMI I SHPENZIMIT:</span>
+      <h3 class="text-base font-bold text-slate-900 mt-0.5"><%= expense.title %></h3>
+    </div>
+    <div class="text-right font-mono">
+      <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block">SHUMA:</span>
+      <div class="text-2xl font-black text-slate-900"><%= formatCurrency(expense.amount) %></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">KATEGORIA</span>
+      <span class="font-bold text-slate-900"><%= expense.category %></span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">MËNYRA E PAGESËS</span>
+      <span class="font-bold text-slate-900"><%= expense.paymentMethod %></span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">FURNITORI</span>
+      <span class="font-bold text-slate-900"><%= expense.supplier || '-' %></span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">NR. FATURËS/KUPONIT</span>
+      <span class="font-mono font-bold text-slate-900"><%= expense.referenceNumber || '-' %></span>
+    </div>
+  </div>
+
+  <% if (expense.project) { %>
+    <div class="pt-2 border-t border-slate-200">
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">PROJEKTI I NDËRLIDHUR</span>
+      <span class="font-bold text-slate-900"><%= expense.project.name %> (<%= expense.project.number %>)</span>
+    </div>
+  <% } %>
+
+  <% if (expense.notes) { %>
+    <div class="pt-2 border-t border-slate-200">
+      <span class="text-[10px] font-bold uppercase text-slate-500 block">SHËNIME DHE ARSYETIMI</span>
+      <p class="text-slate-700 mt-0.5"><%= expense.notes %></p>
+    </div>
+  <% } %>
+</div>
+
+<!-- Nënshkrimet e Autorizimit -->
+<% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+<div class="avoid-break grid grid-cols-2 gap-12 pt-6 text-xs text-center border-t border-slate-200 mt-6">
+  <div class="flex flex-col items-center">
+    <div class="font-bold text-slate-900 mb-1">Aprovuar nga (Menaxhmenti / Drejtori)</div>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="flex items-end justify-center mb-1">
+      <% if (company && company.stampUrl) { %>
+        <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi KRONEER" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
+      <% } %>
+    </div>
+    <div class="w-56 mx-auto border-t border-slate-400 pt-1 font-mono text-[11px] text-slate-600">Nënshkrimi & Vula</div>
+  </div>
+  <div class="flex flex-col items-center">
+    <div class="font-bold text-slate-900 mb-1">Pranuar / Përfituesi (Furnitori / Punonjësi)</div>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="mb-1"></div>
+    <div class="w-56 mx-auto border-t border-slate-400 pt-1 font-mono text-[11px] text-slate-600">Emri, Mbiemri & Nënshkrimi</div>
+  </div>
+</div>

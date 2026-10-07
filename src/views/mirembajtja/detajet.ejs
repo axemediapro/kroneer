@@ -1,0 +1,326 @@
+<%
+  const clientName = contract.customer.companyName || `${contract.customer.firstName || ''} ${contract.customer.lastName || ''}`.trim() || 'Klienti';
+  const cAddress = contract.customer.address || '-';
+  const cCity = contract.customer.city || 'Kosovë';
+  const cTax = contract.customer.taxNumber || contract.customer.businessNumber || '-';
+  const cBuilding = contract.customer.buildingName || 'Objekti i Porositësit';
+  const elevModel = contract.elevator ? (contract.elevator.model || contract.elevator.name) : 'Sisteme Lifti KRONEER';
+  const sn = contract.serialNumber || 'KR-SN-LIFT';
+  const priceFormatted = parseFloat(contract.priceAnnual || 0).toLocaleString('de-DE', {minimumFractionDigits: 2});
+  const sDate = contract.startDate ? new Date(contract.startDate).toLocaleDateString('sq-AL') : 'Sipas marrëveshjes';
+  const eDate = contract.endDate ? new Date(contract.endDate).toLocaleDateString('sq-AL') : 'Sipas marrëveshjes';
+  
+  const compName = company.companyName || 'KRONEER';
+  const compAddr = company.address || 'Prishtinë';
+  const compCity = company.country ? `${company.city}, ${company.country}` : (company.city || 'Kosovë');
+  const compTax = company.taxNumber || '330123456';
+  
+  const defaultPreamble = `Kjo Kontratë lidhet ndërmjet ${compName} me seli në ${compAddr}, ${compCity}, NUI: ${compTax} (në vijim: "Ofruesi i Shërbimit"), dhe ${clientName} me seli në ${cAddress}, ${cCity}, NUI: ${cTax} (në vijim: "Porositësi").`;
+  const defaultArt1 = `Ofruesi i shërbimit merr përsipër mirëmbajtjen teknike preventive dhe korrektive të ashensorit ${elevModel} me numër serik ${sn}, i instaluar në objektin "${cBuilding}", ${cCity}.`;
+  const defaultArt2 = `Vlera vjetore e shërbimit të mirëmbajtjes është €${priceFormatted} (përfshirë TVSH). Pagesa do të kryhet në baza të rregullta sipas marrëveshjes.`;
+  const defaultArt3 = `Kontrata hyn në fuqi më ${sDate} dhe është e vlefshme deri më ${eDate}. Frekuenca e vizitave të rregullta të servisimit do të jetë ${contract.frequency || 'Mujore'}.`;
+  const defaultArt4 = `Ofruesi i shërbimit obligohet të kryejë kontrolle teknike periodike sipas standardit evropian EN 13015, të sigurojë gatishmëri emergjente 24 orë në 7 ditë të javës për zhbllokimin e pasagjerëve, dhe të përdorë pjesë këmbimi origjinale të certifikuara.`;
+  const defaultArt5 = `Porositësi merr përsipër të lejojë qasje të papenguar të teknikëve në ambientet e liftit, të mos lejojë ndërhyrje nga persona të paautorizuar, dhe të njoftojë menjëherë qendrën e shërbimit në rast të ndonjë parregullsie.`;
+  const defaultArt6 = `Çdo ndryshim apo ndërprerje e kontratës bëhet me njoftim me shkrim 30 ditë përpara. Mosmarrëveshjet do të zgjidhen me mirëkuptim, ose në Gjykatën kompetente në Prishtinë.`;
+  const defaultClosing = `Kjo kontratë hartohet dhe nënshkruhet në 2 (dy) kopje origjinale me fuqi të barabartë juridike, nga 1 (një) për secilën palë kontraktuese.`;
+%>
+
+<div class="space-y-6" x-data="{ showVisitModal: false }">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/mirembajtja" class="hover:text-amber-600 dark:hover:text-amber-400">Mirëmbajtja</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200"><%= contract.number %></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Kontrata e Mirëmbajtjes <%= contract.number %>
+        </h1>
+        <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full <%= 
+          contract.status === 'Aktive' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-500/30' :
+          contract.status === 'Skadon së shpejti' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 border border-amber-500/30' :
+          'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 border border-rose-500/30'
+        %>">
+          <%= contract.status %>
+        </span>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        Klienti: <a href="/klientet/<%= contract.customerId %>" class="font-medium text-amber-600 hover:underline"><%= clientName %></a> 
+        • Ashensori SN: <span class="font-mono text-amber-600 font-bold"><%= contract.serialNumber %></span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <a href="/mirembajtja/<%= contract.id %>/ndrysho" class="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-600 transition flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span>Ndrysho Tekstet e Kontratës</span>
+      </a>
+
+      <a href="/mirembajtja/<%= contract.id %>/print" target="_blank" class="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        <span>Printo / PDF</span>
+      </a>
+
+      <button @click="showVisitModal = true" class="inline-flex items-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-sm transition">
+        <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i>
+        Regjistro Vizitë
+      </button>
+
+      <a href="/mirembajtja" class="px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+        Kthehu
+      </a>
+    </div>
+  </div>
+
+  <!-- Contract Overview Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Vlera Vjetore</span>
+      <div class="text-2xl font-extrabold text-amber-500 mt-1">€<%= (contract.priceAnnual || 0).toLocaleString('de-DE') %></div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Frekuenca</span>
+      <div class="text-xl font-bold text-slate-900 dark:text-white mt-1"><%= contract.frequency %></div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Periudha e Kontratës</span>
+      <div class="text-xs font-medium text-slate-700 dark:text-slate-300 mt-2 space-y-0.5">
+        <div>Fillimi: <span class="font-bold"><%= sDate %></span></div>
+        <div>Skadimi: <span class="font-bold"><%= eDate %></span></div>
+      </div>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tekniku Përgjegjës</span>
+      <div class="text-sm font-bold text-slate-900 dark:text-white mt-1">
+        <%= contract.technician ? contract.technician.fullName : 'Ekipi Qendror i Servisit' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Left: Articles & Visits, Right: Elevator & Info -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Left 2 Cols -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Nenet e Kontratës së Mirëmbajtjes -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-5 text-xs">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span><%= contract.contractTitle || 'KONTRATË PËR MIRËMBAJTJEN PERIODIKE DHE SERVISIMIN E LIFTEVE' %></span>
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">Nenet dhe klauzolat tekstuale zyrtare</p>
+          </div>
+          <a href="/mirembajtja/<%= contract.id %>/ndrysho" class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/30 transition flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            Edito
+          </a>
+        </div>
+
+        <!-- Preambula -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Preambula:</span>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.preambleText || defaultPreamble %></p>
+        </div>
+
+        <!-- Neni 1 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article1Title || 'NENI 1: OBJEKTI I MIRËMBAJTJES' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.article1Text || defaultArt1 %></p>
+        </div>
+
+        <!-- Neni 2 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article2Title || 'NENI 2: ÇMIMI DHE KUSHTET E PAGESËS' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.article2Text || defaultArt2 %></p>
+        </div>
+
+        <!-- Neni 3 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article3Title || 'NENI 3: KOHËZGJATJA DHE FREKUENCA E VIZITAVE' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.article3Text || defaultArt3 %></p>
+        </div>
+
+        <!-- Neni 4 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article4Title || 'NENI 4: DETYRIMET E KOMPANISË & SHËRBIMI 24/7' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.article4Text || defaultArt4 %></p>
+        </div>
+
+        <!-- Neni 5 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article5Title || 'NENI 5: DETYRIMET DHE PËRGJEGJËSITË E POROSITËSIT' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line"><%= contract.article5Text || defaultArt5 %></p>
+        </div>
+
+        <!-- Neni 6 -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <h4 class="font-bold text-amber-600 dark:text-amber-400 uppercase"><%= contract.article6Title || 'NENI 6: KUSHTET E VEÇANTA & ZGJIDHJA E MOSMARRËVESHJEVE' %></h4>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed"><%= contract.article6Text || defaultArt6 %></p>
+        </div>
+
+        <% if (contract.specialTerms || contract.notes) { %>
+          <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 rounded-lg border border-amber-200 dark:border-amber-700/50 space-y-1">
+            <h4 class="font-bold text-amber-800 dark:text-amber-300 uppercase">Kushte të Veçanta</h4>
+            <p class="text-slate-800 dark:text-slate-200 leading-relaxed"><%= contract.specialTerms || contract.notes %></p>
+          </div>
+        <% } %>
+
+        <div class="p-3 bg-slate-50/50 dark:bg-slate-900/30 rounded-lg text-slate-500 italic text-[11px]">
+          <%= contract.closingTerms || defaultClosing %>
+        </div>
+      </div>
+
+      <!-- Service Visits History -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center">
+              <i data-lucide="calendar-check" class="w-5 h-5 mr-2 text-amber-500"></i>
+              Regjistri i Vizitave të Servisit (<%= contract.visits.length %>)
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Historiku i inspektimeve periodike dhe ndërhyrjeve</p>
+          </div>
+          <button @click="showVisitModal = true" class="px-3 py-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition">
+            + Regjistro Vizitë
+          </button>
+        </div>
+
+        <div class="divide-y divide-slate-100 dark:divide-slate-700/60">
+          <% if (contract.visits.length === 0) { %>
+            <div class="p-8 text-center text-slate-400 text-sm">
+              Nuk ka ende vizita të regjistruara për këtë kontratë.
+            </div>
+          <% } else { %>
+            <% contract.visits.forEach(v => { %>
+              <div class="p-5 space-y-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span class="px-2.5 py-1 text-xs font-bold rounded bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                      Data: <%= new Date(v.visitDate).toLocaleDateString('sq-AL') %>
+                    </span>
+                    <span class="text-xs text-slate-500">
+                      Tekniku: <strong class="text-slate-700 dark:text-slate-300"><%= v.technician ? v.technician.fullName : 'Teknik KRONEER' %></strong>
+                    </span>
+                  </div>
+                  <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full <%= v.clientSigned ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' %>">
+                    <%= v.clientSigned ? '✓ Nënshkruar nga Klienti' : 'Pa Nënshkrim' %>
+                  </span>
+                </div>
+
+                <% if (v.findings) { %>
+                  <div class="text-xs">
+                    <span class="font-bold text-slate-500">Gjetjet / Gjendja e vërejtur:</span>
+                    <p class="text-slate-800 dark:text-slate-200 mt-0.5"><%= v.findings %></p>
+                  </div>
+                <% } %>
+
+                <% if (v.actionsTaken) { %>
+                  <div class="text-xs">
+                    <span class="font-bold text-slate-500">Punët e kryera / Ndërhyrjet:</span>
+                    <p class="text-slate-800 dark:text-slate-200 mt-0.5"><%= v.actionsTaken %></p>
+                  </div>
+                <% } %>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right 1 Col: Contract Info & Special Terms -->
+    <div class="space-y-6">
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Të Dhënat e Ashensorit</h3>
+        <div class="space-y-2.5 text-sm">
+          <div>
+            <span class="text-xs text-slate-400 block">Numri Serik:</span>
+            <span class="font-mono font-bold text-amber-600 dark:text-amber-400"><%= contract.serialNumber %></span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Modeli:</span>
+            <span class="font-semibold text-slate-900 dark:text-white"><%= contract.elevator ? (contract.elevator.model || contract.elevator.name) : 'Ashensor Standard KRONEER' %></span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Tekniku Përgjegjës:</span>
+            <span class="text-slate-700 dark:text-slate-300"><%= contract.technician ? contract.technician.fullName : 'Ekipi Qendror i Servisit' %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Klienti & Objekti</h3>
+        <div class="space-y-2.5 text-sm">
+          <div>
+            <span class="text-xs text-slate-400 block">Kompania:</span>
+            <a href="/klientet/<%= contract.customerId %>" class="font-bold text-amber-600 hover:underline"><%= clientName %></a>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Objekti:</span>
+            <span class="font-semibold text-slate-900 dark:text-white"><%= cBuilding %></span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Vendndodhja:</span>
+            <span class="text-slate-700 dark:text-slate-300"><%= cAddress %>, <%= cCity %></span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Telefoni:</span>
+            <span class="font-mono text-slate-700 dark:text-slate-300"><%= contract.customer.phone || '-' %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Visit -->
+  <div x-show="showVisitModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div @click.outside="showVisitModal = false" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-lg w-full space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Regjistro Vizitë Servisi</h3>
+        <button @click="showVisitModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form action="/mirembajtja/<%= contract.id %>/vizite" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Data e Vizitës</label>
+          <input type="date" name="visitDate" value="<%= new Date().toISOString().split('T')[0] %>" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tekniku Përgjegjës</label>
+          <select name="technicianId" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none">
+            <% technicians.forEach(t => { %>
+              <option value="<%= t.id %>" <%= contract.technicianId === t.id ? 'selected' : '' %>><%= t.fullName %> (<%= t.role %>)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Gjetjet gjatë inspektimit</label>
+          <textarea name="findings" rows="2" placeholder="Gjendja e frenave, vaji i reduktorit, pastërtia e shinave udhëzuese..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Veprimet e kryera / Servisimi</label>
+          <textarea name="actionsTaken" rows="2" placeholder="Lubrifikimi i shinave, shtrëngimi i kontakteve, rregullimi i nivelizimit..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-2">
+          <input type="checkbox" name="clientSigned" id="clientSigned" checked class="w-4 h-4 text-amber-600 rounded border-slate-300">
+          <label for="clientSigned" class="text-xs text-slate-700 dark:text-slate-300 font-medium">Klienti / Përfaqësuesi konfirmoi dhe nënshkroi raportin e vizitës</label>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+          <button type="button" @click="showVisitModal = false" class="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg">Anulo</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg">Ruaj Vizitën</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

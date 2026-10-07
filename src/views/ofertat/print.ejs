@@ -1,0 +1,171 @@
+<!-- Koka Zyrtare KRONEER -->
+<div class="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono border border-slate-900">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= company.companyName %></h1>
+          <p class="text-[10px] font-bold text-amber-600 tracking-wider"><%= company.tagline %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600 space-y-0.5">
+      <div><%= company.address %>, <%= company.city %>, <%= company.country %></div>
+      <div>NUI: <%= company.taxNumber %> • Nr. Biznesit: <%= company.businessNumber %></div>
+      <div>Tel: <%= company.phone %> • Email: <%= company.email %></div>
+      <div>Ueb: <%= company.website %></div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      OFERTË TREGTARE
+    </span>
+    <div class="text-lg font-black font-mono text-slate-950"><%= quotation.number %></div>
+    <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(quotation.date) %></strong></div>
+    <div class="text-xs text-slate-600">Vlefshmëria deri më: <strong class="text-slate-900"><%= formatDate(quotation.validUntil) %></strong></div>
+  </div>
+</div>
+
+<!-- Të Dhënat e Klientit (Faturuar për:) -->
+<div class="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs">
+  <div>
+    <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block mb-1">OFERTA I DREJTOHET:</span>
+    <h3 class="text-sm font-bold text-slate-900"><%= quotation.customer.companyName %></h3>
+    <div class="text-slate-700 mt-1">Personi Kontaktues: <%= quotation.customer.contactPerson || '-' %></div>
+    <div class="text-slate-700">Adresa: <%= quotation.customer.address || '-' %>, <%= quotation.customer.city || '-' %></div>
+    <div class="text-slate-700">NUI / Nr. Fiskal: <%= quotation.customer.taxNumber || '-' %></div>
+  </div>
+  <div>
+    <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block mb-1">DETAJET E OBJEKTIT / PROJEKTIT:</span>
+    <div class="text-slate-900 font-bold"><%= quotation.customer.buildingName || 'Objekt Ndërtimor' %></div>
+    <div class="text-slate-700">Vendndodhja: <%= quotation.customer.buildingAddress || quotation.customer.city || '-' %></div>
+    <div class="text-slate-700">Afati i Dorëzimit: <strong><%= quotation.deliveryWeeks %> Javë</strong></div>
+    <div class="text-slate-700">Garancia Inxhinierike: <strong><%= quotation.warrantyMonths %> Muaj</strong></div>
+  </div>
+</div>
+
+<!-- Tabela e Artikujve -->
+<div class="mb-6">
+  <table class="w-full text-left text-xs border border-slate-300">
+    <thead class="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
+      <tr>
+        <th class="p-2.5 border-r border-slate-300 text-center w-10">Nr.</th>
+        <th class="p-2.5 border-r border-slate-300">Përshkrimi i Produktit & Specifikimet Teknike</th>
+        <th class="p-2.5 border-r border-slate-300 text-center w-16">Sasia</th>
+        <th class="p-2.5 border-r border-slate-300 text-right w-24">Çmimi</th>
+        <th class="p-2.5 border-r border-slate-300 text-right w-20">Zbritja</th>
+        <th class="p-2.5 text-right w-28">Totali (€)</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-200">
+      <% quotation.items.forEach((item, idx) => { %>
+        <tr>
+          <td class="p-2.5 text-center font-mono border-r border-slate-200 text-slate-600"><%= idx + 1 %></td>
+          <td class="p-2.5 border-r border-slate-200">
+            <div class="font-bold text-slate-900"><%= item.name %></div>
+            <% if (item.description) { %>
+              <div class="text-[11px] text-slate-600 mt-0.5 leading-relaxed"><%= item.description %></div>
+            <% } %>
+          </td>
+          <td class="p-2.5 text-center font-mono border-r border-slate-200 text-slate-800"><%= item.quantity %> <%= item.unit %></td>
+          <td class="p-2.5 text-right font-mono border-r border-slate-200 text-slate-800"><%= formatCurrency(item.unitPrice) %></td>
+          <td class="p-2.5 text-right font-mono border-r border-slate-200 text-slate-600"><%= item.discount > 0 ? ('-' + formatCurrency(item.discount)) : '-' %></td>
+          <td class="p-2.5 text-right font-mono font-bold text-slate-900"><%= formatCurrency(item.total) %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Llogaritja Financiare dhe Kushtet -->
+<div class="grid grid-cols-2 gap-6 mb-8 text-xs">
+  <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+    <span class="text-[10px] font-bold uppercase text-slate-600 tracking-wider block">KUSHTET E PAGESËS & TË DHËNAT BANKARE:</span>
+    <p class="text-slate-800 font-medium leading-relaxed"><%= quotation.paymentTerms %></p>
+    
+    <div class="pt-2 border-t border-slate-200 text-[11px] text-slate-700 space-y-0.5">
+      <div>Banka: <strong><%= company.bankName %></strong></div>
+      <div>IBAN: <strong class="font-mono"><%= company.iban %></strong></div>
+      <div>SWIFT: <strong class="font-mono"><%= company.swift %></strong></div>
+
+      <% if (company.bankName2 && company.iban2) { %>
+        <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+          <div>Banka: <strong><%= company.bankName2 %></strong></div>
+          <div>IBAN: <strong class="font-mono"><%= company.iban2 %></strong></div>
+          <% if (company.swift2) { %><div>SWIFT: <strong class="font-mono"><%= company.swift2 %></strong></div><% } %>
+        </div>
+      <% } %>
+  
+      <% if (company.bankName3 && company.iban3) { %>
+        <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+          <div>Banka: <strong><%= company.bankName3 %></strong></div>
+          <div>IBAN: <strong class="font-mono"><%= company.iban3 %></strong></div>
+          <% if (company.swift3) { %><div>SWIFT: <strong class="font-mono"><%= company.swift3 %></strong></div><% } %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2 flex flex-col justify-between">
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-slate-700">
+        <span>Nëntotali bruto:</span>
+        <span class="font-mono font-bold"><%= formatCurrency(quotation.subtotal) %></span>
+      </div>
+      <div class="flex justify-between text-slate-700">
+        <span>Zbritja totale:</span>
+        <span class="font-mono font-bold">-<%= formatCurrency(quotation.discount) %></span>
+      </div>
+      <div class="flex justify-between text-slate-700 pt-1 border-t border-slate-200">
+        <span>Nëntotali neto:</span>
+        <span class="font-mono font-bold"><%= formatCurrency(quotation.subtotal - quotation.discount) %></span>
+      </div>
+      <div class="flex justify-between text-slate-700">
+        <span>TVSH (18%):</span>
+        <span class="font-mono font-bold"><%= formatCurrency(quotation.vatAmount) %></span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center pt-2 border-t-2 border-slate-900 text-sm">
+      <span class="font-black text-slate-950">TOTALI PËRFUNDIMTAR:</span>
+      <span class="text-lg font-black font-mono text-slate-950"><%= formatCurrency(quotation.total) %></span>
+    </div>
+  </div>
+</div>
+
+<!-- Nënshkrimet Zyrtare -->
+<% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+<div class="avoid-break grid grid-cols-2 gap-12 pt-8 border-t border-slate-300 text-xs">
+  <div class="text-center flex flex-col items-center">
+    <p class="font-bold text-slate-800 mb-1">Për <%= company.companyName %>:</p>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="flex items-end justify-center mb-1">
+      <% if (company && company.stampUrl) { %>
+        <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi <%= company.companyName %>" style="height: <%= stampH %>px; max-height: <%= stampH %>px; max-width: <%= Math.min(320, Math.round(stampH * 2.5)) %>px;" class="w-auto object-contain filter drop-shadow-sm">
+      <% } %>
+    </div>
+    <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+      <span class="text-[10px] text-slate-500">(Vula & Nënshkrimi i Autorizuar)</span>
+    </div>
+  </div>
+
+  <div class="text-center flex flex-col items-center">
+    <p class="font-bold text-slate-800 mb-1">Pranuar nga Klienti:</p>
+    <div style="height: <%= stampH %>px; min-height: <%= stampH %>px;" class="mb-1"></div>
+    <div class="w-56 mx-auto border-b border-slate-900 pb-1">
+      <span class="text-[10px] text-slate-500">(Emri, Mbiemri & Nënshkrimi)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Fundfaqja -->
+<div class="mt-12 text-center text-[10px] text-slate-500 border-t border-slate-200 pt-3">
+  <%= company.companyName %> — <%= company.tagline %> • Ky dokument është gjeneruar në mënyrë elektronike dhe ka vlerë ligjore komerciale.
+</div>

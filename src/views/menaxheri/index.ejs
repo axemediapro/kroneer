@@ -1,0 +1,385 @@
+<!-- Paneli Ekskluziv i Menaxherit të Projektit -->
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <div class="flex items-center gap-3 flex-wrap">
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight">
+        PANELI I MENAXHERIT TË PROJEKTIT
+      </h1>
+      <span class="font-mono text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 rounded-lg">
+        Ekipi Im & Projektet
+      </span>
+    </div>
+    <p class="text-xs text-slate-400 mt-1">
+      Pamja e personalizuar për menaxhimin e ekipit të monterëve, orarit live, projekteve dhe intervenimeve në terren
+    </p>
+  </div>
+
+  <div class="flex items-center gap-2 flex-wrap">
+    <% if (isAdmin && allManagers && allManagers.length > 0) { %>
+      <!-- Admin Selector për të parë panelin e menaxherëve të ndryshëm -->
+      <form method="GET" action="/menaxheri" class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1 rounded-xl">
+        <select name="managerId" onchange="this.form.submit()" class="px-3 py-1.5 bg-slate-950 border-0 rounded-lg text-xs text-cyan-300 font-bold focus:outline-none">
+          <option value="">Të gjithë menaxherët</option>
+          <% allManagers.forEach(m => { %>
+            <option value="<%= m.id %>" <%= targetManagerId === m.id ? 'selected' : '' %>>Menaxher: <%= m.fullName %></option>
+          <% }); %>
+        </select>
+      </form>
+    <% } %>
+
+    <a href="/intervenimet/krijo" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/20 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      <span>+ Intervenim i Ri</span>
+    </a>
+
+    <a href="/puntoret/krijo" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      <span>+ Shto Puntor</span>
+    </a>
+  </div>
+</div>
+
+<!-- 4 Kartat e Statistikave të Ekipit -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-slate-400 text-xs font-semibold">Anëtarë në Ekipin Tim</span>
+      <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+    </div>
+    <div class="text-2xl font-black text-cyan-300 font-mono"><%= stats.totalTeamCount %> Monterë</div>
+    <span class="text-[10px] text-slate-500 block mt-1">Nën menaxhim direkt</span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-slate-400 text-xs font-semibold">Gjendja Sot (Live)</span>
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    </div>
+    <div class="text-2xl font-black text-emerald-400 font-mono"><%= stats.workingNowCount %> Në Punë</div>
+    <span class="text-[10px] text-slate-400 block mt-1">
+      <span class="text-amber-400 font-bold"><%= stats.onBreakCount %> në pauzë</span> • <%= stats.completedTodayCount %> përfunduan
+    </span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-slate-400 text-xs font-semibold">Projektet e Mia Aktive</span>
+      <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+    </div>
+    <div class="text-2xl font-black text-amber-400 font-mono"><%= stats.activeProjectsCount %> Projekte</div>
+    <span class="text-[10px] text-slate-500 block mt-1">Në ekzekutim & montim</span>
+  </div>
+
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-slate-400 text-xs font-semibold">Intervenimet në Terren</span>
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    </div>
+    <div class="text-2xl font-black text-slate-100 font-mono"><%= stats.interventionsCount %> Intervenime</div>
+    <span class="text-[10px] text-slate-500 block mt-1">Të kryera me ekipin tim</span>
+  </div>
+
+</div>
+
+<!-- Grid Kryesor i Menaxherit -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  
+  <!-- Left 2 Cols: EKIPI IM & PROJEKTET E MIA -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- 1. EKIPIN E VET (PUNËTORËT / MONTERËT) -->
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-100 font-mono flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Ekipi Im i Monterëve & Punëtorëve (<%= myTeamEmployees.length %>)
+          </h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Monterët që janë në ekipin tuaj me gjendjen e sotme të orarit dhe veprimet e shpejta</p>
+        </div>
+
+        <a href="/puntoret/krijo" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs border border-slate-700 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          <span>Krijo Puntor të Ri</span>
+        </a>
+      </div>
+
+      <% if (myTeamEmployees && myTeamEmployees.length > 0) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <% myTeamEmployees.forEach(emp => { 
+            const todayAtt = emp.attendances && emp.attendances.length > 0 ? emp.attendances[0] : null;
+          %>
+            <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/90 hover:border-amber-500/40 transition-colors space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <a href="/puntoret/<%= emp.id %>" class="font-bold text-sm text-slate-100 hover:text-amber-400 block">
+                    <%= emp.firstName %> <%= emp.lastName %>
+                  </a>
+                  <span class="text-[11px] text-slate-400 font-mono"><%= emp.code %> • <%= emp.position %></span>
+                </div>
+
+                <!-- Badge i Gjendjes Live Sot -->
+                <div>
+                  <% if (!todayAtt || todayAtt.status === 'Pa Regjistrim') { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400">
+                      Pa Regjistrim Sot
+                    </span>
+                  <% } else if (todayAtt.status === 'Në Punë') { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                      Në Punë
+                    </span>
+                  <% } else if (todayAtt.status === 'Në Pauzë') { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                      Në Pauzë
+                    </span>
+                  <% } else { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300">
+                      Turni Mbyllur (<%= todayAtt.workedHours %>h)
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Veprimet e Shpejta për këtë Monter: Kesh / Bonus / Ndrysho -->
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="hapModalKeshShpejte(<%= emp.id %>, '<%= emp.firstName %> <%= emp.lastName %>')" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 font-bold text-[11px] border border-amber-500/30">
+                    + Kesh
+                  </button>
+                  <button type="button" onclick="hapModalBonusShpejte(<%= emp.id %>, '<%= emp.firstName %> <%= emp.lastName %>')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-[11px] border border-emerald-500/30">
+                    + Bonus
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <a href="/puntoret/<%= emp.id %>/ndrysho" title="Ndrysho të dhënat" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">
+                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </a>
+                  <a href="/puntoret/<%= emp.id %>" class="text-xs text-slate-400 hover:text-slate-100 font-semibold ml-1">
+                    Profili →
+                  </a>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="p-8 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl border border-slate-800/60">
+          Nuk keni ende punëtorë të caktuar në ekipin tuaj. Klikoni "Krijo Puntor të Ri" për të regjistruar stafin.
+        </div>
+      <% } %>
+    </div>
+
+    <!-- 2. PROJEKTET E MENAXHERIT -->
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 class="text-base font-bold text-slate-100 font-mono flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Projektet e Mia (<%= myProjects.length %>)
+        </h2>
+
+        <a href="/projektet/krijo" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs border border-slate-700">
+          + Projekt i Ri
+        </a>
+      </div>
+
+      <% if (myProjects && myProjects.length > 0) { %>
+        <div class="space-y-3">
+          <% myProjects.forEach(prj => { %>
+            <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-amber-500/40 transition-colors">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                <div>
+                  <a href="/projektet/<%= prj.id %>" class="font-bold text-sm text-slate-100 hover:text-amber-400 block">
+                    <%= prj.name %>
+                  </a>
+                  <span class="text-[10px] text-amber-400 font-mono"><%= prj.number %> • Klienti: <%= prj.customer ? (prj.customer.companyName || prj.customer.firstName) : '-' %></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <%= prj.stage %>
+                  </span>
+                  <a href="/projektet/<%= prj.id %>" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700">
+                    Hap →
+                  </a>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <span><%= prj.elevatorCount %> Lifta • <%= prj.floorsCount %> Kate</span>
+                <span class="font-bold text-cyan-300 font-mono"><%= prj.teamMembers ? prj.teamMembers.length : 0 %> Monterë të caktuar</span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="p-6 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl border border-slate-800/60">
+          Nuk keni ende projekte të caktuara.
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- Right 1 Col: INTERVENIMET E FUNDIT & KESH/BONUSE TË DHËNA -->
+  <div class="space-y-6">
+    
+    <!-- Intervenimet e Fundit të Ekipit -->
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider font-mono flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          Intervenimet e Ekipit
+        </h3>
+        <a href="/intervenimet" class="text-[11px] text-cyan-400 hover:underline">Të Gjitha →</a>
+      </div>
+
+      <% if (myInterventions && myInterventions.length > 0) { %>
+        <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+          <% myInterventions.forEach(inv => { %>
+            <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs">
+              <a href="/intervenimet/<%= inv.id %>" class="font-bold text-slate-200 hover:text-cyan-400 block truncate">
+                <%= inv.title %>
+              </a>
+              <span class="text-[10px] text-amber-400 font-mono block"><%= inv.number %> • <%= formatDate(inv.date) %></span>
+              
+              <div class="mt-1.5 flex items-center justify-between text-[11px]">
+                <span class="text-slate-400 font-mono"><%= inv.teamWorkers ? inv.teamWorkers.length : 0 %> Monterë</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold <%= inv.status === 'Përfunduar' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300' %>">
+                  <%= inv.status %>
+                </span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-slate-500 text-center py-4">Nuk ka intervenime të regjistruara.</p>
+      <% } %>
+    </div>
+
+    <!-- Kesh & Bonuset e Shpërndara për Ekipin -->
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider font-mono flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          Kesh & Bonuse për Ekipin
+        </h3>
+        <a href="/puntoret/financat/kesh-bonuse" class="text-[11px] text-amber-400 hover:underline">Pasqyra →</a>
+      </div>
+
+      <% if (recentTransactions && recentTransactions.length > 0) { %>
+        <div class="space-y-2">
+          <% recentTransactions.forEach(t => { %>
+            <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between text-xs">
+              <div>
+                <span class="font-bold text-slate-200 block"><%= t.employee ? (t.employee.firstName + ' ' + t.employee.lastName) : '-' %></span>
+                <span class="text-[10px] text-slate-500 font-mono"><%= t.category || t.type %></span>
+              </div>
+              <div class="text-right">
+                <span class="font-mono font-black text-xs <%= t.type === 'BONUS' ? 'text-emerald-400' : 'text-amber-400' %>">
+                  +<%= t.amount.toFixed(2) %> €
+                </span>
+                <a href="/puntoret/transaksionet/<%= t.id %>/print" target="_blank" class="text-[10px] text-slate-400 hover:text-amber-400 block">Dëftesë</a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-slate-500 text-center py-4">Nuk ka transaksione të fundit.</p>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Shto Kesh / Bonus të Shpejtë nga Paneli i Menaxherit -->
+<div id="modal-kesh-menaxheri" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <h3 id="modal-mgr-title" class="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        Regjistro Pagesë për Monterin
+      </h3>
+      <button type="button" onclick="document.getElementById('modal-kesh-menaxheri').classList.add('hidden')" class="text-slate-400 hover:text-slate-200">
+        ✕
+      </button>
+    </div>
+
+    <form action="/puntoret/transaksionet" method="POST" class="space-y-3.5 text-xs">
+      <input type="hidden" id="mgr-form-emp-id" name="employeeId" value="">
+      <input type="hidden" id="mgr-form-type" name="type" value="KESH_AVANC">
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Punëtori:</label>
+        <input type="text" id="mgr-form-emp-name" readonly class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-bold focus:outline-none cursor-not-allowed">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Shuma (€) *</label>
+          <input type="number" step="0.01" min="0.5" name="amount" required placeholder="p.sh. 50.00" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl font-mono text-amber-400 font-bold focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Data</label>
+          <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Kategoria</label>
+        <input type="text" id="mgr-form-cat" name="category" placeholder="p.sh. Avancë Terreni, Bonus Montimi" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Lidhur me Projektin (Opsionale)</label>
+        <select name="projectId" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+          <option value="">-- Pa projekt --</option>
+          <% myProjects.forEach(p => { %>
+            <option value="<%= p.id %>"><%= p.name %> (<%= p.number %>)</option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-slate-400 font-semibold mb-1">Arsyetimi / Shënime</label>
+        <input type="text" id="mgr-form-desc" name="title" placeholder="Përshkrim..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="document.getElementById('modal-kesh-menaxheri').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">
+          Anulo
+        </button>
+        <button type="submit" id="mgr-form-btn" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20">
+          Ruaj & Gjenero Dëftesë
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function hapModalKeshShpejte(empId, empName) {
+    document.getElementById('mgr-form-emp-id').value = empId;
+    document.getElementById('mgr-form-emp-name').value = empName;
+    document.getElementById('mgr-form-type').value = 'KESH_AVANC';
+    document.getElementById('mgr-form-cat').value = 'Avancë Terreni / Mëditje';
+    document.getElementById('mgr-form-desc').value = 'Avancë kesh për ' + empName;
+    document.getElementById('modal-mgr-title').innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Regjistro Kesh / Avancë';
+    document.getElementById('mgr-form-btn').className = 'px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20';
+    document.getElementById('modal-kesh-menaxheri').classList.remove('hidden');
+  }
+
+  function hapModalBonusShpejte(empId, empName) {
+    document.getElementById('mgr-form-emp-id').value = empId;
+    document.getElementById('mgr-form-emp-name').value = empName;
+    document.getElementById('mgr-form-type').value = 'BONUS';
+    document.getElementById('mgr-form-cat').value = 'Bonus Montimi / Performancë';
+    document.getElementById('mgr-form-desc').value = 'Bonus për ' + empName;
+    document.getElementById('modal-mgr-title').innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Shto Bonus për Monterin';
+    document.getElementById('mgr-form-btn').className = 'px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-500/20';
+    document.getElementById('modal-kesh-menaxheri').classList.remove('hidden');
+  }
+</script>

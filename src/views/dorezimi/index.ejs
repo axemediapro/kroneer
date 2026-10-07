@@ -1,0 +1,101 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Procesverbalet e Dorëzimit të Lifteve</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Dokumentacioni zyrtar i pranim-dorëzimit teknik, trajnimit dhe aktivizimit të garancisë</p>
+    </div>
+    <a href="/dorezimi/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+      Krijo Procesverbal Dorëzimi
+    </a>
+  </div>
+
+  <!-- Unified Navigation Tabs -->
+  <div class="border-b border-slate-200 dark:border-slate-700 mt-2 mb-6">
+    <nav class="-mb-px flex space-x-6 overflow-x-auto">
+      <a href="/projektet?line=Instalim" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+        <i data-lucide="folder" class="w-4 h-4"></i>
+        Projektet
+      </a>
+      <a href="/instalimet" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+        Instalimet Live
+      </a>
+      <a href="/dorezimi" class="border-amber-500 text-amber-600 dark:text-amber-400 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        Dorëzimet
+      </a>
+    </nav>
+  </div>
+
+  <!-- Handover Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Modeli i Liftit</th>
+            <th class="py-3.5 px-4">Numri Serik</th>
+            <th class="py-3.5 px-4">Projekti / Ndërtesa</th>
+            <th class="py-3.5 px-4">Klienti</th>
+            <th class="py-3.5 px-4">Data e Dorëzimit</th>
+            <th class="py-3.5 px-4">Nënshkruesi</th>
+            <th class="py-3.5 px-4">Statusi</th>
+            <th class="py-3.5 px-4 text-right">Veprime</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+          <% if (handovers.length === 0) { %>
+            <tr>
+              <td colspan="8" class="text-center py-12 text-slate-400">
+                <i data-lucide="file-check" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600"></i>
+                Nuk ka ende procesverbale dorëzimi të regjistruara.
+              </td>
+            </tr>
+          <% } else { %>
+            <% handovers.forEach(h => { %>
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition">
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                  <a href="/dorezimi/<%= h.id %>" class="hover:text-amber-600">
+                    <%= h.elevatorModel %>
+                  </a>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  <%= h.serialNumber %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <a href="/projektet/<%= h.projectId %>" class="hover:underline font-medium text-slate-900 dark:text-white">
+                    <%= h.project ? h.project.name : '-' %>
+                  </a>
+                </td>
+                <td class="py-3.5 px-4 font-medium">
+                  <%= h.customer ? h.customer.companyName : '-' %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= new Date(h.handoverDate).toLocaleDateString('sq-AL') %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= h.clientSigneeName %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                    <%= h.status %>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-right space-x-2">
+                  <a href="/dorezimi/<%= h.id %>" class="p-1.5 text-slate-500 hover:text-amber-600 inline-block" title="Shiko">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                  </a>
+                  <a href="/dorezimi/<%= h.id %>/print" target="_blank" class="p-1.5 text-slate-500 hover:text-emerald-600 inline-block" title="Printo PDF">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                  </a>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

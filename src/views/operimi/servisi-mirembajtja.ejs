@@ -1,0 +1,578 @@
+<div class="space-y-6" x-data="{
+  tab: '<%= tab || 'pasqyra' %>',
+  ticketSearch: '',
+  contractSearch: '',
+  ticketStatusFilter: 'all',
+  contractStatusFilter: 'all'
+}">
+
+  <!-- Shtylla 3 Header Banner -->
+  <div class="bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-950 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+    <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none"></div>
+
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
+      <div>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            SHTYLLA 3
+          </span>
+          <span class="text-xs font-mono text-slate-400">KRONEER SERVICE & MAINTENANCE 24/7</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-100 font-mono tracking-tight flex items-center gap-2.5">
+          <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Servisi & Mirëmbajtja (Qendra e Integruar)
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Menaxhimi i plotë i defekteve, kërkesave të servisit, kontratave të mirëmbajtjes periodike dhe vizitave teknike në një vend të vetëm.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <a href="/servisi/krijo" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Hap Kërkesë Servisi</span>
+        </a>
+        <a href="/mirembajtja/krijo" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span>Kontratë Mirëmbajtjeje</span>
+        </a>
+        <a href="/intervenimet/krijo" class="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-bold text-xs transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+          <span>Ndërhyrje në Terren</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 Kartela KPI të Integruara -->
+  <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+    
+    <!-- 1. Tiketa të Hapura -->
+    <button type="button" @click="tab = 'servisi'; ticketStatusFilter = 'Hapur'" class="text-left bg-slate-900/90 border rounded-xl p-4 shadow-md hover:border-amber-500/40 transition-all group" :class="tab === 'servisi' ? 'border-amber-500/50 ring-1 ring-amber-500/20' : 'border-slate-800'">
+      <div class="flex items-center justify-between text-slate-400 mb-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider">TIKETA TË HAPURA</span>
+        <span class="p-1 rounded-md bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-black text-amber-400 font-mono"><%= stats.openTickets %></div>
+      <span class="text-[10px] text-slate-400 font-medium">Në pritje të zgjidhjes</span>
+    </button>
+
+    <!-- 2. Tiketa Urgjente / Kritike -->
+    <button type="button" @click="tab = 'servisi'" class="text-left bg-slate-900/90 border rounded-xl p-4 shadow-md hover:border-rose-500/40 transition-all group" :class="stats.urgentTickets > 0 ? 'border-rose-500/40 bg-rose-500/5' : 'border-slate-800'">
+      <div class="flex items-center justify-between text-slate-400 mb-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider">DEFEKTE URGJENTE</span>
+        <span class="p-1 rounded-md bg-rose-500/10 text-rose-400 group-hover:scale-110 transition-transform">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-black text-rose-400 font-mono"><%= stats.urgentTickets %></div>
+      <span class="text-[10px] text-rose-300 font-medium">Prioritet kritik / i lartë</span>
+    </button>
+
+    <!-- 3. Kontrata Aktive -->
+    <button type="button" @click="tab = 'mirembajtja'; contractStatusFilter = 'Aktive'" class="text-left bg-slate-900/90 border rounded-xl p-4 shadow-md hover:border-emerald-500/40 transition-all group" :class="tab === 'mirembajtja' ? 'border-emerald-500/50 ring-1 ring-emerald-500/20' : 'border-slate-800'">
+      <div class="flex items-center justify-between text-slate-400 mb-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider">KONTRATA AKTIVE</span>
+        <span class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-black text-emerald-400 font-mono"><%= stats.activeContracts %></div>
+      <span class="text-[10px] text-emerald-300 font-medium"><%= formatCurrency(stats.totalContractValue) %>/vit</span>
+    </button>
+
+    <!-- 4. Vizita Mirëmbajtjeje -->
+    <button type="button" @click="tab = 'vizitat'" class="text-left bg-slate-900/90 border rounded-xl p-4 shadow-md hover:border-blue-500/40 transition-all group" :class="tab === 'vizitat' ? 'border-blue-500/50 ring-1 ring-blue-500/20' : 'border-slate-800'">
+      <div class="flex items-center justify-between text-slate-400 mb-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider">VIZITA PERIODIKE</span>
+        <span class="p-1 rounded-md bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-black text-blue-400 font-mono"><%= stats.recentVisitsCount %></div>
+      <span class="text-[10px] text-slate-400 font-medium">Regjistruar në sistem</span>
+    </button>
+
+    <!-- 5. Pjesë Rezervë në Stok -->
+    <button type="button" @click="tab = 'pjeset'" class="text-left bg-slate-900/90 border rounded-xl p-4 shadow-md hover:border-violet-500/40 transition-all group" :class="tab === 'pjeset' ? 'border-violet-500/50 ring-1 ring-violet-500/20' : 'border-slate-800'">
+      <div class="flex items-center justify-between text-slate-400 mb-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider">MAGAZINA E SERVISIT</span>
+        <span class="p-1 rounded-md bg-violet-500/10 text-violet-400 group-hover:scale-110 transition-transform">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-black text-violet-400 font-mono"><%= spareParts.length %></div>
+      <span class="text-[10px] font-medium <%= stats.lowStockParts > 0 ? 'text-amber-400' : 'text-slate-400' %>">
+        <%= stats.lowStockParts > 0 ? (stats.lowStockParts + ' artikuj në stok kritik') : 'Stoku i qëndrueshëm' %>
+      </span>
+    </button>
+
+  </div>
+
+  <!-- Navigimi i Nën-Seksioneve (Tabs) -->
+  <div class="flex items-center gap-1.5 border-b border-slate-800 pb-2 overflow-x-auto">
+    <button type="button" @click="tab = 'pasqyra'" class="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap" :class="tab === 'pasqyra' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+      <span>Pasqyra e Integruar</span>
+    </button>
+    <button type="button" @click="tab = 'servisi'" class="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap" :class="tab === 'servisi' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <span>Kërkesat për Servis (<%= tickets.length %>)</span>
+    </button>
+    <button type="button" @click="tab = 'mirembajtja'" class="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap" :class="tab === 'mirembajtja' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <span>Kontratat e Mirëmbajtjes (<%= contracts.length %>)</span>
+    </button>
+    <button type="button" @click="tab = 'vizitat'" class="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap" :class="tab === 'vizitat' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span>Vizitat & Inspektimet</span>
+    </button>
+    <button type="button" @click="tab = 'pjeset'" class="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap" :class="tab === 'pjeset' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <span>Pjesët Rezervë & Magazina</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: PASQYRA E INTEGRUAR -->
+  <div x-show="tab === 'pasqyra'" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Kërkesat më të Fundit të Servisit -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <h2 class="text-sm font-bold text-slate-100">Kërkesat e Fundit të Servisit</h2>
+          </div>
+          <button type="button" @click="tab = 'servisi'" class="text-xs text-amber-400 hover:underline font-medium">Shiko të gjitha &rarr;</button>
+        </div>
+        <div class="divide-y divide-slate-800">
+          <% const recentTickets = tickets.slice(0, 6); %>
+          <% if (!recentTickets.length) { %>
+            <div class="py-10 text-center text-slate-500 text-xs">Nuk ka kërkesa servisi të regjistruara.</div>
+          <% } %>
+          <% recentTickets.forEach(t => { %>
+            <div class="p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-amber-400"><%= t.number %></span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= t.priority === 'Kritik' || t.priority === 'I lartë' ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-slate-800 text-slate-300' %>">
+                    <%= t.priority %>
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= t.status === 'Hapur' ? 'bg-amber-500/15 text-amber-300' : (t.status === 'Zgjidhur' || t.status === 'Mbyllur' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-blue-500/15 text-blue-300') %>">
+                    <%= t.status %>
+                  </span>
+                </div>
+                <div class="text-xs font-semibold text-slate-200 mt-1 truncate"><%= t.customer ? t.customer.companyName : (t.customer ? (t.customer.firstName + ' ' + t.customer.lastName) : '—') %></div>
+                <div class="text-[11px] text-slate-400 truncate max-w-sm"><%= t.problemDescription %></div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <div class="text-[10px] text-slate-400"><%= t.reportedDate ? new Date(t.reportedDate).toLocaleDateString('sq-AL') : '' %></div>
+                <a href="/servisi/<%= t.id %>" class="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1">Hap &rarr;</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Kontratat Aktive të Mirëmbajtjes -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <h2 class="text-sm font-bold text-slate-100">Kontratat Aktive të Mirëmbajtjes</h2>
+          </div>
+          <button type="button" @click="tab = 'mirembajtja'" class="text-xs text-emerald-400 hover:underline font-medium">Shiko të gjitha &rarr;</button>
+        </div>
+        <div class="divide-y divide-slate-800">
+          <% const recentContracts = contracts.slice(0, 6); %>
+          <% if (!recentContracts.length) { %>
+            <div class="py-10 text-center text-slate-500 text-xs">Nuk ka kontrata mirëmbajtjeje të regjistruara.</div>
+          <% } %>
+          <% recentContracts.forEach(c => { %>
+            <div class="p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <a href="/mirembajtja/<%= c.id %>" class="font-mono text-xs font-bold text-amber-400 hover:underline"><%= c.number %></a>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <%= c.status %>
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-mono">SN: <%= c.serialNumber %></span>
+                </div>
+                <div class="text-xs font-semibold text-slate-200 mt-1 truncate"><%= c.customer ? c.customer.companyName : '—' %></div>
+                <div class="text-[11px] text-slate-400">Frekuenca: <span class="text-slate-300 font-medium"><%= c.frequency %></span> • Vlera: <span class="text-amber-400 font-mono font-bold"><%= formatCurrency(c.priceAnnual) %>/vit</span></div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <div class="text-[10px] text-slate-400">Skadon: <%= c.endDate ? new Date(c.endDate).toLocaleDateString('sq-AL') : '—' %></div>
+                <a href="/mirembajtja/<%= c.id %>" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium">Hap</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Ndërhyrjet Urgjente & Vizitat e Fundit -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Vizitat e Fundit të Mirëmbajtjes -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+            <h2 class="text-sm font-bold text-slate-100">Vizitat Periodike të Fundit</h2>
+          </div>
+          <button type="button" @click="tab = 'vizitat'" class="text-xs text-blue-400 hover:underline font-medium">Shiko vizitat &rarr;</button>
+        </div>
+        <div class="divide-y divide-slate-800">
+          <% if (!recentVisits.length) { %>
+            <div class="py-8 text-center text-slate-500 text-xs">Nuk ka vizita të regjistruara së fundmi.</div>
+          <% } %>
+          <% recentVisits.slice(0, 5).forEach(v => { %>
+            <div class="p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-200"><%= v.contract && v.contract.customer ? v.contract.customer.companyName : 'Vizitë Mirëmbajtjeje' %></span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= v.status === 'E Përfunduar' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300' %>">
+                    <%= v.status %>
+                  </span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-0.5 truncate">
+                  Tekniku: <span class="text-slate-300 font-medium"><%= v.technician ? v.technician.fullName : 'Caktuar' %></span>
+                  <% if (v.findings) { %> • Gjetjet: <%= v.findings %><% } %>
+                </div>
+              </div>
+              <div class="text-[11px] font-mono text-slate-400 flex-shrink-0">
+                <%= v.visitDate ? new Date(v.visitDate).toLocaleDateString('sq-AL') : '—' %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Pjesët Rezervë me Stok të Ulët -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+            <h2 class="text-sm font-bold text-slate-100">Gjendja e Pjesëve Rezervë</h2>
+          </div>
+          <a href="/pjeset-rezerve" class="text-xs text-violet-400 hover:underline font-medium">Magazina e plotë &rarr;</a>
+        </div>
+        <div class="divide-y divide-slate-800">
+          <% if (!spareParts.length) { %>
+            <div class="py-8 text-center text-slate-500 text-xs">Nuk ka pjesë rezervë të regjistruara.</div>
+          <% } %>
+          <% spareParts.slice(0, 5).forEach(p => { %>
+            <div class="p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-slate-200"><%= p.partNumber %></span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-slate-800 text-slate-400"><%= p.category %></span>
+                </div>
+                <div class="text-xs text-slate-300 mt-0.5 truncate"><%= p.name %></div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <div class="text-xs font-mono font-bold <%= p.stockQty <= p.minStockQty ? 'text-rose-400' : 'text-emerald-400' %>">
+                  <%= p.stockQty %> copë
+                </div>
+                <div class="text-[10px] text-slate-500">Min: <%= p.minStockQty %></div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 2: TIKETAT E SERVISIT -->
+  <div x-show="tab === 'servisi'" x-cloak class="space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="text" x-model="ticketSearch" placeholder="Kërko tiketa (numër, klient, defekt)..." class="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:border-amber-400 focus:outline-none w-64">
+        <select x-model="ticketStatusFilter" class="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:border-amber-400 focus:outline-none">
+          <option value="all">Të gjitha statuset</option>
+          <option value="Hapur">Hapur</option>
+          <option value="Caktuar">Caktuar</option>
+          <option value="Në proces">Në proces</option>
+          <option value="Zgjidhur">Zgjidhur</option>
+          <option value="Mbyllur">Mbyllur</option>
+        </select>
+      </div>
+      <a href="/servisi/krijo" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Tiketë e Re</span>
+      </a>
+    </div>
+
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/60 border-b border-slate-800">
+              <th class="py-3 px-4">Nr. Tiketës</th>
+              <th class="py-3 px-4">Klienti & Objekti</th>
+              <th class="py-3 px-4">Përshkrimi i Problemit</th>
+              <th class="py-3 px-4">Prioriteti</th>
+              <th class="py-3 px-4">Tekniku</th>
+              <th class="py-3 px-4">Statusi</th>
+              <th class="py-3 px-4">Data</th>
+              <th class="py-3 px-4 text-right">Veprime</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300">
+            <% if (!tickets.length) { %>
+              <tr><td colspan="8" class="py-12 text-center text-slate-500">Nuk ka kërkesa servisi të regjistruara.</td></tr>
+            <% } %>
+            <% tickets.forEach(t => { %>
+              <tr class="hover:bg-slate-800/50 transition-colors"
+                  x-show="(ticketStatusFilter === 'all' || '<%= t.status %>' === ticketStatusFilter) &&
+                          (ticketSearch === '' || '<%= (t.number + ' ' + (t.customer ? t.customer.companyName : '') + ' ' + (t.problemDescription || '')).toLowerCase() %>'.includes(ticketSearch.toLowerCase()))">
+                <td class="py-3 px-4 font-mono font-bold text-amber-400">
+                  <a href="/servisi/<%= t.id %>" class="hover:underline flex items-center gap-1">
+                    <span><%= t.number %></span>
+                    <i data-lucide="arrow-up-right" class="w-3 h-3 opacity-60"></i>
+                  </a>
+                </td>
+                <td class="py-3 px-4 font-medium text-slate-200">
+                  <%= t.customer ? t.customer.companyName : '—' %>
+                  <% if (t.elevator) { %>
+                    <div class="text-[10px] text-slate-400"><%= t.elevator.model %></div>
+                  <% } %>
+                </td>
+                <td class="py-3 px-4 max-w-xs truncate text-xs text-slate-300">
+                  <%= t.problemDescription || '—' %>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold <%= t.priority === 'Kritik' || t.priority === 'I lartë' ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-slate-800 text-slate-300' %>">
+                    <%= t.priority %>
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-xs text-slate-300">
+                  <%= t.technician ? t.technician.fullName : '—' %>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold <%= t.status === 'Hapur' ? 'bg-amber-500/15 text-amber-300' : (t.status === 'Zgjidhur' || t.status === 'Mbyllur' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-blue-500/15 text-blue-300') %>">
+                    <%= t.status %>
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-xs text-slate-400 font-mono">
+                  <%= t.reportedDate ? new Date(t.reportedDate).toLocaleDateString('sq-AL') : '—' %>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <a href="/servisi/<%= t.id %>" class="inline-flex items-center px-2.5 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-xs text-amber-400 hover:text-amber-300 font-semibold border border-amber-500/30 transition">Hap Faqen</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: KONTRATAT E MIRËMBAJTJES -->
+  <div x-show="tab === 'mirembajtja'" x-cloak class="space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="text" x-model="contractSearch" placeholder="Kërko kontrata (nr, klient, SN)..." class="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:border-emerald-400 focus:outline-none w-64">
+        <select x-model="contractStatusFilter" class="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:border-emerald-400 focus:outline-none">
+          <option value="all">Të gjitha statuset</option>
+          <option value="Aktive">Aktive</option>
+          <option value="Skadon së shpejti">Skadon së shpejti</option>
+          <option value="E skaduar">E skaduar</option>
+          <option value="Anuluar">Anuluar</option>
+        </select>
+      </div>
+      <a href="/mirembajtja/krijo" class="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Kontratë e Re</span>
+      </a>
+    </div>
+
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/60 border-b border-slate-800">
+              <th class="py-3 px-4">Nr. Kontratës</th>
+              <th class="py-3 px-4">Klienti</th>
+              <th class="py-3 px-4">Nr. Serial (SN)</th>
+              <th class="py-3 px-4">Frekuenca</th>
+              <th class="py-3 px-4">Çmimi Vjetor</th>
+              <th class="py-3 px-4">Skadimi</th>
+              <th class="py-3 px-4">Statusi</th>
+              <th class="py-3 px-4 text-right">Veprime</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300">
+            <% if (!contracts.length) { %>
+              <tr><td colspan="8" class="py-12 text-center text-slate-500">Nuk ka kontrata mirëmbajtjeje të regjistruara.</td></tr>
+            <% } %>
+            <% contracts.forEach(c => { %>
+              <tr class="hover:bg-slate-800/50 transition-colors"
+                  x-show="(contractStatusFilter === 'all' || '<%= c.status %>' === contractStatusFilter) &&
+                          (contractSearch === '' || '<%= (c.number + ' ' + (c.customer ? c.customer.companyName : '') + ' ' + (c.serialNumber || '')).toLowerCase() %>'.includes(contractSearch.toLowerCase()))">
+                <td class="py-3 px-4 font-mono font-bold text-amber-400">
+                  <a href="/mirembajtja/<%= c.id %>" class="hover:underline"><%= c.number %></a>
+                </td>
+                <td class="py-3 px-4 font-medium text-slate-200">
+                  <%= c.customer ? c.customer.companyName : '—' %>
+                </td>
+                <td class="py-3 px-4 font-mono text-xs text-slate-300">
+                  <%= c.serialNumber %>
+                </td>
+                <td class="py-3 px-4 text-xs text-slate-300">
+                  <%= c.frequency %>
+                </td>
+                <td class="py-3 px-4 font-mono font-bold text-amber-400">
+                  <%= formatCurrency(c.priceAnnual) %>/vit
+                </td>
+                <td class="py-3 px-4 text-xs text-slate-400 font-mono">
+                  <%= c.endDate ? new Date(c.endDate).toLocaleDateString('sq-AL') : '—' %>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold <%= c.status === 'Aktive' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : (c.status === 'Skadon së shpejti' ? 'bg-amber-500/15 text-amber-300' : 'bg-rose-500/15 text-rose-300') %>">
+                    <%= c.status %>
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-right space-x-2">
+                  <a href="/mirembajtja/<%= c.id %>" class="text-xs text-amber-400 hover:text-amber-300 font-semibold">Detaje</a>
+                  <a href="/mirembajtja/<%= c.id %>/print" target="_blank" class="text-xs text-slate-400 hover:text-slate-200">Print</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: VIZITAT PERIODIKE -->
+  <div x-show="tab === 'vizitat'" x-cloak class="space-y-4">
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-slate-100">Ditar i Vizitave dhe Inspektimeve Teknike</h2>
+        <span class="text-xs font-mono text-slate-400"><%= recentVisits.length %> vizita të regjistruara</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/60 border-b border-slate-800">
+              <th class="py-3 px-4">Kontrata / Klienti</th>
+              <th class="py-3 px-4">Tekniku</th>
+              <th class="py-3 px-4">Data e Vizitës</th>
+              <th class="py-3 px-4">Statusi</th>
+              <th class="py-3 px-4">Gjetjet & Vërejtjet</th>
+              <th class="py-3 px-4">Veprimet e Ndërmarra</th>
+              <th class="py-3 px-4">Nënshkruar</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300">
+            <% if (!recentVisits.length) { %>
+              <tr><td colspan="7" class="py-12 text-center text-slate-500">Nuk ka vizita periodike të regjistruara.</td></tr>
+            <% } %>
+            <% recentVisits.forEach(v => { %>
+              <tr class="hover:bg-slate-800/50 transition-colors">
+                <td class="py-3 px-4">
+                  <div class="font-bold text-slate-200"><%= v.contract && v.contract.customer ? v.contract.customer.companyName : '—' %></div>
+                  <a href="/mirembajtja/<%= v.contractId %>" class="font-mono text-xs text-amber-400 hover:underline"><%= v.contract ? v.contract.number : '' %></a>
+                </td>
+                <td class="py-3 px-4 text-xs text-slate-300">
+                  <%= v.technician ? v.technician.fullName : '—' %>
+                </td>
+                <td class="py-3 px-4 font-mono text-xs text-slate-400">
+                  <%= v.visitDate ? new Date(v.visitDate).toLocaleDateString('sq-AL') : '—' %>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold <%= v.status === 'E Përfunduar' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300' %>">
+                    <%= v.status %>
+                  </span>
+                </td>
+                <td class="py-3 px-4 max-w-xs truncate text-xs text-slate-400">
+                  <%= v.findings || 'Nuk ka vërejtje' %>
+                </td>
+                <td class="py-3 px-4 max-w-xs truncate text-xs text-slate-400">
+                  <%= v.actionsTaken || 'Kontroll standard' %>
+                </td>
+                <td class="py-3 px-4">
+                  <% if (v.clientSigned) { %>
+                    <span class="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      Po
+                    </span>
+                  <% } else { %>
+                    <span class="text-xs text-slate-500">Jo</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: PJESËT REZERVË & MAGAZINA E SERVISIT -->
+  <div x-show="tab === 'pjeset'" x-cloak class="space-y-4">
+    <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+      <div>
+        <h2 class="text-sm font-bold text-slate-100">Magazina e Pjesëve Rezervë për Servis & Mirëmbajtje</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Disponueshmëria e komponentëve dhe pjesëve të konsumueshme për riparime të shpejta</p>
+      </div>
+      <a href="/pjeset-rezerve" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition-all">
+        Menaxho Magazinën
+      </a>
+    </div>
+
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/60 border-b border-slate-800">
+              <th class="py-3 px-4">Kodi / Nr. Pjesës</th>
+              <th class="py-3 px-4">Emri i Artikullit</th>
+              <th class="py-3 px-4">Kategoria</th>
+              <th class="py-3 px-4">Sasia në Stok</th>
+              <th class="py-3 px-4">Stoku Minimal</th>
+              <th class="py-3 px-4">Çmimi Shitës</th>
+              <th class="py-3 px-4">Statusi i Stokut</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300">
+            <% if (!spareParts.length) { %>
+              <tr><td colspan="7" class="py-12 text-center text-slate-500">Nuk ka pjesë rezervë në magazinë.</td></tr>
+            <% } %>
+            <% spareParts.forEach(p => { %>
+              <tr class="hover:bg-slate-800/50 transition-colors">
+                <td class="py-3 px-4 font-mono font-bold text-amber-400"><%= p.partNumber %></td>
+                <td class="py-3 px-4 font-medium text-slate-200"><%= p.name %></td>
+                <td class="py-3 px-4 text-xs text-slate-400"><%= p.category %></td>
+                <td class="py-3 px-4 font-mono font-bold <%= p.stockQty <= p.minStockQty ? 'text-rose-400' : 'text-slate-100' %>">
+                  <%= p.stockQty %> copë
+                </td>
+                <td class="py-3 px-4 font-mono text-xs text-slate-500"><%= p.minStockQty %> copë</td>
+                <td class="py-3 px-4 font-mono text-amber-400 font-bold"><%= formatCurrency(p.sellingPrice) %></td>
+                <td class="py-3 px-4">
+                  <% if (p.stockQty <= p.minStockQty) { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                      Stok Kritik
+                    </span>
+                  <% } else { %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-300">
+                      I Mjaftueshëm
+                    </span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

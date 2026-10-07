@@ -1,0 +1,472 @@
+<!-- Header i Klientit me Kartelat Financiare -->
+<div class="mb-6">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl mb-6">
+    <div class="flex items-start gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg shadow-amber-500/20 font-mono">
+        <%= customer.companyName ? customer.companyName.charAt(0) : 'K' %>
+      </div>
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-black text-slate-100"><%= customer.companyName %></h1>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <%= customer.type %>
+          </span>
+          <% if (customer.discountGroup) { %>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Zbritje: <%= customer.discountGroup %>
+            </span>
+          <% } %>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 mt-1 font-mono">
+          <span>Kodi: <strong class="text-slate-200"><%= customer.code %></strong></span>
+          <span>•</span>
+          <span>NUI: <strong class="text-slate-200"><%= customer.taxNumber || '-' %></strong></span>
+          <span>•</span>
+          <span>Qyteti: <strong class="text-slate-200"><%= customer.city || '-' %>, <%= customer.country || 'Kosovë' %></strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="/klientet/<%= customer.id %>/pasqyra-pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all" title="Shkarko Pasqyrën Financiare (PDF)">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Pasqyra Financiare (PDF)</span>
+      </a>
+      <a href="/ofertat/krijo?customerId=<%= customer.id %>" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Ofertë</span>
+      </a>
+      <a href="/klientet/<%= customer.id %>/ndrysho" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs transition-all flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span>Ndrysho</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 3 Kartela Përmbledhëse Financiare -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+      <span class="text-[11px] font-bold uppercase text-slate-400 tracking-wider block mb-1">TOTALI I FATURUAR</span>
+      <div class="text-xl font-black text-slate-100 font-mono"><%= formatCurrency(totalInvoiced) %></div>
+      <span class="text-[10px] text-slate-500"><%= customer.invoices.length %> fatura të lëshuara</span>
+    </div>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+      <span class="text-[11px] font-bold uppercase text-slate-400 tracking-wider block mb-1">PAGUAR TOTALI</span>
+      <div class="text-xl font-black text-emerald-400 font-mono"><%= formatCurrency(totalPaid) %></div>
+      <span class="text-[10px] text-emerald-500"><%= customer.payments.length %> pagesa të regjistruara</span>
+    </div>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+      <span class="text-[11px] font-bold uppercase text-slate-400 tracking-wider block mb-1">BORXHI I MBETUR</span>
+      <div class="text-xl font-black <%= balanceDue > 0 ? 'text-rose-400' : 'text-slate-400' %> font-mono"><%= formatCurrency(balanceDue) %></div>
+      <span class="text-[10px] <%= balanceDue > 0 ? 'text-rose-500' : 'text-slate-500' %>"><%= balanceDue > 0 ? 'Kërkohet arkëtim' : 'Llogari e shlyer' %></span>
+    </div>
+  </div>
+</div>
+
+<!-- Skedat e Profilit (Tabs Navigation) -->
+<div class="mb-6 border-b border-slate-800 flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+  <a href="/klientet/<%= customer.id %>?tab=permbledhje" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'permbledhje' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Përmbledhje
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=kontaktet" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'kontaktet' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Kontaktet (<%= customer.contacts.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=ofertat" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'ofertat' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Ofertat (<%= customer.quotations.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=kontratat" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'kontratat' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Kontratat (<%= customer.contracts.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=faturat" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'faturat' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Faturat (<%= customer.invoices.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=pagesat" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'pagesat' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Pagesat (<%= customer.payments.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=projektet" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'projektet' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Projektet & Instalimet (<%= customer.projects.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=mirembajtja" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'mirembajtja' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Mirëmbajtja & Servisi (<%= customer.maintenanceContracts.length %>)
+  </a>
+  <a href="/klientet/<%= customer.id %>?tab=historiku" class="px-4 py-2.5 rounded-lg font-bold transition-colors whitespace-nowrap <%= activeTab === 'historiku' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900' %>">
+    Historiku (Timeline)
+  </a>
+</div>
+
+<!-- Përmbajtja e Skedave (Tab Contents) -->
+<div class="space-y-6">
+
+  <!-- 1. Përmbledhje -->
+  <% if (activeTab === 'permbledhje') { %>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Detajet e Kompanisë dhe Objektit -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+            Detajet e Objektit & Ndërtimit
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-slate-500 block">Emri i Objektit:</span>
+              <span class="font-bold text-slate-200"><%= customer.buildingName || '-' %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Adresa e Objektit:</span>
+              <span class="font-bold text-slate-200"><%= customer.buildingAddress || '-' %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Numri i Kateve:</span>
+              <span class="font-bold text-slate-200"><%= customer.floorsCount || 0 %> Kate</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Numri i Lifteve:</span>
+              <span class="font-bold text-amber-400"><%= customer.elevatorsCount || 0 %> Lifta</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Arkitekti / Studio:</span>
+              <span class="font-bold text-slate-200"><%= customer.architect || '-' %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Kompania Ndërtuese:</span>
+              <span class="font-bold text-slate-200"><%= customer.builderCompany || '-' %></span>
+            </div>
+          </div>
+          <% if (customer.notes) { %>
+            <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs">
+              <span class="text-slate-500 block mb-1">Shënime:</span>
+              <p class="text-slate-300 leading-relaxed"><%= customer.notes %></p>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Kontaktet Kryesore -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+            <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider">Kontaktet Kryesore</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <% customer.contacts.forEach(ct => { %>
+              <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-slate-200"><%= ct.firstName %> <%= ct.lastName %></span>
+                  <% if (ct.isPrimary) { %>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Kryesor</span>
+                  <% } %>
+                </div>
+                <div class="text-slate-400 text-[11px]"><%= ct.role || 'Përfaqësues' %></div>
+                <div class="text-amber-400/80 font-mono mt-2"><%= ct.phone || '-' %></div>
+                <div class="text-slate-500 text-[11px]"><%= ct.email || '-' %></div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Timeline e Fundit -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl h-fit">
+        <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+          Historiku i Shpejtë
+        </h3>
+        <div class="space-y-4 text-xs">
+          <% if (timelineEvents && timelineEvents.length > 0) { %>
+            <% timelineEvents.slice(0, 5).forEach(ev => { %>
+              <div class="relative pl-6 pb-2 border-l border-slate-800 last:border-0">
+                <div class="absolute -left-1.5 top-0.5 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-900"></div>
+                <div class="font-mono text-[10px] text-slate-500"><%= formatDate(ev.date) %></div>
+                <div class="font-bold text-slate-200 mt-0.5"><%= ev.title %></div>
+                <div class="text-[11px] text-slate-400"><%= ev.description %></div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="text-slate-500 text-center py-4">Nuk ka aktivitet të regjistruar.</p>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  <% } %>
+
+  <!-- 2. Kontaktet -->
+  <% if (activeTab === 'kontaktet') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <h3 class="text-base font-bold text-slate-100 mb-4">Të Gjitha Kontaktet e Klientit</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <% customer.contacts.forEach(ct => { %>
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-slate-200 text-sm"><%= ct.firstName %> <%= ct.lastName %></span>
+              <% if (ct.isPrimary) { %>
+                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400">Kryesor</span>
+              <% } %>
+            </div>
+            <div class="text-slate-400 text-xs mb-3"><%= ct.role || 'Përfaqësues' %></div>
+            <div class="space-y-1 font-mono text-[11px]">
+              <div class="text-slate-300">Tel: <%= ct.phone || '-' %></div>
+              <div class="text-slate-300">Email: <%= ct.email || '-' %></div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- 3. Ofertat -->
+  <% if (activeTab === 'ofertat') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-100">Ofertat Komerciale të Klientit</h3>
+        <% if (customer.quotations && customer.quotations.length > 0) { %>
+          <a href="/ofertat/eksporto-pdf?customerId=<%= customer.id %>" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all" title="Shkarko Listën e Ofertave si PDF">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Eksporto Ofertat (PDF)</span>
+          </a>
+        <% } %>
+      </div>
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase">
+          <tr>
+            <th class="p-4">Numri</th>
+            <th class="p-4">Data</th>
+            <th class="p-4">Vlefshmëria</th>
+            <th class="p-4">Vlera Totale</th>
+            <th class="p-4">Statusi</th>
+            <th class="p-4 text-right">Veprim</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <% customer.quotations.forEach(q => { %>
+            <tr class="hover:bg-slate-800/40">
+              <td class="p-4 font-mono font-bold text-amber-400"><%= q.number %></td>
+              <td class="p-4"><%= formatDate(q.date) %></td>
+              <td class="p-4"><%= formatDate(q.validUntil) %></td>
+              <td class="p-4 font-mono font-bold text-slate-100"><%= formatCurrency(q.total) %></td>
+              <td class="p-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-amber-400 border border-slate-700">
+                  <%= q.status %>
+                </span>
+              </td>
+              <td class="p-4 text-right">
+                <a href="/ofertat/<%= q.id %>" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 text-xs">Shiko</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- 4. Kontratat -->
+  <% if (activeTab === 'kontratat') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase">
+          <tr>
+            <th class="p-4">Numri</th>
+            <th class="p-4">Modeli i Liftit</th>
+            <th class="p-4">Vlera</th>
+            <th class="p-4">Afati i Dorëzimit</th>
+            <th class="p-4">Statusi</th>
+            <th class="p-4 text-right">Veprim</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <% customer.contracts.forEach(c => { %>
+            <tr class="hover:bg-slate-800/40">
+              <td class="p-4 font-mono font-bold text-amber-400"><%= c.number %></td>
+              <td class="p-4"><%= c.elevator ? c.elevator.model : 'KRONEER Sistem' %></td>
+              <td class="p-4 font-mono font-bold text-slate-100"><%= formatCurrency(c.value) %></td>
+              <td class="p-4"><%= formatDate(c.deliveryDate) %></td>
+              <td class="p-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <%= c.status %>
+                </span>
+              </td>
+              <td class="p-4 text-right">
+                <a href="/kontratat/<%= c.id %>" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 text-xs">Shiko</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- 5. Faturat -->
+  <% if (activeTab === 'faturat') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase">
+          <tr>
+            <th class="p-4">Numri</th>
+            <th class="p-4">Data</th>
+            <th class="p-4">Afati</th>
+            <th class="p-4">Totali</th>
+            <th class="p-4">Paguar</th>
+            <th class="p-4">Mbetur</th>
+            <th class="p-4">Statusi</th>
+            <th class="p-4 text-right">Veprim</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <% customer.invoices.forEach(inv => { %>
+            <tr class="hover:bg-slate-800/40">
+              <td class="p-4 font-mono font-bold text-amber-400"><%= inv.number %></td>
+              <td class="p-4"><%= formatDate(inv.date) %></td>
+              <td class="p-4"><%= formatDate(inv.dueDate) %></td>
+              <td class="p-4 font-mono font-bold text-slate-100"><%= formatCurrency(inv.total) %></td>
+              <td class="p-4 font-mono font-bold text-emerald-400"><%= formatCurrency(inv.paidAmount) %></td>
+              <td class="p-4 font-mono font-bold <%= inv.balanceDue > 0 ? 'text-rose-400' : 'text-slate-400' %>"><%= formatCurrency(inv.balanceDue) %></td>
+              <td class="p-4">
+                <% if (inv.status === 'Paguar') { %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Paguar</span>
+                <% } else if (inv.status === 'E vonuar') { %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">E vonuar</span>
+                <% } else { %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30"><%= inv.status %></span>
+                <% } %>
+              </td>
+              <td class="p-4 text-right">
+                <a href="/faturat/<%= inv.id %>" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 text-xs">Shiko</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- 7. Pagesat -->
+  <% if (activeTab === 'pagesat') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase">
+          <tr>
+            <th class="p-4">ID e Pagesës</th>
+            <th class="p-4">Data</th>
+            <th class="p-4">Shuma</th>
+            <th class="p-4">Metoda</th>
+            <th class="p-4">Referenca</th>
+            <th class="p-4 text-right">Dëftesë</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          <% customer.payments.forEach(p => { %>
+            <tr class="hover:bg-slate-800/40">
+              <td class="p-4 font-mono font-bold text-amber-400"><%= p.number %></td>
+              <td class="p-4"><%= formatDate(p.date) %></td>
+              <td class="p-4 font-mono font-bold text-emerald-400 text-sm"><%= formatCurrency(p.amount) %></td>
+              <td class="p-4"><%= p.paymentMethod %></td>
+              <td class="p-4 font-mono text-slate-400"><%= p.referenceNumber || '-' %></td>
+              <td class="p-4 text-right">
+                <a href="/pagesat/<%= p.id %>/deftese" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-amber-400 text-xs">Dëftesë</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- 8. Projektet & Instalimet -->
+  <% if (activeTab === 'projektet') { %>
+    <div class="space-y-4">
+      <% customer.projects.forEach(prj => { %>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b border-slate-800 pb-3">
+            <div>
+              <span class="font-mono text-xs text-amber-400 font-bold"><%= prj.number %></span>
+              <h3 class="text-base font-bold text-slate-100"><%= prj.name %></h3>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              Faza: <%= prj.stage %>
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mb-4">
+            <div>
+              <span class="text-slate-500 block">Lifta:</span>
+              <span class="font-bold text-slate-200"><%= prj.elevatorCount %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Kate:</span>
+              <span class="font-bold text-slate-200"><%= prj.floorsCount %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Vlera:</span>
+              <span class="font-bold text-slate-200 font-mono"><%= formatCurrency(prj.value) %></span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Data e Fillimit:</span>
+              <span class="font-bold text-slate-200"><%= formatDate(prj.startDate) %></span>
+            </div>
+          </div>
+          <a href="/projektet/<%= prj.id %>" class="text-xs text-amber-400 hover:text-amber-300 font-semibold">Shiko të gjitha instalimet e projektit &rarr;</a>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- 9. Mirëmbajtja & Servisi -->
+  <% if (activeTab === 'mirembajtja') { %>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Kontratat e Mirëmbajtjes -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Kontratat e Mirëmbajtjes</h3>
+        <div class="space-y-3">
+          <% customer.maintenanceContracts.forEach(mc => { %>
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-mono font-bold text-amber-400"><%= mc.number %></span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400"><%= mc.status %></span>
+              </div>
+              <div class="text-slate-300 font-medium">Lifti: <%= mc.elevator ? mc.elevator.model : 'KRONEER' %> (SN: <%= mc.serialNumber %>)</div>
+              <div class="text-slate-500 text-[11px] mt-1">Frekuenca: <%= mc.frequency %> • Çmimi: <%= formatCurrency(mc.priceAnnual) %>/vit</div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Tiketat e Servisit -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Tiketat e Servisit</h3>
+        <div class="space-y-3">
+          <% customer.serviceTickets.forEach(st => { %>
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-mono font-bold text-slate-200"><%= st.number %></span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400"><%= st.priority %></span>
+              </div>
+              <p class="text-slate-300 line-clamp-2 mt-1"><%= st.problemDescription %></p>
+              <div class="text-slate-500 text-[10px] mt-1">Statusi: <%= st.status %> • <%= formatDate(st.reportedDate) %></div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+    </div>
+  <% } %>
+
+  <!-- 10. Historiku i Plotë (Timeline) -->
+  <% if (activeTab === 'historiku') { %>
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <h3 class="text-base font-bold text-slate-100 mb-6">HISTORIKU I PLOTË I NDËRVEPRIMIT (TIMELINE)</h3>
+      <div class="relative border-l-2 border-slate-800 ml-4 pl-6 space-y-8">
+        <% if (timelineEvents && timelineEvents.length > 0) { %>
+          <% timelineEvents.forEach(ev => { %>
+            <div class="relative">
+              <div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full bg-amber-400 border-4 border-slate-900 shadow-md shadow-amber-500/50"></div>
+              <div class="text-xs font-mono text-amber-400 font-bold"><%= formatDate(ev.date) %></div>
+              <h4 class="text-sm font-bold text-slate-100 mt-0.5"><%= ev.title %></h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed"><%= ev.description %></p>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <p class="text-slate-500 text-xs">Nuk ka ngjarje në historik.</p>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+</div>

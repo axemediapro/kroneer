@@ -1,0 +1,300 @@
+<div class="space-y-6" x-data="{ showStockModal: false, selectedPart: null, deltaQty: 1 }">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          Katalogu & Magazina Qendrore
+        </span>
+      </div>
+      <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">Pjesët Rezervë, Paketat e Modernizimit & Shërbimet</h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Inventari i unifikuar me menaxhim stoku, çmime shitëse dhe auto-plotësim në fatura/oferta</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/modernizimi" class="inline-flex items-center px-3.5 py-2 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/30 text-xs font-bold rounded-xl transition">
+        <i data-lucide="wrench" class="w-4 h-4 mr-1.5 text-purple-400"></i>
+        Hub i Modernizimit
+      </a>
+      <% if (typeof canManage !== 'undefined' && canManage) { %>
+      <a href="/pjeset-rezerve/krijo" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition">
+        <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+        Regjistro Artikull / Shërbim
+      </a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Artikuj Gjithsej në Stok</span>
+          <div class="text-2xl font-black text-slate-900 dark:text-white mt-1"><%= totalItems.toLocaleString() %> <span class="text-xs font-normal text-slate-400">njësi</span></div>
+        </div>
+        <div class="p-2 rounded-xl bg-slate-800/80 text-amber-400">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-2">
+        <span class="font-bold text-amber-400"><%= partsCount %></span> pjesë &bull;
+        <span class="font-bold text-purple-400"><%= modernizationCount %></span> modernizim &bull;
+        <span class="font-bold text-sky-400"><%= serviceCount %></span> shërbime
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vlera e Inventarit</span>
+          <div class="text-2xl font-black text-emerald-400 font-mono mt-1">€<%= totalInventoryValue.toLocaleString('de-DE', {minimumFractionDigits: 2}) %></div>
+        </div>
+        <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <i data-lucide="badge-euro" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <div class="mt-2 text-[11px] text-slate-400">Llogaritur sipas çmimeve shitëse</div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Stok i Ulët (Alarm)</span>
+          <div class="text-2xl font-black text-amber-500 mt-1"><%= lowStockCount %> <span class="text-xs font-normal text-slate-400">artikuj</span></div>
+        </div>
+        <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <div class="mt-2 text-[11px] text-amber-400/80">Kërkon rimbushje të shpejtë</div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Pa Stok (Zero)</span>
+          <div class="text-2xl font-black text-rose-500 mt-1"><%= outOfStockCount %> <span class="text-xs font-normal text-slate-400">artikuj</span></div>
+        </div>
+        <div class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <i data-lucide="ban" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <div class="mt-2 text-[11px] text-rose-400/80">Mungesë në magazinë</div>
+    </div>
+  </div>
+
+  <!-- Segment Filter Tabs -->
+  <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+    <a href="/pjeset-rezerve" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 <%= (!filters.tab || filters.tab === 'all') && !filters.category ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800' %>">
+      <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+      Të Gjitha Artikujt
+    </a>
+    <a href="/pjeset-rezerve?tab=pjese" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 <%= filters.tab === 'pjese' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800' %>">
+      <i data-lucide="package" class="w-3.5 h-3.5"></i>
+      Pjesë Rezervë Lifti
+    </a>
+    <a href="/pjeset-rezerve?tab=modernizim" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 <%= filters.tab === 'modernizim' || filters.category === 'Modernizim' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'bg-slate-900 text-purple-400 hover:text-purple-300 border border-purple-900/40' %>">
+      <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+      Paketa Modernizimi (Riparim Lifta të Vjetër)
+    </a>
+    <a href="/pjeset-rezerve?tab=sherbime" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 <%= filters.tab === 'sherbime' ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30' : 'bg-slate-900 text-sky-400 hover:text-sky-300 border border-sky-900/40' %>">
+      <i data-lucide="hammer" class="w-3.5 h-3.5"></i>
+      Shërbime Teknike & Inxhinieri
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+    <form action="/pjeset-rezerve" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <% if (filters.tab) { %>
+        <input type="hidden" name="tab" value="<%= filters.tab %>">
+      <% } %>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kategoria e Detajuar</label>
+        <select name="category" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-400">
+          <option value="">Të gjitha nënkategoritë</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gjendja e Stokut</label>
+        <select name="stockStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-400">
+          <option value="">Të gjitha gjendjet</option>
+          <option value="ok" <%= filters.stockStatus === 'ok' ? 'selected' : '' %>>Stok i mjaftueshëm</option>
+          <option value="low" <%= filters.stockStatus === 'low' ? 'selected' : '' %>>Stok i ulët (&le; Minimal)</option>
+          <option value="out" <%= filters.stockStatus === 'out' ? 'selected' : '' %>>Pa stok (0 copë)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kërko Artikull / Shërbim</label>
+        <div class="relative">
+          <input type="text" name="search" value="<%= filters.search %>" placeholder="Kodi, emri, modeli, pajisja..." class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-400">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+        </div>
+      </div>
+
+      <div class="flex items-end space-x-2">
+        <button type="submit" class="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition">
+          Filtro
+        </button>
+        <% if (filters.category || filters.stockStatus || filters.search || filters.tab) { %>
+          <a href="/pjeset-rezerve" class="py-2 px-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 transition">
+            Pastro
+          </a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Parts & Products Table -->
+  <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-950 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Kodi</th>
+            <th class="py-3.5 px-4">Artikulli / Shërbimi</th>
+            <th class="py-3.5 px-4">Kategoria</th>
+            <th class="py-3.5 px-4">Kompatibiliteti / Detaje</th>
+            <th class="py-3.5 px-4">Stoku / Min</th>
+            <th class="py-3.5 px-4">Çmimi Blerës</th>
+            <th class="py-3.5 px-4">Çmimi Shitës</th>
+            <th class="py-3.5 px-4">Gjendja</th>
+            <% if (typeof canManage !== 'undefined' && canManage) { %>
+            <th class="py-3.5 px-4 text-right">Veprime</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+          <% if (parts.length === 0) { %>
+            <tr>
+              <td colspan="<%= (typeof canManage !== 'undefined' && canManage) ? 9 : 8 %>" class="text-center py-12 text-slate-400">
+                <i data-lucide="package-open" class="w-10 h-10 mx-auto mb-2 text-slate-500"></i>
+                Nuk u gjet asnjë artikull në këtë kategori.
+              </td>
+            </tr>
+          <% } else { %>
+            <% parts.forEach(p => { %>
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="py-3 px-4 font-mono font-bold text-amber-500">
+                  <%= p.partNumber %>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="font-bold text-white"><%= p.name %></div>
+                  <% if (p.location) { %>
+                    <span class="text-[10px] font-normal text-slate-400 flex items-center gap-1 mt-0.5">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i> <%= p.location %>
+                    </span>
+                  <% } %>
+                </td>
+                <td class="py-3 px-4">
+                  <% if (p.category === 'Modernizim') { %>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      Modernizim
+                    </span>
+                  <% } else if (p.category && p.category.includes('Shërbim')) { %>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      Shërbim
+                    </span>
+                  <% } else { %>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">
+                      <%= p.category %>
+                    </span>
+                  <% } %>
+                </td>
+                <td class="py-3 px-4 text-slate-400 max-w-xs truncate text-[11px]">
+                  <%= p.compatibleElevators || 'Të gjithë ashensorët KRONEER' %>
+                </td>
+                <td class="py-3 px-4 font-mono font-bold text-white whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1"><%= p.stockQty %><span class="text-[10px] font-normal text-slate-400">/ min <%= p.minStockQty %></span></span>
+                </td>
+                <td class="py-3 px-4 font-mono text-slate-400">
+                  €<%= (p.purchasePrice || 0).toFixed(2) %>
+                </td>
+                <td class="py-3 px-4 font-mono font-black text-amber-400">
+                  €<%= (p.sellingPrice || 0).toFixed(2) %>
+                </td>
+                <td class="py-3 px-4">
+                  <% if (p.category && p.category.includes('Shërbim')) { %>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      I Pafund (Shërbim)
+                    </span>
+                  <% } else if (p.stockQty === 0) { %>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      PA STOK
+                    </span>
+                  <% } else if (p.stockQty <= p.minStockQty) { %>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      STOK I ULËT
+                    </span>
+                  <% } else { %>
+                    <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      Në Rregull
+                    </span>
+                  <% } %>
+                </td>
+                <% if (typeof canManage !== 'undefined' && canManage) { %>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <a href="/pjeset-rezerve/<%= p.id %>/ndrysho"
+                      class="px-2.5 py-1 text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition flex items-center gap-1">
+                      <i data-lucide="pencil" class="w-3 h-3"></i> Ndrysho
+                    </a>
+                    <button
+                      @click="selectedPart = <%= JSON.stringify(p) %>; deltaQty = 1; showStockModal = true"
+                      class="px-2.5 py-1 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                      +/- Stok
+                    </button>
+                  </div>
+                </td>
+                <% } %>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <% if (typeof canManage !== 'undefined' && canManage) { %>
+  <!-- Modal: Adjust Stock -->
+  <div x-show="showStockModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div @click.outside="showStockModal = false" class="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-2xl max-w-sm w-full space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+          Rregullo Stokun
+        </h3>
+        <button @click="showStockModal = false" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 font-semibold" x-text="selectedPart ? `${selectedPart.name} (${selectedPart.partNumber})` : ''"></p>
+      <p class="text-xs text-amber-400 font-mono" x-text="selectedPart ? `Gjendja aktuale: ${selectedPart.stockQty} copë` : ''"></p>
+
+      <form :action="selectedPart ? `/pjeset-rezerve/${selectedPart.id}/stok` : '#'" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Ndryshimi i Sasisë (+ për hyrje, - për dalje)</label>
+          <input type="number" name="deltaQty" x-model="deltaQty" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white font-mono focus:outline-none focus:border-amber-400">
+          <div class="flex space-x-1.5 mt-2">
+            <button type="button" @click="deltaQty = 1" class="px-2 py-1 text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">+1</button>
+            <button type="button" @click="deltaQty = 5" class="px-2 py-1 text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">+5</button>
+            <button type="button" @click="deltaQty = 10" class="px-2 py-1 text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">+10</button>
+            <button type="button" @click="deltaQty = -1" class="px-2 py-1 text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">-1</button>
+            <button type="button" @click="deltaQty = -5" class="px-2 py-1 text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">-5</button>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex justify-end space-x-2">
+          <button type="button" @click="showStockModal = false" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 rounded-xl">Anulo</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-md">Përditëso Stokun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+</div>

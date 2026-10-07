@@ -1,0 +1,160 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Kontratat e Mirëmbajtjes</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Menaxhimi i kontratave të servisit periodik, vizitave teknike dhe parandaluese</p>
+    </div>
+    <a href="/mirembajtja/krijo" class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+      Krijo Kontratë Mirëmbajtjeje
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+    <form action="/mirembajtja" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Statusi</label>
+        <select name="status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">Të gjitha statuset</option>
+          <% statuses.forEach(st => { %>
+            <option value="<%= st %>" <%= filters.status === st ? 'selected' : '' %>><%= st %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Frekuenca</label>
+        <select name="frequency" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">Të gjitha frekuencat</option>
+          <% frequencies.forEach(fr => { %>
+            <option value="<%= fr %>" <%= filters.frequency === fr ? 'selected' : '' %>><%= fr %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Kërko</label>
+        <div class="relative">
+          <input type="text" name="search" value="<%= filters.search %>" placeholder="Numri i kontratës, SN, klienti..." class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+        </div>
+      </div>
+
+      <div class="flex items-end space-x-2">
+        <button type="submit" class="w-full py-2 px-4 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition">
+          Filtro
+        </button>
+        <% if (filters.status || filters.frequency || filters.search) { %>
+          <a href="/mirembajtja" class="py-2 px-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg hover:bg-slate-300 transition">
+            Pastro
+          </a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contracts Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Kontrata</th>
+            <th class="py-3.5 px-4">Klienti</th>
+            <th class="py-3.5 px-4">Numri Serik</th>
+            <th class="py-3.5 px-4">Frekuenca</th>
+            <th class="py-3.5 px-4">Vlera Vjetore</th>
+            <th class="py-3.5 px-4">Skadimi</th>
+            <th class="py-3.5 px-4">Tekniku</th>
+            <th class="py-3.5 px-4">Statusi</th>
+            <th class="py-3.5 px-4 text-right">Veprime</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+          <% if (contracts.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center py-12 text-slate-400">
+                <i data-lucide="shield-alert" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600"></i>
+                Nuk u gjet asnjë kontratë mirëmbajtjeje.
+              </td>
+            </tr>
+          <% } else { %>
+            <% contracts.forEach(c => { %>
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition">
+                <td class="py-3.5 px-4 font-bold font-mono text-slate-900 dark:text-white">
+                  <a href="/mirembajtja/<%= c.id %>" class="hover:text-amber-600">
+                    <%= c.number %>
+                  </a>
+                </td>
+                <td class="py-3.5 px-4 font-medium">
+                  <a href="/klientet/<%= c.customerId %>" class="hover:underline text-slate-900 dark:text-white">
+                    <%= c.customer ? c.customer.companyName : '-' %>
+                  </a>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-xs text-amber-700 dark:text-amber-400">
+                  <%= c.serialNumber %>
+                </td>
+                <td class="py-3.5 px-4 text-xs font-semibold">
+                  <%= c.frequency %>
+                </td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                  €<%= (c.priceAnnual || 0).toLocaleString('de-DE') %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= new Date(c.endDate).toLocaleDateString('sq-AL') %>
+                </td>
+                <td class="py-3.5 px-4 text-xs">
+                  <%= c.technician ? c.technician.fullName : 'I pacaktuar' %>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full <%= 
+                    c.status === 'Aktive' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' :
+                    c.status === 'Skadon së shpejti' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400' :
+                    'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400'
+                  %>">
+                    <%= c.status %>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button type="button" onclick='openQuickView(<%- JSON.stringify({
+                      title: `Kontrata e Mirëmbajtjes ${c.number}`,
+                      subtitle: c.customer ? c.customer.companyName : "-",
+                      statusLabel: c.status,
+                      statusClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                      rows: [
+                        { label: "Numri Serik", value: c.serialNumber },
+                        { label: "Frekuenca", value: c.frequency },
+                        { label: "Çmimi Vjetor", value: `€${(c.priceAnnual || 0).toLocaleString('de-DE')}` },
+                        { label: "Skadon", value: new Date(c.endDate).toLocaleDateString('sq-AL') },
+                        { label: "Teknik", value: c.technician ? c.technician.fullName : "I pacaktuar" }
+                      ],
+                      viewUrl: `/mirembajtja/${c.id}`,
+                      editUrl: `/mirembajtja/${c.id}/ndrysho`,
+                      printUrl: `/mirembajtja/${c.id}/print`
+                    }).replace(/</g, '\\u003c').replace(/'/g, '&#39;') %>)' class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition" title="Pamje e Shpejtë">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                    <a href="/mirembajtja/<%= c.id %>/ndrysho" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition" title="Ndrysho Tekstet e Kontratës">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </a>
+                    <form action="/mirembajtja/<%= c.id %>/fshi" method="POST" class="inline" onsubmit="return confirm('A jeni të sigurt që dëshironi ta fshini këtë kontratë mirëmbajtjeje?');">
+                      <button type="submit" class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 dark:bg-slate-800 dark:hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition" title="Fshi Kontratën">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </form>
+                    <a href="/mirembajtja/<%= c.id %>/print" target="_blank" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition" title="Printo / PDF">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

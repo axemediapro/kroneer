@@ -1,0 +1,146 @@
+<div class="space-y-6 text-slate-800">
+  <!-- Koka Zyrtare KRONEER -->
+  <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-4">
+    <div>
+      <% const printLogo = (typeof company !== 'undefined' && company && company.logoUrl) ? company.logoUrl : (typeof company !== 'undefined' && company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+      <% if (printLogo) { %>
+        <div class="flex items-center justify-start mb-2">
+          <img src="<%= printLogo %>" alt="<%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+        </div>
+      <% } else { %>
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+            K
+          </div>
+          <div>
+            <h2 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= typeof company !== 'undefined' && company ? company.companyName : 'KRONEER' %></h2>
+            <p class="text-[10px] font-bold text-amber-600 tracking-wider"><%= typeof company !== 'undefined' && company && company.tagline ? company.tagline : 'Professional Elevator Solutions' %></p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <div class="text-right text-[11px] text-slate-600">
+      <div class="font-bold text-slate-900"><%= typeof company !== 'undefined' && company ? company.phone : '+383 38 500 600' %></div>
+      <div><%= typeof company !== 'undefined' && company ? company.email : 'info@kroneer-lifts.com' %></div>
+    </div>
+  </div>
+
+  <!-- Document Title & Header -->
+  <div class="border-b border-slate-300 pb-3 flex justify-between items-end">
+    <div>
+      <h1 class="text-lg font-extrabold uppercase tracking-tight text-slate-900">PROCESVERBAL I PRANIM-DORËZIMIT TEKNIK</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Dokument zyrtar teknik për pranimin dhe vënien në funksion të liftit</p>
+    </div>
+    <div class="text-right font-mono text-xs">
+      <div class="font-bold text-slate-900">SN: <%= handover.serialNumber %></div>
+      <div class="text-slate-500">Data: <%= new Date(handover.handoverDate).toLocaleDateString('sq-AL') %></div>
+    </div>
+  </div>
+
+  <!-- Project & Customer Table -->
+  <table class="w-full text-xs border border-slate-300">
+    <tr class="bg-slate-100">
+      <th class="border border-slate-300 p-2 text-left w-1/4">Projekti / Objekti</th>
+      <td class="border border-slate-300 p-2 font-bold"><%= handover.project ? handover.project.name : '-' %></td>
+      <th class="border border-slate-300 p-2 text-left w-1/4">Klienti / Investitori</th>
+      <td class="border border-slate-300 p-2 font-bold"><%= handover.customer ? handover.customer.companyName : '-' %></td>
+    </tr>
+    <tr>
+      <th class="border border-slate-300 p-2 text-left">Modeli i Liftit</th>
+      <td class="border border-slate-300 p-2"><%= handover.elevatorModel %></td>
+      <th class="border border-slate-300 p-2 text-left">Numri Serik</th>
+      <td class="border border-slate-300 p-2 font-mono font-bold"><%= handover.serialNumber %></td>
+    </tr>
+    <tr class="bg-slate-50">
+      <th class="border border-slate-300 p-2 text-left">Data e Instalimit</th>
+      <td class="border border-slate-300 p-2"><%= new Date(handover.installationDate).toLocaleDateString('sq-AL') %></td>
+      <th class="border border-slate-300 p-2 text-left">Data e Dorëzimit</th>
+      <td class="border border-slate-300 p-2"><%= new Date(handover.handoverDate).toLocaleDateString('sq-AL') %></td>
+    </tr>
+  </table>
+
+  <!-- Verification Points -->
+  <div class="space-y-2">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1">
+      Pikat e Kontrollit dhe Verifikimit Teknik
+    </h3>
+    
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.technicalInspection ? '✓' : ' ' %> ]</span>
+        <span>Inspektimi Teknik dhe Testimi Funksional</span>
+      </div>
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.safetyCheck ? '✓' : ' ' %> ]</span>
+        <span>Kontrolli i Sistemit të Sigurisë dhe Frenave</span>
+      </div>
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.documentationHanded ? '✓' : ' ' %> ]</span>
+        <span>Dorëzimi i Dokumentacionit dhe Pasaportës Teknike</span>
+      </div>
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.clientTrainingDone ? '✓' : ' ' %> ]</span>
+        <span>Trajnimi i Klientit / Personit Përgjegjës</span>
+      </div>
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.keysHanded ? '✓' : ' ' %> ]</span>
+        <span>Dorëzimi i Çelësave të Pajisjes dhe Panelit</span>
+      </div>
+      <div class="p-2 border border-slate-200 rounded flex items-center space-x-2">
+        <span class="font-bold">[ <%= handover.accessActivated ? '✓' : ' ' %> ]</span>
+        <span>Aktivizimi i Qasjes dhe Linjës Emergjente GSM</span>
+      </div>
+      <div class="col-span-2 p-2 border border-slate-300 bg-slate-50 rounded flex items-center space-x-2 font-bold">
+        <span>[ <%= handover.warrantyStarted ? '✓' : ' ' %> ]</span>
+        <span>Aktivizimi Zyrtar i Periudhës së Garancisë KRONEER</span>
+      </div>
+    </div>
+  </div>
+
+  <% if (handover.notes) { %>
+    <div class="text-xs">
+      <div class="font-bold text-slate-700 mb-1">Vërejtje & Shënime Teknike:</div>
+      <div class="p-2 bg-slate-50 border border-slate-200 rounded"><%= handover.notes %></div>
+    </div>
+  <% } %>
+
+  <!-- Declaration -->
+  <p class="text-[11px] text-slate-600 leading-relaxed italic border-t border-slate-200 pt-3">
+    Me nënshkrimin e këtij procesverbali, palët konfirmojnë se ashensori me karakteristikat e lartpërmendura është instaluar konform standardeve evropiane EN 81-20/50, është testuar me sukses dhe është dorëzuar në gjendje të rregullt pune.
+  </p>
+
+  <!-- Signatures Grid -->
+  <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>
+  <% const dorMaxW = Math.min(320, Math.round(stampH * 2.5)); %>
+  <% const dorBoxH = Math.max(80, stampH + 10); %>
+  <style>
+    .dor-rep-box  { height: <%=dorBoxH%>px; min-height: <%=dorBoxH%>px; }
+    .dor-rep-img  { height: <%=stampH%>px; max-height: <%=stampH%>px; max-width: <%=dorMaxW%>px; }
+    .dor-cli-box  { height: <%=dorBoxH%>px; min-height: <%=dorBoxH%>px; }
+  </style>
+  <div class="avoid-break grid grid-cols-2 gap-10 pt-6 mt-4 border-t border-slate-400">
+    <div class="text-center">
+      <p class="text-xs font-bold text-slate-900 mb-1">Për KRONEER — Professional Elevator Solutions</p>
+      <div class="dor-rep-box flex items-center justify-center border-b border-dashed border-slate-400">
+        <% if (handover.repSignatureData) { %>
+          <img src="<%= handover.repSignatureData %>" alt="Nënshkrim" class="max-h-16">
+        <% } else if (company && company.stampUrl) { %>
+          <img src="<%= company.stampUrl %>" alt="Vula & Nënshkrimi" class="dor-rep-img w-auto object-contain filter drop-shadow-sm">
+        <% } %>
+      </div>
+      <p class="text-xs font-bold text-slate-900 mt-1">KRONEER</p>
+      <p class="text-[10px] text-slate-400 mt-0.5">(Vula & Nënshkrimi Zyrtar)</p>
+    </div>
+
+    <div class="text-center">
+      <p class="text-xs font-bold text-slate-900 mb-1">Pranoi Klienti / Investitori</p>
+      <p class="text-[11px] text-slate-500 mb-2"><%= handover.clientSigneeName %></p>
+      <div class="dor-cli-box flex items-center justify-center border-b border-dashed border-slate-400">
+        <% if (handover.clientSignatureData) { %>
+          <img src="<%= handover.clientSignatureData %>" alt="Nënshkrim" class="max-h-16">
+        <% } %>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-1">(Nënshkrimi i Përfaqësuesit)</p>
+    </div>
+  </div>
+</div>

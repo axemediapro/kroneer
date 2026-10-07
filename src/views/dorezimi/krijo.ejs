@@ -1,0 +1,205 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/dorezimi" class="hover:text-amber-600 dark:hover:text-amber-400">Dorëzimi i Lifteve</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">Krijo Procesverbal</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Krijo Procesverbal të Pranim-Dorëzimit</h1>
+    </div>
+    <a href="/dorezimi" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form id="handoverForm" action="/dorezimi/krijo" method="POST" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-8">
+    <!-- Basic Project & Elevator Selection -->
+    <div class="space-y-4">
+      <h2 class="text-base font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-slate-700 flex items-center">
+        <i data-lucide="building" class="w-4 h-4 mr-2 text-amber-500"></i>
+        Të Dhënat e Projektit dhe Liftit
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Projekti *</label>
+          <select id="projectSelect" name="projectId" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Zgjidh Projektin --</option>
+            <% projects.forEach(p => { %>
+              <option value="<%= p.id %>" data-customer-id="<%= p.customerId %>" data-customer-name="<%= p.customer.companyName %>" <%= selectedInstallation && selectedInstallation.projectId === p.id ? 'selected' : '' %>>
+                <%= p.name %> (<%= p.customer.companyName %>)
+              </option>
+            <% }) %>
+          </select>
+          <input type="hidden" id="customerId" name="customerId" value="<%= selectedInstallation && selectedInstallation.project ? selectedInstallation.project.customerId : (projects[0] ? projects[0].customerId : '') %>">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Modeli i Liftit *</label>
+          <input type="text" id="elevatorModel" name="elevatorModel" required value="<%= selectedInstallation ? selectedInstallation.elevatorModel : '' %>" placeholder="p.sh. KRONEER ProPassenger 630 MRL" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Numri Serik i Liftit *</label>
+          <input type="text" id="serialNumber" name="serialNumber" required value="<%= selectedInstallation ? selectedInstallation.serialNumber : '' %>" placeholder="KR630-2026-XXXXX" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Data e Dorëzimit Zyrtar</label>
+          <input type="date" name="handoverDate" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 Mandatory Checkpoints -->
+    <div class="space-y-4">
+      <h2 class="text-base font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-slate-700 flex items-center">
+        <i data-lucide="check-square" class="w-4 h-4 mr-2 text-emerald-500"></i>
+        Pikat e Verifikimit dhe Pranim-Dorëzimit
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="technicalInspection" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Inspektimi Teknik</span>
+            <span class="text-xs text-slate-500">Testimet e funksionimit mekanik, shpejtësisë dhe ndalesave të sakta.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="safetyCheck" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Kontrolli i Sigurisë</span>
+            <span class="text-xs text-slate-500">Testimi i frenave të emergjencës, sensorëve të dyerve dhe butonit STOP.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="documentationHanded" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Dokumentacioni Teknik</span>
+            <span class="text-xs text-slate-500">Dorëzimi i pasaportës teknike, manualit të përdorimit dhe skemave elektrike.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="clientTrainingDone" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Trajnimi i Klientit</span>
+            <span class="text-xs text-slate-500">Udhëzimi i personit përgjegjës për operimin dhe procedurat e emergjencës.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="keysHanded" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Dorëzimi i Çelësave</span>
+            <span class="text-xs text-slate-500">Dorëzimi i plotë i çelësave të hapjes së dyerve dhe panelit të kontrollit.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer">
+          <input type="checkbox" name="accessActivated" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Aktivizimi i Qasjes</span>
+            <span class="text-xs text-slate-500">Lidhja e linjës së thirrjes emergjente dhe aktivizimi i kartelave RFID/kodit.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start p-3.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer md:col-span-2">
+          <input type="checkbox" name="warrantyStarted" checked class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 mt-0.5">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white block">Aktivizimi i Periudhës së Garancisë Zyrtare</span>
+            <span class="text-xs text-slate-500">Fillimi zyrtar i periudhës së garancisë 24/36 mujore KRONEER.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Digital Signatures Pad -->
+    <div class="space-y-4">
+      <h2 class="text-base font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-slate-700 flex items-center">
+        <i data-lucide="edit-3" class="w-4 h-4 mr-2 text-amber-500"></i>
+        Nënshkrimet Digjitale
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Përfaqësuesi KRONEER -->
+        <div class="space-y-3">
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Emri i Përfaqësuesit të KRONEER *</label>
+          <input type="text" name="repSigneeName" required value="<%= currentUser ? currentUser.fullName : 'Përfaqësues KRONEER' %>" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none">
+          
+          <div>
+            <div class="flex items-center justify-between mb-1 text-xs text-slate-500">
+              <span>Nënshkrimi Digjital (Vizatoni me maush ose gisht):</span>
+              <button type="button" onclick="window.clearSignature('repCanvas')" class="text-amber-600 hover:underline">Pastro</button>
+            </div>
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900/60 p-1">
+              <canvas id="repCanvas" width="380" height="130" class="w-full h-32 bg-white dark:bg-slate-900 rounded cursor-crosshair"></canvas>
+            </div>
+            <input type="hidden" id="repSignatureData" name="repSignatureData">
+          </div>
+        </div>
+
+        <!-- Klienti / Investitori -->
+        <div class="space-y-3">
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Emri i Përfaqësuesit të Klientit *</label>
+          <input type="text" name="clientSigneeName" required placeholder="p.sh. Ing. Valon Berisha" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none">
+          
+          <div>
+            <div class="flex items-center justify-between mb-1 text-xs text-slate-500">
+              <span>Nënshkrimi Digjital i Klientit:</span>
+              <button type="button" onclick="window.clearSignature('clientCanvas')" class="text-amber-600 hover:underline">Pastro</button>
+            </div>
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900/60 p-1">
+              <canvas id="clientCanvas" width="380" height="130" class="w-full h-32 bg-white dark:bg-slate-900 rounded cursor-crosshair"></canvas>
+            </div>
+            <input type="hidden" id="clientSignatureData" name="clientSignatureData">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Vërejtje ose Shënime Shtesë të Procesverbalit</label>
+      <textarea name="notes" rows="3" placeholder="Pajisjet e dorëzuara, numri i çelësave, kushtet e ambientit..." class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+    </div>
+
+    <!-- Submit Buttons -->
+    <div class="pt-6 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <a href="/dorezimi" class="px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 rounded-lg transition shadow-sm flex items-center">
+        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
+        Konfirmo dhe Gjenero Procesverbalin
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Dynamic Project Selection Customer ID Handler
+  document.getElementById('projectSelect').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    if (selected && selected.dataset.customerId) {
+      document.getElementById('customerId').value = selected.dataset.customerId;
+    }
+  });
+
+  // Attach signature submission
+  document.getElementById('handoverForm').addEventListener('submit', function() {
+    const repCanvas = document.getElementById('repCanvas');
+    const clientCanvas = document.getElementById('clientCanvas');
+    if (repCanvas) {
+      document.getElementById('repSignatureData').value = repCanvas.toDataURL('image/png');
+    }
+    if (clientCanvas) {
+      document.getElementById('clientSignatureData').value = clientCanvas.toDataURL('image/png');
+    }
+  });
+</script>

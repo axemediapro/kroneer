@@ -1,0 +1,136 @@
+<header class="topbar sticky top-0 z-30 flex items-center justify-between h-16 px-4 lg:px-8 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+  <div class="flex items-center gap-3">
+    <!-- Mobile Hamburger Toggle -->
+    <button id="mobile-menu-btn" type="button" class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Global Search Trigger -->
+    <button id="search-trigger-btn" type="button" class="flex items-center gap-3 px-3.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 text-sm transition-all shadow-inner">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <span class="hidden sm:inline">Kërko në të gjithë sistemin...</span>
+      <span class="sm:hidden">Kërko...</span>
+      <kbd class="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-slate-700/60 rounded border border-slate-600 text-slate-300">Ctrl K</kbd>
+    </button>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <!-- Quick Create Button -->
+    <% if (!currentUser || (currentUser.role !== 'TEKNIK' && currentUser.role !== 'MENAXHER_PROJEKTI')) { %>
+    <a href="/ofertat/krijo" class="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      <span>+ Ofertë e Re</span>
+    </a>
+    <% } %>
+
+    <!-- Dark / Light Mode Toggle -->
+    <button id="theme-toggle-btn" type="button" title="Ndrysho modalitetin e dritës/errësirës" class="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors">
+      <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+    </button>
+
+    <!-- Qendra e Njoftimeve (Notification Center) -->
+    <div class="relative" x-data="{ open: false }">
+      <button @click="open = !open" type="button" class="relative p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <% if (unreadNotifCount > 0) { %>
+          <span id="notif-badge-count" class="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-slate-950 bg-amber-400 rounded-full animate-bounce">
+            <%= unreadNotifCount %>
+          </span>
+        <% } %>
+      </button>
+
+      <!-- Dropdown i njoftimeve -->
+      <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl z-50 overflow-hidden">
+        <div class="p-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold text-slate-200">Njoftimet</h3>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30"><%= unreadNotifCount %> të reja</span>
+          </div>
+          <button type="button" onclick="markAllNotificationsRead()" class="text-xs text-slate-400 hover:text-amber-400">Shëno të gjitha si të lexuara</button>
+        </div>
+
+        <div id="notifications-list" class="max-h-80 overflow-y-auto divide-y divide-slate-800/60">
+          <% if (recentNotifications && recentNotifications.length > 0) { %>
+            <% recentNotifications.forEach(n => { %>
+              <div id="notif-<%= n.id %>" class="p-3 hover:bg-slate-800/50 transition-colors flex gap-3 items-start <%= !n.isRead ? 'bg-amber-500/5' : '' %>">
+                <div class="mt-0.5">
+                  <% if (n.type === 'warning') { %>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span>
+                  <% } else if (n.type === 'error') { %>
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 block"></span>
+                  <% } else if (n.type === 'success') { %>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 block"></span>
+                  <% } else { %>
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 block"></span>
+                  <% } %>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold text-slate-200"><%= n.title %></h4>
+                    <span class="text-[10px] text-slate-500"><%= timeAgo(n.createdAt) %></span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-0.5 leading-relaxed"><%= n.message %></p>
+                  <% if (n.linkUrl) { %>
+                    <a href="<%= n.linkUrl %>" class="inline-block mt-1 text-[11px] text-amber-400 hover:text-amber-300 font-medium">Shiko detajet &rarr;</a>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="p-6 text-center text-xs text-slate-400">Nuk keni asnjë njoftim për momentin.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Global Search Modal (Ctrl+K) -->
+<div id="search-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-start justify-center pt-20 px-4">
+  <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="p-4 border-b border-slate-800 flex items-center gap-3">
+      <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input id="global-search-input" type="text" placeholder="Kërko klientë, oferta, kontrata, fatura, numra serikë..." class="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none font-medium">
+      <button id="search-scan-btn" type="button" title="Skano me Kamerë (QR / Barkod)" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+      </button>
+      <button id="search-close-btn" type="button" class="text-xs text-slate-400 hover:text-slate-200 px-2 py-1 bg-slate-800 rounded border border-slate-700">ESC</button>
+    </div>
+    <div id="global-search-results" class="max-h-96 overflow-y-auto">
+      <p class="p-6 text-center text-sm text-slate-400">Shkruani për të kërkuar...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay: Skanimi me Kamerë ose Foto (QR / Barkod) -->
+<div id="barcode-scan-overlay" class="hidden fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+  <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Skano QR / Barkod</h3>
+      <button id="barcode-scan-close-btn" type="button" class="text-slate-400 hover:text-slate-200">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Zgjedhja: Kamera Tani ose Foto nga Kompjuteri -->
+    <div id="barcode-scan-choice" class="p-6 space-y-3">
+      <button id="barcode-scan-choose-camera" type="button" class="w-full flex items-center gap-3 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-sm font-semibold transition-colors">
+        <i data-lucide="camera" class="w-5 h-5 text-amber-400"></i>
+        Skano Tani me Kamerë
+      </button>
+      <button id="barcode-scan-choose-file" type="button" class="w-full flex items-center gap-3 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-sm font-semibold transition-colors">
+        <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
+        Zgjidh Foto nga Kompjuteri
+      </button>
+      <input id="barcode-scan-file-input" type="file" accept="image/*" class="hidden">
+    </div>
+
+    <div id="barcode-scan-camera-wrap" class="hidden relative bg-black">
+      <video id="barcode-scan-video" class="w-full aspect-square object-cover" muted playsinline autoplay></video>
+      <div class="absolute inset-0 border-[3px] border-amber-400/60 m-8 rounded-xl pointer-events-none"></div>
+    </div>
+    <p id="barcode-scan-status" class="hidden p-3 text-center text-xs text-slate-400">Vendosni kodin brenda kornizës...</p>
+  </div>
+</div>

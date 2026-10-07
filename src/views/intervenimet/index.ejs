@@ -1,0 +1,152 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-100 font-mono tracking-tight">
+      INTERVENIMET NË TERREN & EKIPET
+    </h1>
+    <p class="text-xs text-slate-400 mt-1">
+      Regjistri i saktë i çdo intervenimi (montim, servis, mirëmbajtje, riparim) dhe ekipit të monterëve që ka qenë prezent
+    </p>
+  </div>
+
+  <div class="flex items-center gap-2 flex-wrap">
+    <a href="/intervenimet/krijo" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      <span>+ REGJISTRO INTERVENIM TË RI</span>
+    </a>
+  </div>
+</div>
+
+<!-- Filtruesi -->
+<div class="mb-6 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+  <form method="GET" action="/intervenimet" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+    <div>
+      <input type="text" name="search" value="<%= filters.search %>" placeholder="Kërko me nr, titull, lokacion..." class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+    </div>
+    <div>
+      <select name="tipi" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjitha llojet</option>
+        <% types.forEach(t => { %>
+          <option value="<%= t %>" <%= filters.tipi === t ? 'selected' : '' %>><%= t %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <select name="statusi" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Të gjitha statuset</option>
+        <% statuses.forEach(s => { %>
+          <option value="<%= s %>" <%= filters.statusi === s ? 'selected' : '' %>><%= s %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <select name="puntoriId" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <option value="te-gjitha">Sipas Punëtorit / Monterit</option>
+        <% employees.forEach(e => { %>
+          <option value="<%= e.id %>" <%= filters.puntoriId == e.id ? 'selected' : '' %>><%= e.firstName %> <%= e.lastName %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" class="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-md transition-all">Filtro</button>
+      <% if (filters.search || filters.tipi !== 'te-gjitha' || filters.statusi !== 'te-gjitha' || filters.puntoriId !== 'te-gjitha') { %>
+        <a href="/intervenimet?all=true" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-xl flex items-center justify-center border border-slate-700">Pastro</a>
+      <% } %>
+    </div>
+  </form>
+</div>
+
+<!-- Tabela e Intervenimeve -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="border-b border-slate-800 bg-slate-950/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+          <th class="p-4">Nr. & Titulli i Intervenimit</th>
+          <th class="p-4">Projekti / Lokacioni</th>
+          <th class="p-4">Menaxheri Përgjegjës</th>
+          <th class="p-4">Ekipi i Monterëve që ka qenë</th>
+          <th class="p-4">Data & Orari</th>
+          <th class="p-4">Statusi</th>
+          <th class="p-4 text-right">Veprime</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/60">
+        <% if (interventions && interventions.length > 0) { %>
+          <% interventions.forEach(inv => { %>
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="p-4">
+                <a href="/intervenimet/<%= inv.id %>" class="font-bold text-slate-100 hover:text-amber-400 block text-sm">
+                  <%= inv.title %>
+                </a>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="font-mono text-[10px] text-amber-400 font-bold"><%= inv.number %></span>
+                  <span class="text-slate-500">•</span>
+                  <span class="text-[10px] text-slate-400 font-medium"><%= inv.type %></span>
+                </div>
+              </td>
+              <td class="p-4">
+                <% if (inv.project) { %>
+                  <a href="/projektet/<%= inv.project.id %>" class="font-bold text-slate-200 hover:text-cyan-400 block">
+                    <%= inv.project.name %>
+                  </a>
+                  <span class="text-[10px] text-slate-500 font-mono"><%= inv.project.customer ? (inv.project.customer.companyName || inv.project.customer.firstName) : '-' %></span>
+                <% } else { %>
+                  <span class="text-slate-300 font-medium"><%= inv.location || '-' %></span>
+                <% } %>
+              </td>
+              <td class="p-4">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full <%= inv.projectManager ? 'bg-cyan-400' : 'bg-slate-600' %>"></span>
+                  <span class="font-bold text-slate-200 text-xs"><%= inv.projectManager ? inv.projectManager.fullName : 'Pa Menaxher' %></span>
+                </div>
+              </td>
+              <td class="p-4">
+                <% if (inv.teamWorkers && inv.teamWorkers.length > 0) { %>
+                  <div class="flex flex-wrap gap-1 max-w-xs">
+                    <% inv.teamWorkers.forEach(tw => { %>
+                      <a href="/puntoret/<%= tw.employee.id %>" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-[10px] border border-slate-700 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <%= tw.employee.firstName %> <%= tw.employee.lastName %>
+                      </a>
+                    <% }); %>
+                  </div>
+                <% } else { %>
+                  <span class="text-slate-500 text-[11px] italic">Pa ekip të specifikuar</span>
+                <% } %>
+              </td>
+              <td class="p-4 font-mono text-slate-300">
+                <span class="font-bold text-slate-100"><%= formatDate(inv.date) %></span>
+                <% if (inv.startTime) { %>
+                  <span class="text-slate-500 text-[10px] block font-mono"><%= inv.startTime %><%= inv.endTime ? ' - ' + inv.endTime : '' %></span>
+                <% } %>
+              </td>
+              <td class="p-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase <%= inv.status === 'Përfunduar' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (inv.status === 'Në Proces' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-300') %>">
+                  <%= inv.status %>
+                </span>
+              </td>
+              <td class="p-4 text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <a href="/track/<%= inv.trackingToken %>" target="_blank" title="Ndjekja Live Publike" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/20 transition-colors flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>Track</span>
+                  </a>
+                  <a href="/intervenimet/<%= inv.id %>" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors">
+                    Raporti →
+                  </a>
+                  <a href="/intervenimet/<%= inv.id %>/print" target="_blank" title="Printo Raportin" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="p-8 text-center text-slate-500">Nuk u gjet asnjë intervenim.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

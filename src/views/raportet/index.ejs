@@ -1,0 +1,235 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Raportet Analitike & Statistikat</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Përmbledhje e performancës së shitjeve, financave, instalimeve dhe mirëmbajtjes KRONEER</p>
+    </div>
+    <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      <i data-lucide="printer" class="w-4 h-4 mr-2"></i>
+      Printo Raportin
+    </button>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b border-slate-200 dark:border-slate-700">
+    <nav class="flex space-x-6 overflow-x-auto text-sm font-medium">
+      <a href="/raportet?tab=shitjet" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'shitjet' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="trending-up" class="w-4 h-4"></i>
+        <span>Raporti i Shitjeve</span>
+      </a>
+      <a href="/raportet?tab=lifta" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'lifta' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="layers" class="w-4 h-4"></i>
+        <span>Raporti i Lifteve</span>
+      </a>
+      <a href="/raportet?tab=financiar" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'financiar' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+        <span>Raporti Financiar</span>
+      </a>
+      <a href="/raportet?tab=projektet" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'projektet' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="hard-hat" class="w-4 h-4"></i>
+        <span>Raporti i Instalimeve</span>
+      </a>
+      <a href="/raportet?tab=mirembajtja" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'mirembajtja' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+        <span>Raporti i Servisit & Mirëmbajtjes</span>
+      </a>
+      <a href="/raportet?tab=modernizimi" class="pb-3 border-b-2 flex items-center space-x-2 <%= activeTab === 'modernizimi' ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' %>">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Raporti i Modernizimit</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- TAB 1: SHITJET -->
+  <% if (activeTab === 'shitjet') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Të Ardhurat nga Ofertat e Fituara</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">€<%= sales.totalRevenue.toLocaleString('de-DE') %></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Përqindja e Konvertimit</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= sales.conversionRate %>%</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Oferta të Fituara / Humbura</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
+            <span class="text-emerald-600"><%= sales.wonCount %></span> / <span class="text-rose-500"><%= sales.lostCount %></span>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vlera Mesatare e Shitjes</span>
+          <div class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">€<%= sales.avgSaleValue.toLocaleString('de-DE') %></div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4">Performanca Tremujore e Shitjeve KRONEER</h3>
+        <div class="h-72 flex items-end gap-3 border-b border-slate-200 dark:border-slate-700 px-3 pb-8" role="img" aria-label="Shitjet tremujore të ofertave të pranuara">
+          <% quarterlySales.forEach(quarter => { %>
+            <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
+              <span class="text-[10px] text-slate-500">€<%= quarter.value.toLocaleString('de-DE') %></span>
+              <div class="w-full max-w-16 rounded-t bg-amber-500/90" style="height:<%= quarter.heightPercent %>%"></div>
+              <span class="text-center text-[11px] font-semibold text-slate-600 dark:text-slate-300"><%= quarter.label %><br><span class="font-normal text-slate-500"><%= quarter.period %></span></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TAB 2: LIFTA -->
+  <% if (activeTab === 'lifta') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lifta Gjithsej në Katalog</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><%= elevatorsReport.elevators.length %> Modele</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Lifta të Instaluar & Dorëzuar</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= elevatorsReport.installedCount %> Lifta</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Lifta në Proces Montimi</span>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1"><%= elevatorsReport.inProgressCount %> Lifta</div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Katalogu i Modeleve dhe Çmimet Bazë</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-400 uppercase">
+              <tr>
+                <th class="p-3.5">Kodi</th>
+                <th class="p-3.5">Modeli</th>
+                <th class="p-3.5">Lloji</th>
+                <th class="p-3.5">Kapaciteti</th>
+                <th class="p-3.5">Shpejtësia</th>
+                <th class="p-3.5">Çmimi Bazë</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+              <% elevatorsReport.elevators.forEach(e => { %>
+                <tr>
+                  <td class="p-3.5 font-mono text-xs font-bold text-amber-600"><%= e.code %></td>
+                  <td class="p-3.5 font-bold text-slate-900 dark:text-white"><%= e.model %></td>
+                  <td class="p-3.5 text-xs"><%= e.type %></td>
+                  <td class="p-3.5 font-bold"><%= e.capacityKg %> KG (<%= e.personsCount %> persona)</td>
+                  <td class="p-3.5 font-mono text-xs"><%= e.speed %> m/s</td>
+                  <td class="p-3.5 font-extrabold text-slate-900 dark:text-white">€<%= (e.basePrice || 0).toLocaleString('de-DE') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TAB 3: FINANCIAR -->
+  <% if (activeTab === 'financiar') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Faturuar Gjithsej</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">€<%= financial.totalInvoiced.toLocaleString('de-DE') %></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Pagesa të Arkëtuara</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1">€<%= financial.totalPaid.toLocaleString('de-DE') %></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Borxhi i Mbetur (Për t'u arkëtuar)</span>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1">€<%= financial.totalDebt.toLocaleString('de-DE') %></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-rose-500 uppercase tracking-wider">Fatura të Vonuara</span>
+          <div class="text-2xl font-extrabold text-rose-600 mt-1">€<%= financial.overdueAmount.toLocaleString('de-DE') %> (<%= financial.overdueCount %> fatura)</div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Përmbledhje Tatimore dhe TVSH</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">TVSH e llogaritur me normën standarde 18% të Kosovës.</p>
+        <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg flex items-center justify-between">
+          <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">TVSH Totale e Deklaruar (18%):</span>
+          <span class="text-xl font-extrabold text-amber-600">€<%= financial.totalVat.toLocaleString('de-DE') %></span>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TAB 4: PROJEKTET -->
+  <% if (activeTab === 'projektet') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Projekte Gjithsej</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><%= projectsReport.total %> Projekte</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Projekte Aktive (Në Punim)</span>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1"><%= projectsReport.active %> Projekte</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Projekte të Përfunduara</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= projectsReport.completed %> Projekte</div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TAB 5: MIREMBAJTJA -->
+  <% if (activeTab === 'mirembajtja') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kontrata Aktive Mirëmbajtjeje</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><%= maintenanceReport.active %> Kontrata</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Skadojnë së Shpejti</span>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1"><%= maintenanceReport.expiring %> Kontrata</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-rose-500 uppercase tracking-wider">Kërkesa Servisi të Hapura</span>
+          <div class="text-2xl font-extrabold text-rose-600 mt-1"><%= maintenanceReport.openTickets %> Tiketa</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Vizita Teknike të Kryera</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= maintenanceReport.completedVisits || 0 %> Vizita</div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TAB 6: MODERNIZIMI -->
+  <% if (activeTab === 'modernizimi') { %>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Projekte Modernizimi Gjithsej</span>
+          <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><%= modernizationReport.total %> Projekte</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Në Ekzekutim</span>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1"><%= modernizationReport.active %> Projekte</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Të Përfunduara</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= modernizationReport.completed %> Projekte</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs font-semibold text-violet-500 uppercase tracking-wider">Vlera Totale</span>
+          <div class="text-2xl font-extrabold text-violet-600 mt-1">€<%= (modernizationReport.totalValue || 0).toLocaleString('de-DE') %></div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>

@@ -1,0 +1,78 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <a href="/dokumentet" class="hover:text-amber-600 dark:hover:text-amber-400">Dokumentet</a>
+        <span>/</span>
+        <span class="text-slate-900 dark:text-slate-200">Ngarko Dokument</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Ngarko / Regjistro Dokument të Ri</h1>
+    </div>
+    <a href="/dokumentet" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+      Kthehu
+    </a>
+  </div>
+
+  <form action="/dokumentet/krijo" method="POST" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Titulli i Dokumentit *</label>
+        <input type="text" name="title" required placeholder="p.sh. Certifikata CE e Përputhshmërisë — Model KRONEER 630" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Lloji i Dokumentit *</label>
+        <select name="documentType" required class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <% types.forEach(t => { %>
+            <option value="<%= t %>"><%= t %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Madhësia e Skedarit</label>
+        <input type="text" name="fileSize" value="2.4 MB" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div x-data="quickCustomerModal()">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Klienti Ndërlidhës</label>
+        <div class="flex items-center gap-2">
+          <select name="customerId" x-ref="customerSelect" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="">-- Pa Klient të Ndërlidhur --</option>
+            <% customers.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.companyName %></option>
+            <% }) %>
+          </select>
+          <button type="button" @click="openModal()" title="Shto Klient të Ri" class="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition-all">+</button>
+        </div>
+        <%- include('../partials/quick-customer-modal') %>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Projekti Ndërlidhës</label>
+        <select name="projectId" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <option value="">-- Pa Projekt të Ndërlidhur --</option>
+          <% projects.forEach(p => { %>
+            <option value="<%= p.id %>"><%= p.name %> (<%= p.number %>)</option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Linku / URL e Skedarit</label>
+        <input type="text" name="fileUrl" value="/uploads/dokument_teknik.pdf" placeholder="https://... ose /uploads/..." class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <a href="/dokumentet" class="px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+        Anulo
+      </a>
+      <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 rounded-lg transition shadow-sm flex items-center">
+        <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+        Regjistro Dokumentin
+      </button>
+    </div>
+  </form>
+</div>

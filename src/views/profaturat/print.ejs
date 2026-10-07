@@ -1,0 +1,109 @@
+<!-- Koka Zyrtare e Profaturës -->
+<div class="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
+  <div>
+    <% const printLogo = (company && company.logoUrl) ? company.logoUrl : (company && company.logoDarkBgUrl ? company.logoDarkBgUrl : null); %>
+    <% if (printLogo) { %>
+      <div class="flex items-center justify-start mb-2">
+        <img src="<%= printLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" style="height: 48px; width: auto; max-width: 100%; object-fit: contain; display: block;">
+      </div>
+    <% } else { %>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-black flex items-center justify-center text-lg font-mono">
+          K
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-widest text-slate-950 font-mono"><%= company.companyName %></h1>
+          <p class="text-[10px] font-bold text-amber-600"><%= company.tagline %></p>
+        </div>
+      </div>
+    <% } %>
+    <div class="text-[11px] text-slate-600 space-y-0.5">
+      <div><%= company.address %>, <%= company.city %> • NUI: <%= company.taxNumber %></div>
+      <div>Tel: <%= company.phone %> • Email: <%= company.email %></div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
+      PROFATURË ME ETAPA
+    </span>
+    <div class="text-lg font-black font-mono text-slate-950"><%= proforma.number %></div>
+    <div class="text-xs text-slate-600 mt-1">Data: <strong class="text-slate-900"><%= formatDate(proforma.date) %></strong></div>
+    <div class="text-xs text-slate-600">Afati: <strong class="text-slate-900"><%= formatDate(proforma.dueDate) %></strong></div>
+  </div>
+</div>
+
+<div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs">
+  <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider block mb-1">FATURUAR PËR:</span>
+  <h3 class="text-sm font-bold text-slate-900"><%= proforma.customer.companyName %></h3>
+  <div class="text-slate-700 mt-1">Personi Kontaktues: <%= proforma.customer.contactPerson || '-' %></div>
+  <div class="text-slate-700">Adresa: <%= proforma.customer.address || '-' %>, <%= proforma.customer.city || '-' %></div>
+  <div class="text-slate-700">NUI: <%= proforma.customer.taxNumber || '-' %></div>
+</div>
+
+<!-- Tabela e Etapave të Profaturës -->
+<table class="w-full text-left text-xs border border-slate-300 mb-6">
+  <thead class="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
+    <tr>
+      <th class="p-2.5 border-r border-slate-300 text-center w-12">Etapa</th>
+      <th class="p-2.5 border-r border-slate-300">Përshkrimi i Etapës së Ekzekutimit</th>
+      <th class="p-2.5 border-r border-slate-300 text-center w-24">Përqindja</th>
+      <th class="p-2.5 border-r border-slate-300 text-right w-32">Shuma (€)</th>
+      <th class="p-2.5 text-center w-28">Statusi</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-200">
+    <% proforma.items.forEach((it, idx) => { %>
+      <tr>
+        <td class="p-2.5 text-center font-mono border-r border-slate-200 text-slate-600"><%= idx + 1 %></td>
+        <td class="p-2.5 border-r border-slate-200 font-bold text-slate-900"><%= it.description %></td>
+        <td class="p-2.5 text-center font-mono border-r border-slate-200 font-bold"><%= it.percentage %>%</td>
+        <td class="p-2.5 text-right font-mono font-bold border-r border-slate-200 text-slate-900"><%= formatCurrency(it.amount) %></td>
+        <td class="p-2.5 text-center font-bold text-[10px] <%= it.isPaid ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50' %>">
+          <%= it.isPaid ? 'PAGUAR' : 'NË PRITJE' %>
+        </td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+
+<!-- Totali & Banka -->
+<div class="grid grid-cols-2 gap-6 text-xs mb-8">
+  <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 space-y-1">
+    <span class="font-bold text-slate-900 block mb-1">TË DHËNAT PËR PAGESË:</span>
+    <div>Banka: <strong><%= company.bankName %></strong></div>
+    <div>IBAN: <strong class="font-mono"><%= company.iban %></strong></div>
+    <div>SWIFT: <strong class="font-mono"><%= company.swift %></strong></div>
+    
+    <% if (company.bankName2 && company.iban2) { %>
+      <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+        <div>Banka: <strong><%= company.bankName2 %></strong></div>
+        <div>IBAN: <strong class="font-mono"><%= company.iban2 %></strong></div>
+        <% if (company.swift2) { %><div>SWIFT: <strong class="font-mono"><%= company.swift2 %></strong></div><% } %>
+      </div>
+    <% } %>
+
+    <% if (company.bankName3 && company.iban3) { %>
+      <div class="mt-2 pt-2 border-t border-slate-300 border-dashed">
+        <div>Banka: <strong><%= company.bankName3 %></strong></div>
+        <div>IBAN: <strong class="font-mono"><%= company.iban3 %></strong></div>
+        <% if (company.swift3) { %><div>SWIFT: <strong class="font-mono"><%= company.swift3 %></strong></div><% } %>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
+    <div class="flex justify-between text-slate-700">
+      <span>Totali i Profaturës:</span>
+      <span class="font-mono font-bold"><%= formatCurrency(proforma.totalAmount) %></span>
+    </div>
+    <div class="flex justify-between text-slate-700">
+      <span>Paguar deri tani:</span>
+      <span class="font-mono font-bold text-emerald-600"><%= formatCurrency(proforma.paidAmount) %></span>
+    </div>
+    <div class="flex justify-between pt-2 border-t border-slate-300 font-black text-slate-950">
+      <span>Mbetur për arkëtim:</span>
+      <span class="font-mono text-sm"><%= formatCurrency(proforma.totalAmount - proforma.paidAmount) %></span>
+    </div>
+  </div>
+</div>

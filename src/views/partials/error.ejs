@@ -1,0 +1,15 @@
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+  <div class="w-20 h-20 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-6 shadow-xl">
+    <span class="text-3xl font-black font-mono"><%= statusCode || 500 %></span>
+  </div>
+  <h1 class="text-2xl font-bold text-slate-100 mb-2"><%= pageTitle %></h1>
+  <p class="text-slate-400 max-w-md mb-8 text-sm leading-relaxed"><%= errorMessage %></p>
+  <div class="flex items-center gap-4">
+    <a href="/paneli" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-amber-500/20">
+      Kthehu te Paneli Kryesor
+    </a>
+    <button type="button" onclick="history.back()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-sm border border-slate-700 transition-all">
+      Kthehu Prapa
+    </button>
+  </div>
+</div>
