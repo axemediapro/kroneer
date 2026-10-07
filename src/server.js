@@ -8,6 +8,7 @@ import { renderError } from './lib/render.js';
 import { generalLimiter, securityHeaders, blockSensitivePaths, csrfOriginCheck } from './lib/security.js';
 import { auth } from './modules/auth/routes.js';
 import { dashboard } from './modules/dashboard/routes.js';
+import { mountLegacyRoutes } from './lib/legacyBridge.js';
 
 const app = new Hono();
 
@@ -38,6 +39,7 @@ app.use(csrfOriginCheck);
 app.get('/', (c) => c.redirect(c.get('session').user ? '/paneli' : '/kycu'));
 app.route('/', auth);
 app.route('/', dashboard);
+mountLegacyRoutes(app);
 
 app.notFound((c) =>
   renderError(c, 404, 'Faqja nuk u gjet - 404', 'Faqja që kërkuat nuk ekziston ose mund të jetë zhvendosur.',

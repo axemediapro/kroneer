@@ -34,3 +34,5 @@ export async function getCompanySettings() {
 export const invalidateCompanySettings = () => {
   cache = null;
 };
+
+globalThis.__invalidateCompanySettings = invalidateCompanySettings;
