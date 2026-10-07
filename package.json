@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "build": "prisma generate && npm run build:css",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --minify",
-    "seed": "node prisma/seed.js",
+    "seed": "node prisma/seed.cjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
