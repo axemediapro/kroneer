@@ -16,7 +16,7 @@
         Hub i Modernizimit
       </a>
       <% if (typeof canManage !== 'undefined' && canManage) { %>
-      <a href="/pjeset-rezerve/krijo" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition">
+      <a href="/pjeset-rezerve/krijo<%= filters.tab === 'modernizim' ? '?tipi=produkt' : (filters.tab === 'sherbime' ? '?tipi=sherbim' : '') %>" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition">
         <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
         Regjistro Artikull / Shërbim
       </a>

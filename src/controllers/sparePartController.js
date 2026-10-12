@@ -10,6 +10,29 @@ async function resolveSupplier(body) {
   return { supplierId: null, supplier: body.supplier ? body.supplier.trim() : null };
 }
 
+const ITEM_TYPES = {
+  pjese: { label: 'Pjesë Rezervë', prefix: 'KR-PJ', categories: ['Mekanike', 'Elektrike', 'Hidraulike', 'Elektronike', 'Dyer', 'Siguri', 'Interier'] },
+  produkt: { label: 'Produkt', prefix: 'KR-PR', categories: ['Modernizim'] },
+  sherbim: { label: 'Shërbim', prefix: 'KR-SH', categories: ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis'] }
+};
+
+function resolveType(value) {
+  return ITEM_TYPES[value] ? value : 'pjese';
+}
+
+async function generatePartNumber(prefix) {
+  const existing = await prisma.sparePart.findMany({
+    where: { partNumber: { startsWith: `${prefix}-` } },
+    select: { partNumber: true }
+  });
+  let max = 0;
+  for (const { partNumber } of existing) {
+    const n = parseInt(partNumber.slice(prefix.length + 1), 10);
+    if (!isNaN(n) && n > max) max = n;
+  }
+  return `${prefix}-${String(max + 1).padStart(4, '0')}`;
+}
+
 class SparePartController {
   static async getIndex(req, res) {
     try {
@@ -95,42 +118,45 @@ class SparePartController {
 
   static async getCreate(req, res) {
     const suppliers = await prisma.supplier.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
-    const categories = [
-      'Mekanike',
-      'Elektrike',
-      'Hidraulike',
-      'Elektronike',
-      'Dyer',
-      'Siguri',
-      'Interier',
-      'Modernizim',
-      'Shërbime Inxhinierike'
-    ];
     res.render('pjeset-rezerve/krijo', {
       pageTitle: 'Regjistro Pjesë, Produkt ose Shërbim të Ri - KRONEER',
-      categories,
+      itemTypes: ITEM_TYPES,
+      selectedType: resolveType(req.query.tipi),
       suppliers
     });
   }
 
   static async postCreate(req, res) {
     try {
-      const { partNumber, name, category, compatibleElevators, stockQty, minStockQty, purchasePrice, sellingPrice, location } = req.body;
+      const { name, category, compatibleElevators, stockQty, minStockQty, purchasePrice, sellingPrice, location } = req.body;
+      const type = resolveType(req.body.itemType);
+      const config = ITEM_TYPES[type];
+      const isService = type === 'sherbim';
+      const safeCategory = config.categories.includes(category) ? category : config.categories[0];
+      const manualCode = req.body.partNumber ? req.body.partNumber.trim() : '';
 
-      const part = await prisma.sparePart.create({
-        data: {
-          partNumber: partNumber.trim(),
-          name: name.trim(),
-          category: category || 'Mekanike',
-          compatibleElevators: compatibleElevators ? compatibleElevators.trim() : null,
-          stockQty: parseInt(stockQty) || 0,
-          minStockQty: parseInt(minStockQty) || 2,
-          purchasePrice: parseFloat(purchasePrice) || 0,
-          sellingPrice: parseFloat(sellingPrice) || 0,
-          ...(await resolveSupplier(req.body)),
-          location: location ? location.trim() : null
+      let part;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          part = await prisma.sparePart.create({
+            data: {
+              partNumber: manualCode || await generatePartNumber(config.prefix),
+              name: name.trim(),
+              category: safeCategory,
+              compatibleElevators: compatibleElevators ? compatibleElevators.trim() : null,
+              stockQty: isService ? 0 : (parseInt(stockQty) || 0),
+              minStockQty: isService ? 0 : (parseInt(minStockQty) || 2),
+              purchasePrice: parseFloat(purchasePrice) || 0,
+              sellingPrice: parseFloat(sellingPrice) || 0,
+              ...(await resolveSupplier(req.body)),
+              location: isService ? null : (location ? location.trim() : null)
+            }
+          });
+          break;
+        } catch (e) {
+          if (e.code !== 'P2002' || manualCode || attempt === 2) throw e;
         }
-      });
+      }
 
       await ActivityService.log({
         userId: req.session.user?.id,
@@ -145,7 +171,7 @@ class SparePartController {
       res.redirect('/pjeset-rezerve');
     } catch (err) {
       console.error('Gabim në regjistrimin e artikullit:', err);
-      req.flash('error', 'Nuk u regjistrua artikulli (kontrolloni nëse kodi/numri i pjesës ekziston tashmë).');
+      req.flash('error', 'Nuk u regjistrua artikulli (kontrolloni nëse kodi i dhënë ekziston tashmë).');
       res.redirect('/pjeset-rezerve/krijo');
     }
   }
