@@ -10,10 +10,16 @@ async function resolveSupplier(body) {
   return { supplierId: null, supplier: body.supplier ? body.supplier.trim() : null };
 }
 
+const OTHER_PART = 'Tjetër';
+const OTHER_PRODUCT = 'Tjetër (Produkt)';
+const OTHER_SERVICE = 'Tjetër (Shërbim)';
+const MODERNIZATION_CATEGORIES = ['Modernizim', OTHER_PRODUCT];
+const SERVICE_CATEGORIES = ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis', OTHER_SERVICE];
+
 const ITEM_TYPES = {
-  pjese: { label: 'Pjesë Rezervë', prefix: 'KR-PJ', categories: ['Mekanike', 'Elektrike', 'Hidraulike', 'Elektronike', 'Dyer', 'Siguri', 'Interier'] },
-  produkt: { label: 'Produkt', prefix: 'KR-PR', categories: ['Modernizim'] },
-  sherbim: { label: 'Shërbim', prefix: 'KR-SH', categories: ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis'] }
+  pjese: { label: 'Pjesë Rezervë', prefix: 'KR-PJ', categories: ['Mekanike', 'Elektrike', 'Hidraulike', 'Elektronike', 'Dyer', 'Siguri', 'Interier', OTHER_PART] },
+  produkt: { label: 'Produkt', prefix: 'KR-PR', categories: ['Modernizim', OTHER_PRODUCT] },
+  sherbim: { label: 'Shërbim', prefix: 'KR-SH', categories: ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis', OTHER_SERVICE] }
 };
 
 function resolveType(value) {
@@ -42,11 +48,11 @@ class SparePartController {
       if (category) {
         where.category = category;
       } else if (tab === 'modernizim') {
-        where.category = 'Modernizim';
+        where.category = { in: MODERNIZATION_CATEGORIES };
       } else if (tab === 'sherbime') {
-        where.category = { in: ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis'] };
+        where.category = { in: SERVICE_CATEGORIES };
       } else if (tab === 'pjese') {
-        where.category = { notIn: ['Modernizim', 'Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis'] };
+        where.category = { notIn: [...MODERNIZATION_CATEGORIES, ...SERVICE_CATEGORIES] };
       }
 
       if (search) {
@@ -78,8 +84,8 @@ class SparePartController {
       const lowStockCount = allParts.filter(p => p.stockQty > 0 && p.stockQty <= p.minStockQty).length;
       const outOfStockCount = allParts.filter(p => p.stockQty === 0).length;
 
-      const modernizationCount = allParts.filter(p => p.category === 'Modernizim').length;
-      const serviceCount = allParts.filter(p => ['Shërbime Inxhinierike', 'Shërbime Teknike', 'Servis'].includes(p.category)).length;
+      const modernizationCount = allParts.filter(p => MODERNIZATION_CATEGORIES.includes(p.category)).length;
+      const serviceCount = allParts.filter(p => SERVICE_CATEGORIES.includes(p.category)).length;
       const partsCount = allParts.length - modernizationCount - serviceCount;
 
       const categories = [
@@ -90,8 +96,13 @@ class SparePartController {
         'Dyer',
         'Siguri',
         'Interier',
+        OTHER_PART,
         'Modernizim',
-        'Shërbime Inxhinierike'
+        OTHER_PRODUCT,
+        'Shërbime Inxhinierike',
+        'Shërbime Teknike',
+        'Servis',
+        OTHER_SERVICE
       ];
 
       res.render('pjeset-rezerve/index', {
@@ -294,10 +305,10 @@ class SparePartController {
             sellingPrice: p.sellingPrice,
             purchasePrice: p.purchasePrice,
             stockQty: p.stockQty,
-            unit: p.category === 'Modernizim' ? 'komplet' : (p.category.includes('Shërbim') ? 'shërbim' : 'copë'),
+            unit: MODERNIZATION_CATEGORIES.includes(p.category) ? 'komplet' : (p.category.includes('Shërbim') ? 'shërbim' : 'copë'),
             description: p.compatibleElevators ? `${p.partNumber} - Për: ${p.compatibleElevators}` : p.partNumber,
             isService: p.category.includes('Shërbim'),
-            isModernization: p.category === 'Modernizim'
+            isModernization: MODERNIZATION_CATEGORIES.includes(p.category)
           }))
         });
       }
@@ -323,10 +334,10 @@ class SparePartController {
         sellingPrice: p.sellingPrice,
         purchasePrice: p.purchasePrice,
         stockQty: p.stockQty,
-        unit: p.category === 'Modernizim' ? 'komplet' : (p.category.includes('Shërbim') ? 'shërbim' : 'copë'),
+        unit: MODERNIZATION_CATEGORIES.includes(p.category) ? 'komplet' : (p.category.includes('Shërbim') ? 'shërbim' : 'copë'),
         description: p.compatibleElevators ? `${p.partNumber} - Për: ${p.compatibleElevators}` : p.partNumber,
         isService: p.category.includes('Shërbim'),
-        isModernization: p.category === 'Modernizim'
+        isModernization: MODERNIZATION_CATEGORIES.includes(p.category)
       }));
 
       return res.json({

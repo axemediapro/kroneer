@@ -106,7 +106,7 @@
     function apply() {
       var key = form.querySelector('input[name="itemType"]:checked').value;
       var t = types[key];
-      select.innerHTML = t.categories.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+      select.innerHTML = t.categories.map(function (c) { return '<option value="' + c + '">' + c.replace(/ \(.*\)$/, '') + '</option>'; }).join('');
       hint.textContent = t.prefix;
       nameLabel.textContent = 'Emri i ' + (key === 'pjese' ? 'Pjesës Rezervë' : key === 'produkt' ? 'Produktit' : 'Shërbimit') + ' *';
       form.querySelectorAll('[data-stock-field]').forEach(function (el) {

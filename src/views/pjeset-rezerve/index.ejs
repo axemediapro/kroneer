@@ -192,9 +192,9 @@
                   <% } %>
                 </td>
                 <td class="py-3 px-4">
-                  <% if (p.category === 'Modernizim') { %>
+                  <% if (p.category === 'Modernizim' || p.category === 'Tjetër (Produkt)') { %>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                      Modernizim
+                      <%= p.category === 'Modernizim' ? 'Modernizim' : 'Produkt' %>
                     </span>
                   <% } else if (p.category && p.category.includes('Shërbim')) { %>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
