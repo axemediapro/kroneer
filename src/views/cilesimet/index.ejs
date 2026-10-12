@@ -17,7 +17,19 @@
   activeTab: '<%= activeTab || "kompania" %>',
   isCreateUserModalOpen: false,
   isEditUserModalOpen: false,
+  newUserRole: 'MENAXHER_PROJEKTI',
   editUserData: { id: null, fullName: '', username: '', email: '', phone: '', role: 'SHITJE' },
+  roleDescription(role) {
+    const descriptions = {
+      ADMINISTRATOR: 'Qasje e plotë në të gjitha modulet dhe administrimin e përdoruesve.',
+      MENAXHER: 'Qasje e gjerë në punën e kompanisë, pa administrimin e përdoruesve.',
+      MENAXHER_PROJEKTI: 'Menaxhon projektet, ndërhyrjet dhe ekipin e vet.',
+      TEKNIK: 'Qasje për punë në terren dhe ndërhyrjet ku është caktuar.',
+      SHITJE: 'Menaxhon klientët, ofertat dhe kontratat.',
+      FINANCE: 'Menaxhon faturat, pagesat dhe financat.'
+    };
+    return descriptions[role] || '';
+  },
   openEditModal(user) {
     this.editUserData = { ...user };
     this.isEditUserModalOpen = true;
@@ -493,6 +505,33 @@
         </button>
       </div>
     </form>
+
+    <form action="/cilesimet/njesite" method="POST" class="mt-6 p-5 rounded-2xl border border-slate-800 bg-slate-900/50 space-y-3">
+      <div>
+        <h3 class="text-sm font-black text-slate-100">Njësitë matëse (oferta &amp; fatura)</h3>
+        <p class="text-xs text-slate-400 mt-1">Një njësi për rresht (p.sh. copë, shërbim, m, ore). Shfaqen si zgjedhje te artikujt e ofertave dhe faturave.</p>
+      </div>
+      <textarea name="units" rows="6" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono text-sm"><%= (settings.units || 'copë\nshërbim\nm\nm²\nore\nkomplet\nkg') %></textarea>
+      <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm">Ruaj njësitë</button>
+    </form>
+    <form action="/cilesimet/turnstile" method="POST" class="mt-6 p-5 rounded-2xl border border-slate-800 bg-slate-900/50 space-y-4">
+      <div>
+        <h3 class="text-sm font-black text-slate-100">Cloudflare Turnstile (verifikimi anti-robot)</h3>
+        <p class="text-xs text-slate-400 mt-1">Çelësat merren nga Cloudflare Dashboard → Turnstile. Përdoren te format publike (p.sh. Raporto Defekt). Pa çelësa përdoren çelësat testues, që nuk mbrojnë.</p>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Site Key</label>
+        <input type="text" name="turnstileSiteKey" value="<%= settings.turnstileSiteKey || '' %>" autocomplete="off" placeholder="0x4AAAAAA..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Secret Key <span class="font-normal text-slate-500"><%= settings.turnstileSecretKey ? '(e ruajtur — lëre bosh për ta mbajtur)' : '(nuk është vendosur)' %></span></label>
+        <input type="password" name="turnstileSecretKey" value="" autocomplete="new-password" placeholder="<%= settings.turnstileSecretKey ? '••••••••••••' : '0x4AAAAAA...' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono text-sm">
+      </div>
+      <% if (settings.turnstileSecretKey) { %>
+      <label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" name="clearSecret" value="1"> Fshi Secret Key-n e ruajtur</label>
+      <% } %>
+      <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm">Ruaj çelësat</button>
+    </form>
   </div>
 
   <!-- TAB 2: Prefiksat e Numërimit Automatik -->
@@ -586,7 +625,7 @@
       <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-950/40">
         <div>
           <h2 class="text-base font-bold text-slate-100">Llogaritë e Përdoruesve & Rolet</h2>
-          <p class="text-xs text-slate-400">Menaxhoni qasjen e stafit sipas departamenteve: Administrator, Shitje, Financë, Menaxher Projekti, Teknik</p>
+          <p class="text-xs text-slate-400">Menaxhoni qasjen e stafit sipas rolit: Administrator, Menaxher, Menaxher i Projektit, Punëtor dhe rolet e specializuara</p>
         </div>
         <button type="button" @click="isCreateUserModalOpen = true" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
@@ -645,6 +684,10 @@
                   <% } else if (u.role === 'FINANCE') { %>
                     <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                       FINANCË
+                    </span>
+                  <% } else if (u.role === 'MENAXHER') { %>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                      MENAXHER
                     </span>
                   <% } else if (u.role === 'MENAXHER_PROJEKTI') { %>
                     <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
@@ -829,16 +872,20 @@
   </div>
 
   <!-- MODAL: Shto Përdorues të Ri -->
-  <div x-show="isCreateUserModalOpen" x-cloak class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div @click.away="isCreateUserModalOpen = false" class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-        <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
-          <span>➕</span> Regjistro Përdorues të Ri
-        </h3>
-        <button type="button" @click="isCreateUserModalOpen = false" class="text-slate-400 hover:text-slate-200 text-sm">✕</button>
+  <div x-show="isCreateUserModalOpen" x-cloak @keydown.escape.window="isCreateUserModalOpen = false" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6">
+    <div role="dialog" aria-modal="true" aria-labelledby="create-user-modal-title" @click.away="isCreateUserModalOpen = false" class="w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl shadow-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+      <div class="p-5 sm:p-6 border-b border-slate-800 flex items-start justify-between gap-4 bg-gradient-to-br from-amber-500/10 via-slate-950/60 to-slate-900">
+        <div class="flex items-center gap-3">
+          <span class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-400/25 text-amber-300 flex items-center justify-center text-xl">＋</span>
+          <div>
+            <h3 id="create-user-modal-title" class="text-base font-bold text-slate-100">Regjistro përdorues të ri</h3>
+            <p class="text-xs text-slate-400 mt-1">Krijoni llogarinë dhe caktoni qasjen sipas rolit të punës.</p>
+          </div>
+        </div>
+        <button type="button" aria-label="Mbyll dritaren" @click="isCreateUserModalOpen = false" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">✕</button>
       </div>
 
-      <form action="/cilesimet/perdoruesit/krijo" method="POST" class="p-5 space-y-4 text-xs">
+      <form action="/cilesimet/perdoruesit/krijo" method="POST" class="p-5 sm:p-6 space-y-5 text-xs overflow-y-auto">
         <div>
           <label class="block font-semibold text-slate-300 mb-1">Emri dhe Mbiemri *</label>
           <input type="text" name="fullName" required placeholder="p.sh. Alban Berisha" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400">
@@ -851,7 +898,7 @@
           </div>
           <div>
             <label class="block font-semibold text-slate-300 mb-1">Fjalëkalimi *</label>
-            <input type="password" name="password" required placeholder="Të paktën 6 karaktere" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+            <input type="password" name="password" required minlength="6" placeholder="Të paktën 6 karaktere" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
           </div>
         </div>
 
@@ -866,23 +913,29 @@
           </div>
         </div>
 
-        <div>
-          <label class="block font-semibold text-slate-300 mb-1">Roli në Sistem *</label>
-          <select name="role" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
-            <option value="SHITJE">Shitje & CRM (Ofertues)</option>
-            <option value="FINANCE">Financë & Kontabilitet (Fatura / Pagesa)</option>
-            <option value="MENAXHER_PROJEKTI">Menaxher Projekti & Instalimi</option>
-            <option value="TEKNIK">Teknik & Mirëmbajtje</option>
-            <option value="ADMINISTRATOR">Administrator (Qasje e Plotë)</option>
+        <div class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 space-y-2">
+          <label for="new-user-role" class="block font-semibold text-slate-200">Roli dhe qasja në sistem <span class="text-rose-400">*</span></label>
+          <select id="new-user-role" name="role" x-model="newUserRole" required class="w-full px-3.5 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+            <optgroup label="Rolet kryesore">
+              <option value="ADMINISTRATOR">Administrator — qasje e plotë</option>
+              <option value="MENAXHER">Menaxher — qasje e gjerë, pa përdoruesit</option>
+              <option value="TEKNIK">Punëtor — qasje në terren</option>
+              <option value="MENAXHER_PROJEKTI">Menaxher i projektit — projekti dhe ekipi i vet</option>
+            </optgroup>
+            <optgroup label="Rolet e specializuara">
+              <option value="SHITJE">Shitje & CRM (Ofertues)</option>
+              <option value="FINANCE">Financë & Kontabilitet (Fatura / Pagesa)</option>
+            </optgroup>
           </select>
+          <p class="text-[11px] leading-relaxed text-slate-400" x-text="roleDescription(newUserRole)"></p>
         </div>
 
-        <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+        <div class="pt-4 border-t border-slate-800 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
           <button type="button" @click="isCreateUserModalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700">
             Anulo
           </button>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20">
-            Regjistro Përdoruesin
+          <button type="submit" class="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all">
+            Krijo llogarinë
           </button>
         </div>
       </form>
@@ -919,11 +972,12 @@
         <div>
           <label class="block font-semibold text-slate-300 mb-1">Roli në Sistem</label>
           <select name="role" x-model="editUserData.role" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-400 font-semibold">
+            <option value="ADMINISTRATOR">Administrator — qasje e plotë</option>
+            <option value="MENAXHER">Menaxher — qasje e gjerë, pa përdoruesit</option>
+            <option value="TEKNIK">Punëtor — qasje në terren</option>
+            <option value="MENAXHER_PROJEKTI">Menaxher i projektit — ekipi i vet</option>
             <option value="SHITJE">Shitje & CRM (Ofertues)</option>
             <option value="FINANCE">Financë & Kontabilitet (Fatura / Pagesa)</option>
-            <option value="MENAXHER_PROJEKTI">Menaxher Projekti & Instalimi</option>
-            <option value="TEKNIK">Teknik & Mirëmbajtje</option>
-            <option value="ADMINISTRATOR">Administrator (Qasje e Plotë)</option>
           </select>
         </div>
 

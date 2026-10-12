@@ -14,8 +14,8 @@
       <% } %>
       <div class="text-xs text-slate-600 mt-2 space-y-0.5">
         <p><strong><%= company ? company.name : 'KRONEER SH.P.K.' %></strong></p>
-        <p><%= company ? company.address : 'Prishtinë, Kosovë' %></p>
-        <p>Tel: <%= company ? company.phone : '+383 38 500 600' %> • Email: <%= company ? company.email : 'service@kroneer.com' %></p>
+        <p><%= company.address %>, <%= company.city %> • NUI: <%= company.taxNumber %></p>
+        <p>Tel: <%= company.phone %> • Email: <%= company.email %></p>
       </div>
     </div>
 

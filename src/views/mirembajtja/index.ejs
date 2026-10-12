@@ -100,7 +100,7 @@
                   <%= c.frequency %>
                 </td>
                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                  €<%= (c.priceAnnual || 0).toLocaleString('de-DE') %>
+                  <%= (c.priceAnnual || 0).toLocaleString('de-DE') %> €
                 </td>
                 <td class="py-3.5 px-4 text-xs">
                   <%= new Date(c.endDate).toLocaleDateString('sq-AL') %>
@@ -127,7 +127,7 @@
                       rows: [
                         { label: "Numri Serik", value: c.serialNumber },
                         { label: "Frekuenca", value: c.frequency },
-                        { label: "Çmimi Vjetor", value: `€${(c.priceAnnual || 0).toLocaleString('de-DE')}` },
+                        { label: "Çmimi Vjetor", value: `${(c.priceAnnual || 0).toLocaleString('de-DE')} €` },
                         { label: "Skadon", value: new Date(c.endDate).toLocaleDateString('sq-AL') },
                         { label: "Teknik", value: c.technician ? c.technician.fullName : "I pacaktuar" }
                       ],

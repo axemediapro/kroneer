@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
       base = baseRates[elevatorType][capacityKg];
     }
 
-    // Shtesa për kate mbi 5 (+€600 për çdo kat shtesë)
+    // Shtesa për kate mbi 5 (+600 € për çdo kat shtesë)
     if (floorsCount > 5) {
       base += (floorsCount - 5) * 650;
     }
@@ -125,14 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const elVat = document.getElementById('summary-vat-price');
     const elTotal = document.getElementById('summary-total-price');
 
-    if (elBase) elBase.innerText = '€' + base.toLocaleString('de-DE');
-    if (elOpts) elOpts.innerText = '€' + optionsTotal.toLocaleString('de-DE');
-    if (elInst) elInst.innerText = '€' + installPrice.toLocaleString('de-DE');
-    if (elTrans) elTrans.innerText = '€' + transportPrice.toLocaleString('de-DE');
-    if (elDisc) elDisc.innerText = '-€' + discount.toLocaleString('de-DE');
-    if (elSub) elSub.innerText = '€' + subtotal.toLocaleString('de-DE');
-    if (elVat) elVat.innerText = '€' + vatAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 });
-    if (elTotal) elTotal.innerText = '€' + total.toLocaleString('de-DE', { minimumFractionDigits: 2 });
+    if (elBase) elBase.innerText = base.toLocaleString('de-DE') + ' €';
+    if (elOpts) elOpts.innerText = optionsTotal.toLocaleString('de-DE') + ' €';
+    if (elInst) elInst.innerText = installPrice.toLocaleString('de-DE') + ' €';
+    if (elTrans) elTrans.innerText = transportPrice.toLocaleString('de-DE') + ' €';
+    if (elDisc) elDisc.innerText = '-' + discount.toLocaleString('de-DE') + ' €';
+    if (elSub) elSub.innerText = subtotal.toLocaleString('de-DE') + ' €';
+    if (elVat) elVat.innerText = vatAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + ' €';
+    if (elTotal) elTotal.innerText = total.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + ' €';
 
     // Përditëso fushat e fshehura në formë për dërgim në server
     const hiddenBase = document.getElementById('hidden-basePrice');

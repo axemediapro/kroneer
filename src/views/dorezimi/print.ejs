@@ -19,10 +19,7 @@
         </div>
       <% } %>
     </div>
-    <div class="text-right text-[11px] text-slate-600">
-      <div class="font-bold text-slate-900"><%= typeof company !== 'undefined' && company ? company.phone : '+383 38 500 600' %></div>
-      <div><%= typeof company !== 'undefined' && company ? company.email : 'info@kroneer-lifts.com' %></div>
-    </div>
+    <div class="text-right text-[11px] text-slate-600 space-y-0.5"><div><%= company.address %>, <%= company.city %></div><div>NUI: <%= company.taxNumber %></div><div>Tel: <%= company.phone %> • Email: <%= company.email %></div></div>
   </div>
 
   <!-- Document Title & Header -->

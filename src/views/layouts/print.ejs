@@ -5,14 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dokument Zyrtar - KRONEER' %></title>
   
-  <link rel="stylesheet" href="/css/style.css?v=6">
+  <link rel="stylesheet" href="/css/style.css?v=14">
   
   <style>
+    @page { size: A4; margin: 6mm; }
+    .page-a4.twoup { padding: 0 !important; width: 198mm !important; max-width: 198mm !important; border-radius: 0; }
+    .twoup-copy { position: relative; height: 138mm; overflow: hidden; box-sizing: border-box; padding: 6mm 8mm; }
+    .twoup-inner { width: 138.9%; transform: scale(.72); transform-origin: top left; }
+    .twoup-cut { border-top: 1px dashed #64748b; margin: 2mm 0; }
     @media print {
+      .page-a4.twoup { min-height: 0 !important; display: block !important; }
       .no-print { display: none !important; }
       body { background: #fff !important; color: #000 !important; font-size: 10pt; }
       .page-a4 { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; min-height: 100vh !important; display: flex !important; flex-direction: column !important; }
     }
+    .print-toolbar { background:#0f172a !important; border:1px solid #334155 !important; color:#f1f5f9 !important; opacity:1 !important; }
+    .print-toolbar h2 { color:#fff !important; }
+    .print-toolbar p { color:#cbd5e1 !important; }
+    .print-toolbar .pt-btn { background:#334155 !important; border:1px solid #64748b !important; color:#fff !important; opacity:1 !important; }
+    .print-toolbar .pt-btn:hover { background:#475569 !important; }
+    .print-toolbar .pt-btn svg { color:#fbbf24 !important; }
     /* Mos e ndaj këtë element mes dy faqeve të PDF-së */
     .avoid-break {
       break-inside: avoid;
@@ -25,10 +37,10 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-900 font-sans p-4 sm:p-8">
+<body class="text-slate-900 font-sans p-4 sm:p-8" style="background:#e2e8f0;">
 
   <!-- Print Toolbar (Top) -->
-  <div class="no-print max-w-4xl mx-auto mb-6 flex items-center justify-between bg-slate-900 text-slate-100 p-4 rounded-xl shadow-lg border border-slate-800">
+  <div class="no-print print-toolbar max-w-4xl mx-auto mb-6 flex items-center justify-between p-4 rounded-xl shadow-lg">
     <div class="flex items-center gap-3">
       <% const printToolbarLogo = (typeof company !== 'undefined' && company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : (typeof company !== 'undefined' && company && company.logoUrl ? company.logoUrl : null); %>
       <% if (printToolbarLogo) { %>
@@ -48,19 +60,25 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         <span>Shkarko Direkt si PDF</span>
       </button>
-      <button type="button" onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-lg border border-slate-700 shadow transition-all flex items-center gap-2">
+      <button type="button" onclick="window.print()" class="pt-btn px-4 py-2 font-bold text-xs rounded-lg shadow transition-all flex items-center gap-2">
         <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
         <span>Printo (A4)</span>
       </button>
-      <button type="button" onclick="window.history.back()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-lg border border-slate-700 transition-all">
+      <button type="button" onclick="window.history.back()" class="pt-btn px-4 py-2 font-medium text-xs rounded-lg transition-all">
         Kthehu Prapa
       </button>
     </div>
   </div>
 
   <!-- A4 Document Body -->
-  <div class="page-a4 max-w-4xl mx-auto bg-white border border-slate-300 shadow-xl rounded-lg p-8 sm:p-12 text-slate-900">
-    <%- body %>
+  <div class="page-a4 <%= (typeof twoUp !== 'undefined' && twoUp) ? 'twoup' : '' %> max-w-4xl mx-auto bg-white border border-slate-300 shadow-xl rounded-lg p-8 sm:p-12 text-slate-900">
+    <% if (typeof twoUp !== 'undefined' && twoUp) { %>
+      <div class="twoup-copy"><div class="twoup-inner"><%- body %></div></div>
+      <div class="twoup-cut"></div>
+      <div class="twoup-copy"><div class="twoup-inner"><%- body %></div></div>
+    <% } else { %>
+      <%- body %>
+    <% } %>
   </div>
 
   <!-- Dynamic PDF Script Loader -->

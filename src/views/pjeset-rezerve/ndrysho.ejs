@@ -79,9 +79,7 @@
 
       <div>
         <label class="block text-sm font-semibold text-slate-300 mb-2">Furnitori</label>
-        <input type="text" name="supplier" value="<%= part.supplier || '' %>"
-          placeholder="p.sh. Wittur, Fermator"
-          class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        <select name="supplierId" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"><option value="">— Pa furnitor —</option><% suppliers.forEach(s => { %><option value="<%= s.id %>" <%= part.supplierId === s.id ? 'selected' : '' %>><%= s.name %></option><% }) %></select><a href="/furnitoret/krijo" class="text-[11px] text-amber-500 hover:text-amber-400 mt-1 inline-block">+ Furnitor i ri</a><% if (!part.supplierId && part.supplier) { %><div class="text-[11px] text-slate-400 mt-1">Aktual: <%= part.supplier %></div><% } %>
       </div>
 
       <div>

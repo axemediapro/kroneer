@@ -35,7 +35,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['system-ui','-apple-system','Segoe UI','Roboto','Helvetica Neue','Arial','sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        mono: ['system-ui','-apple-system','Segoe UI','Roboto','Helvetica Neue','Arial','sans-serif'],
       }
     },
   },

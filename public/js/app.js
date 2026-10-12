@@ -43,35 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.lucide.createIcons();
   }
 
-  // 1. Menaxhimi i Modalitetit të Ndritshëm / të Errët (Dark / Light Mode)
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const themeIcon = document.getElementById('theme-icon');
-  const html = document.documentElement;
-
-  // Kontrollo preferencën e ruajtur (default është dark)
-  const savedTheme = localStorage.getItem('kroneer_theme') || 'dark';
-  if (savedTheme === 'light') {
-    html.classList.remove('dark');
-    html.classList.add('light');
-  } else {
-    html.classList.remove('light');
-    html.classList.add('dark');
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      if (html.classList.contains('dark')) {
-        html.classList.remove('dark');
-        html.classList.add('light');
-        localStorage.setItem('kroneer_theme', 'light');
-      } else {
-        html.classList.remove('light');
-        html.classList.add('dark');
-        localStorage.setItem('kroneer_theme', 'dark');
-      }
-    });
-  }
-
   // 2. Menaxhimi i Menysë Anësore në Celular (Mobile Sidebar Drawer)
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const sidebar = document.getElementById('main-sidebar');
@@ -517,6 +488,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Funksione Ndihmëse Globale
 
+// Shtetet dhe qytetet për formularët e klientit (Kosovë, Shqipëri, Mal i Zi, Maqedoni e Veriut)
+window.KR_GEO = {
+  'Kosovë': ['Deçan', 'Dragash', 'Ferizaj', 'Fushë Kosovë', 'Gjakovë', 'Gjilan', 'Gllogoc', 'Graçanicë', 'Hani i Elezit', 'Istog', 'Junik', 'Kaçanik', 'Kamenicë', 'Klinë', 'Kllokot', 'Leposaviq', 'Lipjan', 'Malishevë', 'Mamushë', 'Mitrovicë', 'Mitrovicë e Veriut', 'Novobërdë', 'Obiliq', 'Partesh', 'Pejë', 'Podujevë', 'Prishtinë', 'Prizren', 'Rahovec', 'Ranillug', 'Shtërpcë', 'Shtime', 'Skenderaj', 'Suharekë', 'Viti', 'Vushtrri', 'Zubin Potok', 'Zveçan'],
+  'Shqipëri': ['Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Elbasan', 'Fier', 'Korçë', 'Berat', 'Lushnjë', 'Kavajë', 'Pogradec', 'Gjirokastër', 'Sarandë', 'Lezhë', 'Kukës', 'Peshkopi', 'Krujë', 'Laç', 'Burrel', 'Rrëshen', 'Përmet', 'Tepelenë', 'Gramsh', 'Librazhd', 'Cërrik', 'Ballsh', 'Patos', 'Fushë-Krujë', 'Vorë', 'Himarë'],
+  'Mal i Zi': ['Podgoricë', 'Nikšić', 'Herceg Novi', 'Pljevlja', 'Budva', 'Bar', 'Ulqin', 'Cetinje', 'Bijelo Polje', 'Berane', 'Kotor', 'Tivat', 'Rožaje', 'Plav', 'Gucia', 'Tuz', 'Danilovgrad', 'Mojkovac', 'Kolašin', 'Žabljak'],
+  'Maqedonia e Veriut': ['Shkup', 'Tetovë', 'Gostivar', 'Ohër', 'Strugë', 'Manastir', 'Kumanovë', 'Veles', 'Prilep', 'Strumicë', 'Koçan', 'Kërçovë', 'Dibër', 'Resnjë', 'Shtip', 'Gjevgjeli', 'Radoviš', 'Negotinë']
+};
+
+window.krGeoCountries = function() { return Object.keys(window.KR_GEO); };
+
+window.krGeoCities = function(country, current) {
+  const list = (window.KR_GEO[country] || []).slice();
+  if (current && !list.includes(current)) list.unshift(current);
+  return list;
+};
+
+// Plotëson qytetin dhe rrugën nga vendndodhja e shfletuesit (përmes serverit për gjeokodim)
+window.krGeoLocate = async function(form) {
+  if (!navigator.geolocation) throw new Error('Shfletuesi nuk e mbështet vendndodhjen.');
+  const pos = await new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('Leja për vendndodhje u refuzua ose nuk është e disponueshme.')), { enableHighAccuracy: true, timeout: 15000 });
+  });
+  const res = await fetch(`/klientet/api/reverse-geocode?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || 'Adresa nuk u gjet.');
+  if (data.country && window.KR_GEO[data.country]) form.country = data.country;
+  const known = window.KR_GEO[form.country] || [];
+  const match = known.find(c => c.toLowerCase() === (data.city || '').toLowerCase());
+  form.city = match || data.city || form.city;
+  form.address = data.address || form.address;
+};
+
+// Komponent Alpine për fushat Shteti / Qyteti / Rruga në faqen e klientit
+function geoPicker(country, city, address) {
+  return {
+    form: { country: country || 'Kosovë', city: city || '', address: address || '' },
+    locating: false,
+    geoError: '',
+    countries() { return window.krGeoCountries(); },
+    cities() { return window.krGeoCities(this.form.country, this.form.city); },
+    onCountryChange() { this.form.city = ''; },
+    async locate() {
+      this.locating = true; this.geoError = '';
+      try { await window.krGeoLocate(this.form); } catch (e) { this.geoError = e.message; } finally { this.locating = false; }
+    }
+  };
+}
+
+// Combobox me kërkim automatik për zgjedhjen e klientit. Punon mbi <select name="customerId"> në të njëjtin prind,
+// ndaj quickCustomerModal() vazhdon të funksionojë pa ndryshime.
+function customerCombo() {
+  return {
+    q: '', open: false, rect: { top: 0, left: 0, width: 300 }, sel: null, hi: 0,
+    init() {
+      this.sel = this.$el.parentElement.querySelector('select[name="customerId"]');
+      this.sync();
+      this.sel.addEventListener('change', () => this.sync());
+    },
+    label(o) { return o.textContent.replace(/\s+/g, ' ').trim(); },
+    options() { return [...this.sel.options].filter(o => o.value); },
+    list() {
+      const q = this.q.trim().toLowerCase();
+      const all = this.options().map(o => ({ id: o.value, text: this.label(o) }));
+      return (q ? all.filter(o => o.text.toLowerCase().includes(q)) : all).slice(0, 50);
+    },
+    sync() {
+      const o = this.sel.selectedOptions[0];
+      this.q = o && o.value ? this.label(o) : '';
+    },
+    show(el) {
+      const r = el.getBoundingClientRect();
+      this.rect = { top: r.bottom + 4, left: r.left, width: Math.max(r.width, 300) };
+      this.open = true;
+    },
+    typed() {
+      if (this.sel.value) { this.sel.value = ''; }
+      this.hi = 0;
+    },
+    choose(o) {
+      this.sel.value = o.id;
+      this.q = o.text;
+      this.open = false;
+      this.sel.dispatchEvent(new Event('change'));
+    },
+    enter() {
+      const l = this.list();
+      if (l[this.hi]) this.choose(l[this.hi]);
+    },
+    blur() {
+      setTimeout(() => { this.open = false; if (!this.sel.value) this.q = ''; }, 200);
+    }
+  };
+}
 // Komponent Alpine i ripërdorshëm: popup për shtim të shpejtë të klientit (Individ / Biznes Privat)
 // kudo që zgjidhet klienti (fatura, oferta, kontrata, projekte, etj.). Kërkon një <select x-ref="customerSelect">
 // brenda të njëjtit x-data.
@@ -533,10 +597,19 @@ function quickCustomerModal() {
       { name: 'VIP/Partner', percent: 20 }
     ],
     form: {},
+    locating: false,
+    geoError: '',
+    countries() { return window.krGeoCountries(); },
+    cities() { return window.krGeoCities(this.form.country, this.form.city); },
+    onCountryChange() { this.form.city = ''; },
+    async locate() {
+      this.locating = true; this.geoError = '';
+      try { await window.krGeoLocate(this.form); } catch (e) { this.geoError = e.message; } finally { this.locating = false; }
+    },
     defaultForm() {
       return {
         kind: 'biznes', firstName: '', lastName: '', companyName: '', contactPerson: '',
-        taxNumber: '', businessNumber: '', phone: '', email: '', city: '', address: '',
+        taxNumber: '', businessNumber: '', phone: '', email: '', country: 'Kosovë', city: '', address: '',
         discountGroup: 'Standard', discountPercent: 0
       };
     },
@@ -547,6 +620,7 @@ function quickCustomerModal() {
     openModal() {
       this.form = this.defaultForm();
       this.error = '';
+      this.geoError = '';
       this.isOpen = true;
     },
     closeModal() {
@@ -556,6 +630,10 @@ function quickCustomerModal() {
       const isIndivid = this.form.kind === 'individ';
       if (isIndivid && (!this.form.firstName.trim() || !this.form.lastName.trim())) {
         this.error = 'Emri dhe Mbiemri janë të detyrueshëm.';
+        return;
+      }
+      if (isIndivid && !(this.form.phone || '').trim()) {
+        this.error = 'Numri i telefonit është i detyrueshëm për individin.';
         return;
       }
       if (!isIndivid && !this.form.companyName.trim()) {
@@ -583,6 +661,12 @@ function quickCustomerModal() {
         select.value = data.customer.id;
         select.dispatchEvent(new Event('change'));
         this.isOpen = false;
+        const acc = data.account;
+        if (acc && acc.created) {
+          alert(acc.tempPassword
+            ? `Llogaria e klientit u krijua.\nPërdoruesi: ${acc.username}\nFjalëkalimi i përkohshëm: ${acc.tempPassword}`
+            : `Llogaria e klientit u krijua (përdoruesi: ${acc.username}). Kodi i aktivizimit u dërgua me email.`);
+        }
       } catch (err) {
         this.error = 'Ndodhi një gabim në lidhje me serverin.';
       } finally {
@@ -770,3 +854,5 @@ function markAllNotificationsRead() {
       if (countBadge) countBadge.remove();
     });
 }
+
+

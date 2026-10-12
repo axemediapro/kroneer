@@ -9,6 +9,14 @@
   <p class="text-xs text-slate-400 mt-1">Ndryshoni vetëm të dhënat tuaja. Roli dhe emri i përdoruesit i cakton administratori.</p>
 </div>
 
+<% if (customer) { %>
+<div class="max-w-xl bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl mb-6">
+  <h2 class="text-sm font-black text-slate-100 mb-3">Logo e profilit</h2>
+  <% if (customer.logoUrl) { %><img src="<%= customer.logoUrl %>" alt="Logo" class="w-24 h-24 object-contain rounded-xl bg-white p-1 mb-3"><% } %>
+  <%- include('../partials/customer-logo-form', { customer, returnUrl: '/cilesimet/profili' }) %>
+</div>
+<% } %>
+
 <div class="max-w-xl bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl">
   <form action="/cilesimet/profili" method="POST" class="space-y-4 text-sm">
     <div>

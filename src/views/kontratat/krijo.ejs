@@ -82,7 +82,7 @@
     
     this.preamble = `Kjo Kontratë lidhet ndërmjet ${this.compName} me seli në ${this.compAddr}, ${this.compCity}, NUI: ${this.compTax} (në vijim: \'Shitësi / Kryesi i Punëve\'), dhe ${cust.name} me seli në ${cust.address}, ${cust.city}, NUI: ${cust.tax} (në vijim: \'Blerësi / Porositësi\').`;
     this.art1Text = `Shitësi merr përsipër furnizimin me pajisje, transportin, montimin profesional, testimin dinamik dhe dorëzimin e plotë funksional të sistemit të liftit: ${elev.model} për objektin \'${cust.building}\'.`;
-    this.art2Text = `Vlera totale e dakorduar kontraktuale është €${valFormatted} (përfshirë TVSH 18%). Kushtet e pagesës janë: ${this.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
+    this.art2Text = `Vlera totale e dakorduar kontraktuale është ${valFormatted} € (përfshirë TVSH 18%). Kushtet e pagesës janë: ${this.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
     this.art3Text = `Afati i dorëzimit të pajisjeve në kantier është deri më ${this.deliveryDate || 'sipas marrëveshjes'}. Përfundimi i montimit dhe testimit parashikohet më ${this.installationDate || 'sipas marrëveshjes'}. Periudha e Garancisë Inxhinierike është ${this.warrantyMonths || 24} Muaj nga dita e nënshkrimit të Procesverbalit të Dorëzimit Teknik.`;
   }
 }">
@@ -99,7 +99,7 @@
           <p class="text-slate-400">Të dhënat janë plotësuar automatikisht nga oferta e përzgjedhur.</p>
         </div>
       </div>
-      <span class="font-mono font-black text-amber-300 text-sm">€<%= selectedQuotation.total.toLocaleString('de-DE', {minimumFractionDigits: 2}) %></span>
+      <span class="font-mono font-black text-amber-300 text-sm"><%= selectedQuotation.total.toLocaleString('de-DE', {minimumFractionDigits: 2}) %> €</span>
     </div>
   <% } %>
 

@@ -1,4 +1,4 @@
-<div class="mb-6 flex items-center justify-between">
+﻿<div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-black text-slate-100 font-mono">REGJISTRO KLIENT TË RI</h1>
     <p class="text-xs text-slate-400 mt-1">Plotësoni të dhënat e kompanisë, kontaktit dhe specifikave të objektit</p>
@@ -55,7 +55,7 @@
 
       <div>
         <label class="block text-xs font-semibold text-slate-300 mb-1">Personi Kontaktues</label>
-        <input type="text" name="contactPerson" placeholder="p.sh. Ing. Sutki Aliu" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <input type="text" name="contactPerson" placeholder="p.sh. Filan Fisteku" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
       </div>
 
       <div>
@@ -82,22 +82,33 @@
         <label class="block text-xs font-semibold text-slate-300 mb-1">Uebfaqja</label>
         <input type="text" name="website" placeholder="www.kompania.com" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
       </div>
+      <div class="sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" x-data="geoPicker('Kosovë', '', '')">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Shteti</label>
+          <select name="country" x-model="form.country" @change="onCountryChange()" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <template x-for="c in countries()" :key="c"><option :value="c" x-text="c"></option></template>
+          </select>
+        </div>
 
-      <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Shteti</label>
-        <input type="text" name="country" value="Kosovë" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Qyteti</label>
+          <select name="city" x-model="form.city" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <option value="">-- Zgjidh qytetin --</option>
+            <template x-for="c in cities()" :key="c"><option :value="c" x-text="c" :selected="c === form.city"></option></template>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2 lg:col-span-3">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold text-slate-300">Adresa e Selisë</label>
+            <button type="button" @click="locate()" :disabled="locating" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 disabled:opacity-60">
+              <span x-text="locating ? 'Duke gjetur vendndodhjen...' : '📍 Përdor vendndodhjen time'"></span>
+            </button>
+          </div>
+          <input type="text" name="address" x-model="form.address" placeholder="Rruga, Numri, Ndërtesa" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <p x-show="geoError" x-cloak x-text="geoError" class="mt-1 text-[11px] text-rose-400"></p>
+        </div>
       </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Qyteti</label>
-        <input type="text" name="city" placeholder="p.sh. Prishtinë" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
-      </div>
-
-      <div class="sm:col-span-2">
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Adresa e Selisë</label>
-        <input type="text" name="address" placeholder="Rruga, Numri, Ndërtesa" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
-      </div>
-
       <div>
         <label class="block text-xs font-semibold text-slate-300 mb-1">Kodi Postar</label>
         <input type="text" name="postalCode" placeholder="10000" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
@@ -166,3 +177,4 @@
   </div>
 
 </form>
+

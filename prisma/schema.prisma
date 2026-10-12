@@ -14,7 +14,7 @@ model User {
   passwordHash String
   fullName     String
   email        String    @unique
-  role         String    @default("SHITJE") // ADMINISTRATOR, SHITJE, FINANCE, MENAXHER_PROJEKTI, TEKNIK
+  role         String    @default("SHITJE") // ADMINISTRATOR, MENAXHER, SHITJE, FINANCE, MENAXHER_PROJEKTI, TEKNIK
   avatar       String?
   phone        String?
   isActive     Boolean   @default(true)
@@ -59,6 +59,7 @@ model Customer {
   address         String?
   postalCode      String?
   notes           String?
+  logoUrl         String?
   discountGroup   String?   @default("Standard") // Standard, Bronz, Argjend, Ar, VIP/Partner
   discountPercent Float?    @default(0)
   
@@ -269,9 +270,28 @@ model SparePart {
   purchasePrice       Float     @default(0)
   sellingPrice        Float     @default(0)
   supplier            String?
+  supplierId          Int?
+  supplierRef         Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   location            String?   // Magazina A-1, Rafti 3
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+}
+
+model Supplier {
+  id            Int         @id @default(autoincrement())
+  name          String      @unique
+  contactPerson String?
+  phone         String?
+  email         String?
+  country       String?
+  city          String?
+  address       String?
+  taxNumber     String?
+  notes         String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  parts         SparePart[]
 }
 
 model Quotation {
@@ -486,6 +506,7 @@ model InvoiceItem {
   name        String
   description String?
   quantity    Float     @default(1)
+  unit        String    @default("copë")
   unitPrice   Float     @default(0)
   discount    Float     @default(0)
   vatRate     Float     @default(18)
@@ -822,6 +843,9 @@ model CompanySettings {
   logoDarkBgUrl  String?
   logoDarkBgSvg  String?
   stampUrl       String?
+  units          String   @default("copë\nshërbim\nm\nm²\nore\nkomplet\nkg")
+  turnstileSiteKey   String?
+  turnstileSecretKey String?
   stampHeight    Int      @default(80) // Madhësia/lartësia e vulës në px (p.sh. 40 - 250px)
   address        String   @default("Rruga Dëshmorët e Kombit, Nr. 45")
   city           String   @default("Prishtinë")

@@ -1,0 +1,29 @@
+# ==============================================================================
+# KRONEER PUBLIC ASSETS SECURITY (.htaccess)
+# ==============================================================================
+
+Options -Indexes
+ServerSignature Off
+
+# Blloko skedarët e fshehur
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Security Headers për Asetet Statike
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Caching për CSS, JS dhe Imazhe (30 Ditë)
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "max-age=2592000, public, immutable"
+    </FilesMatch>
+</IfModule>

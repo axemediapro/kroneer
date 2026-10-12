@@ -1,0 +1,13 @@
+<% const lgUrl = customer.logoUrl; %>
+<form action="/klientet/<%= customer.id %>/logo" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3 text-xs" x-data="{ err: '' }" @submit="if (!$refs.f.files.length) { $event.preventDefault(); err = 'Zgjidhni një skedar.'; }">
+  <input type="hidden" name="returnUrl" value="<%= returnUrl %>">
+  <input x-ref="f" type="file" name="logo" accept="image/png,image/jpeg"
+    @change="err=''; const f=$event.target.files[0]; if(!f) return; const u=URL.createObjectURL(f); const i=new Image(); i.onload=()=>{ if(i.width>2000||i.height>2000){ err='Maksimumi 2000x2000px (e juaja: '+i.width+'x'+i.height+').'; $event.target.value=''; } URL.revokeObjectURL(u); }; i.src=u;"
+    class="text-slate-300 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-slate-700 file:text-slate-100 file:font-bold">
+  <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black">Ngarko logon</button>
+  <% if (lgUrl) { %>
+  <button type="submit" formaction="/klientet/<%= customer.id %>/logo/fshi" formnovalidate formenctype="application/x-www-form-urlencoded" class="px-3 py-1.5 rounded-lg bg-slate-800 text-rose-300 font-bold">Hiq</button>
+  <% } %>
+  <span class="text-slate-500 w-full">JPG ose PNG, deri 2000x2000px. Kompresohet automatikisht pa humbje të dukshme cilësie.</span>
+  <span x-show="err" x-text="err" x-cloak class="text-rose-400 font-bold w-full"></span>
+</form>

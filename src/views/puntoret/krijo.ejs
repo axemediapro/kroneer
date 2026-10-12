@@ -8,12 +8,19 @@
     </div>
     <p class="text-xs text-slate-400 mt-1">Plotësoni të dhënat e punonjësit, orarin zyrtar të punës dhe llogaritjet financiare</p>
   </div>
-  <a href="/puntoret" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
-    Anulo
-  </a>
+  <% if (popupMode) { %>
+    <button type="button" onclick="window.parent.postMessage({ type: 'close-employee-modal' }, window.location.origin)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+      Mbyll
+    </button>
+  <% } else { %>
+    <a href="/puntoret" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+      Anulo
+    </a>
+  <% } %>
 </div>
 
-<form action="/puntoret/krijo" method="POST" x-data="{ createAccount: true }" class="space-y-6 max-w-4xl">
+<form action="<%= popupMode ? '/puntoret/krijo?popup=1' : '/puntoret/krijo' %>" method="POST" x-data="{ createAccount: true }" class="space-y-6 max-w-4xl">
+  <% if (popupMode) { %><input type="hidden" name="popupMode" value="1"><% } %>
   
   <!-- 1. Të Dhënat Personale -->
   <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
@@ -121,16 +128,24 @@
           <span class="text-[10px] text-slate-400 mt-1 block">Standardi fillestar: <code>kroneer123</code></span>
         </div>
 
-        <div>
-          <label class="block font-semibold text-slate-200 mb-1">Roli në Sistem <span class="text-rose-400">*</span></label>
-          <select name="accountRole" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-100 font-semibold focus:outline-none focus:border-amber-400">
-            <option value="MENAXHER_PROJEKTI">Menaxher Projekti & Ekipi (Shef)</option>
-            <option value="TEKNIK" selected>Teknik / Punëtor Terreni</option>
-            <option value="SHITJE">Shitje & CRM</option>
-            <option value="FINANCE">Financë</option>
-            <option value="ADMINISTRATOR">Administrator</option>
-          </select>
-        </div>
+        <% if (currentUser && currentUser.role === 'ADMINISTRATOR') { %>
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1">Roli në Sistem <span class="text-rose-400">*</span></label>
+            <select name="accountRole" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-100 font-semibold focus:outline-none focus:border-amber-400">
+              <option value="TEKNIK" selected>Punëtor / Teknik Terreni</option>
+              <option value="MENAXHER">Menaxher</option>
+              <option value="MENAXHER_PROJEKTI">Menaxher i projektit</option>
+              <option value="SHITJE">Shitje & CRM</option>
+              <option value="FINANCE">Financë</option>
+              <option value="ADMINISTRATOR">Administrator</option>
+            </select>
+          </div>
+        <% } else { %>
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+            <span class="block font-semibold text-slate-200 mb-1">Roli i llogarisë</span>
+            <span class="text-slate-400">Punëtor / Teknik — llogaria caktohet automatikisht te ekipi juaj.</span>
+          </div>
+        <% } %>
       </div>
     </div>
 
@@ -146,17 +161,24 @@
         </select>
       </div>
 
-      <div>
-        <label class="block font-semibold text-slate-300 mb-1">Menaxheri i Ekipit / Përgjegjësi</label>
-        <select name="managerId" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
-          <option value="">-- Pa menaxher të veçantë (Staf Qendror) --</option>
-          <% if (typeof managers !== 'undefined' && managers) { %>
-            <% managers.forEach(m => { %>
-              <option value="<%= m.id %>"><%= m.fullName %> (<%= m.role %>)</option>
-            <% }); %>
-          <% } %>
-        </select>
-      </div>
+      <% if (currentUser && currentUser.role === 'ADMINISTRATOR') { %>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Menaxheri i Ekipit / Përgjegjësi</label>
+          <select name="managerId" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <option value="">-- Pa menaxher të veçantë (Staf Qendror) --</option>
+            <% if (typeof managers !== 'undefined' && managers) { %>
+              <% managers.forEach(m => { %>
+                <option value="<%= m.id %>"><%= m.fullName %> (<%= m.role %>)</option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+      <% } else { %>
+        <div class="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+          <span class="block font-semibold text-cyan-200 mb-1">Menaxheri i ekipit</span>
+          <span class="text-slate-400"><%= currentUser ? currentUser.fullName : 'Stafi qendror' %> — do të caktohet automatikisht.</span>
+        </div>
+      <% } %>
     </div>
   </div>
 
@@ -207,9 +229,15 @@
 
   <!-- Butonat e Veprimit -->
   <div class="flex items-center justify-end gap-3 pt-2">
-    <a href="/puntoret" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
-      Anulo
-    </a>
+    <% if (popupMode) { %>
+      <button type="button" onclick="window.parent.postMessage({ type: 'close-employee-modal' }, window.location.origin)" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+        Anulo
+      </button>
+    <% } else { %>
+      <a href="/puntoret" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+        Anulo
+      </a>
+    <% } %>
     <button type="submit" class="px-7 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       <span>RUAJ DHE REGJISTRO PUNTORIN</span>

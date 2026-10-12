@@ -25,7 +25,20 @@
       <div x-data="quickCustomerModal()">
         <label class="block font-semibold text-slate-300 mb-1">Klienti *</label>
         <div class="flex items-center gap-2">
-          <select name="customerId" x-ref="customerSelect" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+          <div x-data="customerCombo()" class="relative flex-1 min-w-0">
+            <input type="text" x-model="q" autocomplete="off" placeholder="Shkruaj emrin, kodin ose qytetin e klientit…"
+              @focus="show($el); " @input="show($el); typed()" @blur="blur()"
+              @keydown.arrow-down.prevent="hi = Math.min(hi + 1, list().length - 1)" @keydown.arrow-up.prevent="hi = Math.max(hi - 1, 0)"
+              @keydown.enter.prevent="enter()" @keydown.escape="open = false"
+              class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+            <div x-show="open" x-cloak :style="`position:fixed;z-index:9999;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;background:#0d1220;max-height:280px;overflow-y:auto`" class="border border-slate-600 rounded-xl shadow-2xl">
+              <template x-for="(o, oi) in list()" :key="o.id">
+                <button type="button" @mousedown.prevent="choose(o)" :class="oi === hi ? 'bg-slate-700' : ''" class="w-full text-left px-3 py-2.5 text-sm text-slate-100 hover:bg-slate-700 border-b border-slate-800 last:border-0" x-text="o.text"></button>
+              </template>
+              <p x-show="!list().length" class="px-3 py-3 text-xs text-slate-400">Asnjë klient nuk u gjet. Përdor + për të shtuar të ri.</p>
+            </div>
+          </div>
+          <select name="customerId" x-ref="customerSelect" required tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
             <option value="">-- Zgjidh Klientin --</option>
             <% customers.forEach(c => { %>
               <option value="<%= c.id %>"><%= c.companyName %> (<%= c.code %>) - <%= c.city || 'Kosovë' %></option>
@@ -38,21 +51,18 @@
 
       <div>
         <label class="block font-semibold text-slate-300 mb-1">Data e Ofertës *</label>
-        <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+        <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
       </div>
 
       <div>
-        <label class="block font-semibold text-slate-300 mb-1">Vlefshmëria deri më *</label>
-        <input type="date" name="validUntil" value="<%= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] %>" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+        <label class="block font-semibold text-slate-300 mb-1">Vlefshmëria deri më <span class="text-slate-500 font-normal">(opsionale)</span></label>
+        <input type="date" name="validUntil" value="" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
       </div>
 
       <div>
         <label class="block font-semibold text-slate-300 mb-1">Përfaqësuesi i Shitjes</label>
-        <select name="salesRepId" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-amber-400">
-          <% users.forEach(u => { %>
-            <option value="<%= u.id %>" <%= currentUser && currentUser.id === u.id ? 'selected' : '' %>><%= u.fullName %> (<%= u.role %>)</option>
-          <% }); %>
-        </select>
+        <input type="hidden" name="salesRepId" value="<%= currentUser ? currentUser.id : '' %>">
+        <div class="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300"><%= currentUser ? (currentUser.fullName || currentUser.username) : '-' %></div>
       </div>
 
       <div>
@@ -79,13 +89,50 @@
 
   <!-- 2. Tabela Dinamike e Artikujve -->
   <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl" x-data="{
+    catalog: <%= JSON.stringify(typeof catalog !== 'undefined' ? catalog : []) %>,
+    sugIdx: null, sugRect: { top: 0, left: 0, width: 300 },
+    showPicker: false, pickerQ: '', added: 0,
+    emptyItem() { return { itemType: 'Artikull i personalizuar', name: '', description: '', quantity: 1, unit: 'copë', unitPrice: 0, discount: 0 }; },
+    suggestions(item) {
+      const q = (item.name || '').trim().toLowerCase();
+      if (!q) return [];
+      return this.catalog.filter(c => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q).slice(0, 8);
+    },
+    openSug(idx, el) {
+      const r = el.getBoundingClientRect();
+      this.sugRect = { top: r.bottom + 4, left: r.left, width: Math.max(r.width, 320) };
+      this.sugIdx = idx;
+    },
+    fill(item, c) {
+      item.name = c.name; item.itemType = c.itemType; item.description = c.description; item.unit = c.unit; item.unitPrice = c.unitPrice;
+    },
+    choose(idx, c) { this.fill(this.items[idx], c); this.sugIdx = null; },
+    pickerList() {
+      const q = this.pickerQ.trim().toLowerCase();
+      return this.catalog.filter(c => !q || (c.name + ' ' + (c.description || '') + ' ' + c.itemType).toLowerCase().includes(q));
+    },
+    qtyOf(c) { const it = this.items.find(i => i.name === c.name); return it ? (Number(it.quantity) || 0) : 0; },
+    incCatalog(c) {
+      const it = this.items.find(i => i.name === c.name);
+      if (it) { it.quantity = (Number(it.quantity) || 0) + 1; return; }
+      const last = this.items[this.items.length - 1];
+      const target = (last && !last.name.trim()) ? last : (this.items.push(this.emptyItem()), this.items[this.items.length - 1]);
+      this.fill(target, c); target.quantity = 1;
+    },
+    decCatalog(c) {
+      const idx = this.items.findIndex(i => i.name === c.name);
+      if (idx < 0) return;
+      const q = (Number(this.items[idx].quantity) || 0) - 1;
+      if (q > 0) this.items[idx].quantity = q;
+      else if (this.items.length > 1) this.items.splice(idx, 1);
+      else this.items[idx] = this.emptyItem();
+    },
+    addedCount() { return this.items.filter(i => i.name && i.name.trim()).length; },    openPicker() { this.pickerQ = ''; this.added = 0; this.showPicker = true; },
     items: [
-      { itemType: 'Lift', name: 'Lift KRONEER Elegance 630', description: 'Motor gearless MRL, kabinë inoksi AISI 304, shpejtësi 1.0 m/s', quantity: 1, unit: 'copë', unitPrice: 22500, discount: 1000 },
-      { itemType: 'Instalim', name: 'Instalimi dhe Montimi Profesional', description: 'Montimi i shinave, kabinës dhe lidhja elektrike', quantity: 1, unit: 'shërbim', unitPrice: 3500, discount: 0 },
-      { itemType: 'Transport', name: 'Transporti në Kantier', description: 'Transport me vinç', quantity: 1, unit: 'shërbim', unitPrice: 900, discount: 0 }
+      { itemType: 'Artikull i personalizuar', name: '', description: '', quantity: 1, unit: 'copë', unitPrice: 0, discount: 0 }
     ],
     addItem() {
-      this.items.push({ itemType: 'Komponent', name: '', description: '', quantity: 1, unit: 'copë', unitPrice: 0, discount: 0 });
+      this.items.push(this.emptyItem());
     },
     removeItem(idx) {
       if (this.items.length > 1) this.items.splice(idx, 1);
@@ -110,19 +157,59 @@
       <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">
         2. Artikujt e Ofertës
       </h3>
+      <div class="flex items-center gap-2"><button type="button" @click="openPicker()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5">📦 <span>Shto Shërbime/Produkte</span></button>
       <button type="button" @click="addItem()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         <span>Shto Artikull</span>
-      </button>
+      </button></div>
     </div>
 
+    <template x-teleport="body">
+      <div x-show="showPicker" x-cloak @keydown.escape.window="showPicker = false" class="fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] p-3 flex pointer-events-none">
+        <div class="relative pointer-events-auto w-full flex flex-col rounded-2xl border border-slate-700 shadow-2xl" style="background:#0b1020">
+          <div class="flex items-center justify-between gap-3 p-4 border-b border-slate-700">
+            <div>
+              <h3 class="text-base font-black text-slate-100">Shto Shërbime / Produkte</h3>
+              <p class="text-xs text-slate-400" x-text="addedCount() ? addedCount() + ' artikuj në ofertë' : 'Përdor + për të shtuar në ofertë'"></p>
+            </div>
+            <button type="button" @click="showPicker = false" class="text-slate-400 hover:text-white text-2xl leading-none px-2">&times;</button>
+          </div>
+          <div class="p-3 border-b border-slate-700">
+            <input type="text" x-model="pickerQ" x-ref="pq" x-effect="if (showPicker) $nextTick(() => $refs.pq && $refs.pq.focus())" placeholder="Kërko produkt…" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-amber-400">
+          </div>
+          <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+            <template x-for="(c, ci) in pickerList()" :key="ci">
+              <div class="p-3 rounded-xl border transition" :class="qtyOf(c) ? 'border-amber-400/70 bg-slate-800/60' : 'border-slate-700'">
+                <div class="flex items-start justify-between gap-2">
+                  <span class="text-sm font-bold text-slate-100 leading-snug" x-text="c.name"></span>
+                  <span class="font-mono font-black text-amber-400 text-sm shrink-0" x-text="(c.unitPrice) + ' €'"></span>
+                </div>
+                <div class="text-[11px] text-slate-400 line-clamp-2 mt-1" x-text="c.description || '—'"></div>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-[10px] uppercase font-bold text-slate-500" x-text="c.itemType + ' · ' + c.unit"></span>
+                  <div class="flex items-center gap-1" x-show="qtyOf(c)">
+                    <button type="button" @click="decCatalog(c)" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 font-black text-lg leading-none">−</button>
+                    <span class="w-8 text-center font-mono font-bold text-slate-100 text-sm" x-text="qtyOf(c)"></span>
+                    <button type="button" @click="incCatalog(c)" class="w-8 h-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-lg leading-none">+</button>
+                  </div>
+                  <button type="button" x-show="!qtyOf(c)" @click="incCatalog(c)" class="px-3 h-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs">+ Shto</button>
+                </div>
+              </div>
+            </template>
+            <p x-show="!pickerList().length" class="text-center text-sm text-slate-400 py-10">Asnjë produkt nuk u gjet. Mund ta shkruash manualisht te oferta.</p>
+          </div>
+          <div class="p-3 border-t border-slate-700 flex justify-end">
+            <button type="button" @click="showPicker = false" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm">Gati</button>
+          </div>
+        </div>
+      </div>
+    </template>
     <!-- Tabela e Artikujve -->
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-950/70 text-slate-400 uppercase font-bold text-[10px]">
           <tr>
-            <th class="p-3">Lloji</th>
-            <th class="p-3 w-1/3">Produkti & Përshkrimi</th>
+            <th class="p-3 min-w-[260px] w-2/5">Produkti & Përshkrimi</th>
             <th class="p-3">Sasia</th>
             <th class="p-3">Njësia</th>
             <th class="p-3">Çmimi (€)</th>
@@ -134,34 +221,34 @@
         <tbody class="divide-y divide-slate-800/60">
           <template x-for="(item, index) in items" :key="index">
             <tr>
-              <td class="p-2">
-                <select x-model="item.itemType" class="px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none">
-                  <option value="Lift">Lift</option>
-                  <option value="Komponent">Komponent</option>
-                  <option value="Shërbim">Shërbim</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Instalim">Instalim</option>
-                  <option value="Mirëmbajtje">Mirëmbajtje</option>
-                  <option value="Artikull i personalizuar">I Personalizuar</option>
-                </select>
-              </td>
-              <td class="p-2 space-y-1">
-                <input type="text" x-model="item.name" required placeholder="Emri i produktit" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 font-semibold focus:outline-none">
-                <input type="text" x-model="item.description" placeholder="Përshkrim teknik" class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
+<td class="p-2 space-y-1">
+                <input type="text" x-model="item.name" required autocomplete="off" placeholder="Shkruaj emrin e produktit / shërbimit…"
+                  @focus="openSug(index, $el)" @input="openSug(index, $el)" @blur="setTimeout(() => { if (sugIdx === index) sugIdx = null }, 200)" @keydown.escape="sugIdx = null"
+                  class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-100 font-semibold focus:outline-none focus:border-amber-400">
+                <div x-show="sugIdx === index && suggestions(item).length" x-cloak :style="`position:fixed;z-index:9999;top:${sugRect.top}px;left:${sugRect.left}px;width:${sugRect.width}px;background:#0d1220;max-height:300px;overflow-y:auto`" class="border border-slate-600 rounded-xl shadow-2xl">
+                  <template x-for="(c, ci) in suggestions(item)" :key="ci">
+                    <button type="button" @mousedown.prevent="choose(index, c)" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-700 border-b border-slate-800 last:border-0">
+                      <span class="min-w-0"><span class="block text-sm font-semibold text-slate-100 truncate" x-text="c.name"></span><span class="block text-[11px] text-slate-400 truncate" x-text="c.itemType + (c.description ? ' · ' + c.description : '')"></span></span>
+                      <span class="font-mono font-bold text-amber-400 text-sm shrink-0" x-text="(c.unitPrice) + ' €'"></span>
+                    </button>
+                  </template>
+                </div>                <input type="text" x-model="item.description" placeholder="Përshkrim teknik" class="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/60 rounded-lg text-[11px] text-slate-400 focus:outline-none">
               </td>
               <td class="p-2">
                 <input type="number" x-model.number="item.quantity" min="1" step="0.5" class="w-16 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-center focus:outline-none">
               </td>
               <td class="p-2">
-                <input type="text" x-model="item.unit" class="w-16 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 text-center focus:outline-none">
-              </td>
+                <select x-model="item.unit" class="w-28 px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400">
+                  <% unitList.forEach(u => { %><option value="<%= u %>"><%= u %></option><% }) %>
+                  <template x-if="item.unit && !<%= JSON.stringify(unitList) %>.includes(item.unit)"><option :value="item.unit" x-text="item.unit"></option></template>
+                </select>              </td>
               <td class="p-2">
                 <input type="number" x-model.number="item.unitPrice" min="0" step="10" class="w-24 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 text-right focus:outline-none">
               </td>
               <td class="p-2">
                 <input type="number" x-model.number="item.discount" min="0" step="10" class="w-20 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-emerald-400 text-right focus:outline-none">
               </td>
-              <td class="p-2 font-mono font-bold text-slate-100 text-right" x-text="'€' + ((item.quantity * item.unitPrice) - item.discount).toLocaleString('de-DE', {minimumFractionDigits: 2})"></td>
+              <td class="p-2 font-mono font-bold text-slate-100 text-right" x-text="(((item.quantity * item.unitPrice) - item.discount).toLocaleString('de-DE', {minimumFractionDigits: 2})) + ' €'"></td>
               <td class="p-2 text-center">
                 <button type="button" @click="removeItem(index)" class="text-slate-500 hover:text-rose-400 p-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -178,23 +265,23 @@
       <div class="w-72 space-y-2 text-xs">
         <div class="flex justify-between text-slate-400">
           <span>Nëntotali bruto:</span>
-          <span class="font-mono font-bold text-slate-200" x-text="'€' + subtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+          <span class="font-mono font-bold text-slate-200" x-text="(subtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})) + ' €'"></span>
         </div>
         <div class="flex justify-between text-slate-400">
           <span>Zbritja totale:</span>
-          <span class="font-mono font-bold text-emerald-400" x-text="'-€' + totalDiscount().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+          <span class="font-mono font-bold text-emerald-400" x-text="'-' + totalDiscount().toLocaleString('de-DE', {minimumFractionDigits: 2}) + ' €'"></span>
         </div>
         <div class="flex justify-between text-slate-400">
           <span>Nëntotali neto:</span>
-          <span class="font-mono font-bold text-slate-200" x-text="'€' + netSubtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+          <span class="font-mono font-bold text-slate-200" x-text="(netSubtotal().toLocaleString('de-DE', {minimumFractionDigits: 2})) + ' €'"></span>
         </div>
         <div class="flex justify-between text-slate-400">
           <span>TVSH (18%):</span>
-          <span class="font-mono font-bold text-slate-200" x-text="'€' + vat().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+          <span class="font-mono font-bold text-slate-200" x-text="(vat().toLocaleString('de-DE', {minimumFractionDigits: 2})) + ' €'"></span>
         </div>
         <div class="pt-2 border-t-2 border-amber-500/40 flex justify-between">
           <span class="font-black text-slate-100 text-sm">TOTALI:</span>
-          <span class="text-xl font-black text-amber-400 font-mono" x-text="'€' + total().toLocaleString('de-DE', {minimumFractionDigits: 2})"></span>
+          <span class="text-xl font-black text-amber-400 font-mono" x-text="(total().toLocaleString('de-DE', {minimumFractionDigits: 2})) + ' €'"></span>
         </div>
       </div>
     </div>
@@ -219,3 +306,5 @@
   </div>
 
 </form>
+
+

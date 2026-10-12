@@ -12,7 +12,7 @@
   
   const defaultPreamble = `Kjo Kontratë lidhet ndërmjet ${compName} me seli në ${compAddr}, ${compCity}, NUI: ${compTax} (në vijim: "Shitësi / Kryesi i Punëve"), dhe ${clientName} me seli në ${cAddress}, ${cCity}, NUI: ${cTax} (në vijim: "Blerësi / Porositësi").`;
   const defaultArt1 = `Shitësi merr përsipër furnizimin me pajisje, transportin, montimin profesional, testimin dinamik dhe dorëzimin e plotë funksional të sistemit të liftit: ${elevName} për objektin "${bldName}".`;
-  const defaultArt2 = `Vlera totale e dakorduar kontraktuale është €${contract.value.toLocaleString('de-DE', {minimumFractionDigits: 2})} (përfshirë TVSH 18%). Kushtet e pagesës janë: ${contract.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
+  const defaultArt2 = `Vlera totale e dakorduar kontraktuale është ${contract.value.toLocaleString('de-DE', {minimumFractionDigits: 2})} € (përfshirë TVSH 18%). Kushtet e pagesës janë: ${contract.paymentTerms || '30% Parapagim, 40% Para Instalimit, 20% Gjatë Instalimit, 10% Pas Dorëzimit'}.`;
   const dDate = contract.deliveryDate ? new Date(contract.deliveryDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
   const iDate = contract.installationDate ? new Date(contract.installationDate).toLocaleDateString('de-DE') : 'Sipas marrëveshjes';
   const defaultArt3 = `Afati i dorëzimit të pajisjeve në kantier është deri më ${dDate}. Përfundimi i montimit dhe testimit parashikohet më ${iDate}. Periudha e Garancisë Inxhinierike është ${contract.warrantyMonths || 24} Muaj nga dita e nënshkrimit të Procesverbalit të Dorëzimit Teknik.`;

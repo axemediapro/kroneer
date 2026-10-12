@@ -101,7 +101,7 @@
                 <a href="/ofertat/<%= q.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-sm text-slate-900 dark:text-white">Oferta <%= q.number %></span>
-                    <span class="font-bold text-xs text-amber-600">€<%= (q.total || 0).toLocaleString('de-DE') %></span>
+                    <span class="font-bold text-xs text-amber-600"><%= (q.total || 0).toLocaleString('de-DE') %> €</span>
                   </div>
                   <div class="text-xs text-slate-500 mt-0.5"><%= q.customer ? q.customer.companyName : '-' %> • Statusi: <%= q.status %></div>
                 </a>
@@ -110,9 +110,9 @@
                 <a href="/faturat/<%= i.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-sm text-slate-900 dark:text-white">Fatura <%= i.number %></span>
-                    <span class="font-bold text-xs text-emerald-600">€<%= (i.total || 0).toLocaleString('de-DE') %></span>
+                    <span class="font-bold text-xs text-emerald-600"><%= (i.total || 0).toLocaleString('de-DE') %> €</span>
                   </div>
-                  <div class="text-xs text-slate-500 mt-0.5"><%= i.customer ? i.customer.companyName : '-' %> • Mbetur: €<%= (i.balanceDue || 0).toLocaleString('de-DE') %></div>
+                  <div class="text-xs text-slate-500 mt-0.5"><%= i.customer ? i.customer.companyName : '-' %> • Mbetur: <%= (i.balanceDue || 0).toLocaleString('de-DE') %> €</div>
                 </a>
               <% }) %>
             </div>
@@ -130,7 +130,7 @@
                 <a href="/kontratat/<%= c.id %>" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-sm text-slate-900 dark:text-white">Kontrata <%= c.number %></span>
-                    <span class="font-bold text-xs text-amber-600">€<%= (c.value || 0).toLocaleString('de-DE') %></span>
+                    <span class="font-bold text-xs text-amber-600"><%= (c.value || 0).toLocaleString('de-DE') %> €</span>
                   </div>
                   <div class="text-xs text-slate-500 mt-0.5"><%= c.customer ? c.customer.companyName : '-' %> • Statusi: <%= c.status %></div>
                 </a>
@@ -150,7 +150,7 @@
                 <a href="/shpenzimet" class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition bg-slate-50/50 dark:bg-slate-900/40">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-sm text-slate-900 dark:text-white"><%= e.number %></span>
-                    <span class="font-bold text-xs text-rose-500">€<%= (e.amount || 0).toLocaleString('de-DE') %></span>
+                    <span class="font-bold text-xs text-rose-500"><%= (e.amount || 0).toLocaleString('de-DE') %> €</span>
                   </div>
                   <div class="text-xs text-slate-500 mt-0.5"><%= e.title %> • <%= e.category %></div>
                 </a>
@@ -199,7 +199,7 @@
                     <span class="font-bold text-sm text-slate-900 dark:text-white"><%= p.name %></span>
                     <span class="text-xs font-mono font-bold text-amber-600"><%= p.partNumber %></span>
                   </div>
-                  <div class="text-xs text-slate-500 mt-0.5">Stoku: <%= p.stockQty %> copë • Çmimi: €<%= (p.sellingPrice || 0).toFixed(2) %></div>
+                  <div class="text-xs text-slate-500 mt-0.5">Stoku: <%= p.stockQty %> copë • Çmimi: <%= (p.sellingPrice || 0).toFixed(2) %> €</div>
                 </a>
               <% }) %>
             </div>

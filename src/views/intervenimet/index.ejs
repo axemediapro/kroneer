@@ -83,6 +83,7 @@
                   <span class="text-slate-500">•</span>
                   <span class="text-[10px] text-slate-400 font-medium"><%= inv.type %></span>
                 </div>
+                <span class="text-[10px] text-slate-500 block mt-1">Regjistroi: <span class="text-slate-300"><%= inv.createdBy ? inv.createdBy.userName : 'Pa të dhëna' %></span></span>
               </td>
               <td class="p-4">
                 <% if (inv.project) { %>

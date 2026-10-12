@@ -17,20 +17,68 @@
         </div>
       </div>
     <% } %>
-    <div class="text-[11px] text-slate-600">
-      <%= company.address || 'Prishtinë' %>, <%= company.city || 'Kosovë' %> • NUI: <%= company.taxNumber || '330123456' %>
-    </div>
+    <div class="text-[11px] text-slate-600 space-y-0.5"><div><%= company.address %>, <%= company.city %> • NUI: <%= company.taxNumber %></div><div>Tel: <%= company.phone %> • Email: <%= company.email %></div></div>
   </div>
 
   <div class="text-right">
     <span class="inline-block px-3 py-1 bg-slate-950 text-amber-400 text-xs font-mono font-black rounded uppercase tracking-wider mb-2">
-      RAPORT PREZENCE & ORARI
+      <%= employeeReport ? 'RAPORT MUJOR INDIVIDUAL I PREZENCËS' : 'RAPORT PREZENCE & ORARI' %>
     </span>
     <div class="text-base font-black font-mono text-slate-950"><%= monthName %> <%= selectedYear %></div>
-    <div class="text-xs text-slate-600 mt-1">Departamenti: <strong class="text-slate-900"><%= departamenti %></strong></div>
+    <% if (employeeReport) { %>
+      <div class="text-xs text-slate-600 mt-1">Punëtori: <strong class="text-slate-900"><%= employeeReport.firstName %> <%= employeeReport.lastName %></strong></div>
+    <% } else { %>
+      <div class="text-xs text-slate-600 mt-1">Departamenti: <strong class="text-slate-900"><%= departamenti %></strong></div>
+    <% } %>
   </div>
 </div>
 
+<% if (employeeReport) { %>
+  <% const monthlySummary = employeeSummaries[0]; %>
+  <div class="grid grid-cols-4 gap-2 mb-5 text-center text-xs">
+    <div class="border border-slate-300 rounded-lg p-2"><span class="block text-[10px] uppercase text-slate-500">Ditë pune</span><strong class="text-sm"><%= monthlySummary.daysWorked %></strong></div>
+    <div class="border border-slate-300 rounded-lg p-2"><span class="block text-[10px] uppercase text-slate-500">Orë pune</span><strong class="text-sm"><%= monthlySummary.totalHours %></strong></div>
+    <div class="border border-slate-300 rounded-lg p-2"><span class="block text-[10px] uppercase text-slate-500">Orë shtesë</span><strong class="text-sm"><%= monthlySummary.overtimeHours %></strong></div>
+    <div class="border border-slate-300 rounded-lg p-2"><span class="block text-[10px] uppercase text-slate-500">Pauza (orë)</span><strong class="text-sm"><%= monthlySummary.breakHours %></strong></div>
+  </div>
+
+  <div class="mb-3 text-xs text-slate-700">
+    <strong><%= employeeReport.code %></strong> · <%= employeeReport.position %> · <%= employeeReport.department %>
+  </div>
+
+  <table class="w-full text-left text-xs border border-slate-300 mb-6">
+    <thead class="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
+      <tr>
+        <th class="p-2 border-r border-slate-300">Data</th>
+        <th class="p-2 border-r border-slate-300">Statusi</th>
+        <th class="p-2 border-r border-slate-300">Hyrja</th>
+        <th class="p-2 border-r border-slate-300">Dalja</th>
+        <th class="p-2 border-r border-slate-300 text-center">Pauza (min)</th>
+        <th class="p-2 border-r border-slate-300 text-center">Orë pune</th>
+        <th class="p-2 border-r border-slate-300 text-center">Shtesë (min)</th>
+        <th class="p-2">Lokacioni / Shënime</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-200">
+      <% if (employeeReport.attendances.length) { %>
+        <% employeeReport.attendances.forEach(attendance => { %>
+          <tr>
+            <td class="p-2 border-r border-slate-200"><%= formatDate(attendance.date) %></td>
+            <td class="p-2 border-r border-slate-200"><%= attendance.status %></td>
+            <td class="p-2 border-r border-slate-200 font-mono"><%= attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+            <td class="p-2 border-r border-slate-200 font-mono"><%= attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+            <td class="p-2 border-r border-slate-200 text-center"><%= attendance.totalBreakMinutes || 0 %></td>
+            <td class="p-2 border-r border-slate-200 text-center font-bold"><%= Number(attendance.workedHours || 0).toFixed(1) %></td>
+            <td class="p-2 border-r border-slate-200 text-center"><%= attendance.overtimeMinutes || 0 %></td>
+            <td class="p-2"><%= [attendance.location, attendance.notes].filter(Boolean).join(' · ') || '-' %></td>
+          </tr>
+        <% }); %>
+      <% } else { %>
+        <tr><td colspan="8" class="p-6 text-center text-slate-500">Nuk ka regjistrime të prezencës për këtë muaj.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+<% } else { %>
 <div class="text-center font-bold uppercase tracking-wider text-sm mb-4 border-b border-slate-300 pb-1.5 text-slate-950">
   PASQYRA PËRMBLEDHËSE E PREZENCËS DHE ORËVE TË PUNËS TË STAFIT
 </div>
@@ -58,6 +106,7 @@
         <td class="p-2 text-center font-mono border-r border-slate-200 text-slate-600 font-bold"><%= item.employee.code %></td>
         <td class="p-2 border-r border-slate-200 font-bold text-slate-900">
           <%= item.employee.firstName %> <%= item.employee.lastName %>
+          <a class="block text-[9px] text-cyan-700 underline" href="/prezenca/print?employeeId=<%= item.employee.id %>&muaji=<%= selectedMonth %>&viti=<%= selectedYear %>">Hap raportin ditor</a>
         </td>
         <td class="p-2 border-r border-slate-200 text-slate-700">
           <div><%= item.employee.position %></div>
@@ -88,6 +137,7 @@
     </tr>
   </tfoot>
 </table>
+<% } %>
 
 <!-- Nënshkrimet Zyrtare -->
 <% const stampH = (typeof company !== 'undefined' && company && company.stampHeight) ? company.stampHeight : 80; %>

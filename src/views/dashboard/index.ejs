@@ -64,21 +64,6 @@
         <div class="flex flex-wrap items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span class="text-[11px] font-mono font-bold tracking-wider text-emerald-400 uppercase">Sistemi Aktiv</span>
-          <% if (company && company.logoDarkBgUrl) { %>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-              <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              Logo Dark UI Aktive
-            </span>
-          <% } else if (company && company.logoUrl) { %>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
-              <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              Logo Standarde
-            </span>
-          <% } else { %>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700">
-              Logo KRONEER
-            </span>
-          <% } %>
         </div>
         <h1 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight font-mono mt-0.5">
           PËRSHËNDETJE, <%= currentUser ? currentUser.fullName.toUpperCase() : 'ADMIN' %>
@@ -90,24 +75,25 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <a href="/prezenca" class="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 hover:from-emerald-500/30 hover:to-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>Orari & Prezenca</span>
-      </a>
-
-      <!-- Butoni i Ngarkimit të Logos direkt nga Dashboardi -->
-      <button type="button" @click="isLogoModalOpen = true" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 border border-amber-500/40 hover:border-amber-400 font-bold text-xs shadow-md shadow-amber-500/10 transition-all flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        <span>Menaxho Logot</span>
-      </button>
-
-      <a href="/lifts/konfiguruesi" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        <span>Konfiguruesi</span>
-      </a>
-      <a href="/ofertat/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
+      <% if (canCreateDocs) { %><a href="/ofertat/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         <span>Krijo Ofertë</span>
+      </a><% } %>
+      <% if (canCreateDocs) { %><a href="/faturat/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Faturë</span>
+      </a><% } %>
+      <a href="/kontratat/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Kontratë</span>
+      </a>
+      <a href="/servisi/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Tiketë të Servisit</span>
+      </a>
+      <a href="/puntoret/krijo" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Krijo Punëtorë</span>
       </a>
     </div>
   </div>
@@ -389,8 +375,9 @@
       </div>
       <span class="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-slate-800 text-amber-400 border border-slate-700">Janar - Dhjetor</span>
     </div>
-    <div class="h-72">
+    <div id="salesPerformanceChartWrap" class="h-72 relative">
       <div id="salesPerformanceChart" class="w-full h-full"></div>
+      <div id="salesPerformanceTooltip" role="status" aria-live="polite" class="hidden absolute z-10 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-amber-500/50 text-xs font-semibold text-slate-100 shadow-xl pointer-events-none whitespace-nowrap"></div>
     </div>
   </div>
 
@@ -636,13 +623,23 @@
 </script>
 
 <!-- Grafikët (SVG i pastër, pa bibliotekë të jashtme) -->
+<style>
+  #salesPerformanceChart .sales-chart-point { cursor: pointer; outline: none; pointer-events: all; }
+  #salesPerformanceChart .sales-chart-marker { transform-box: fill-box; transform-origin: center; transition: transform 160ms ease, filter 160ms ease; }
+  #salesPerformanceChart .sales-chart-point:hover .sales-chart-marker,
+  #salesPerformanceChart .sales-chart-point:focus .sales-chart-marker,
+  #salesPerformanceChart .sales-chart-point.is-active .sales-chart-marker { transform: scale(1.7); filter: drop-shadow(0 0 5px #D4AF37); }
+  #elevatorTypesChart .elevator-chart-segment { cursor: pointer; transition: stroke-width 160ms ease, filter 160ms ease; }
+  #elevatorTypesChart .elevator-chart-segment:hover,
+  #elevatorTypesChart .elevator-chart-segment:focus { stroke-width: 20; filter: drop-shadow(0 0 3px currentColor); outline: none; }
+</style>
 <script>
 (function () {
   var d = JSON.parse(document.getElementById('dashboard-charts-data').textContent);
   var sales = d.monthlySales || [], types = d.elevatorTypesBreakdown || { labels: [], data: [] };
   var months = ['Jan', 'Shk', 'Mar', 'Pri', 'Maj', 'Qer', 'Kor', 'Gus', 'Sht', 'Tet', 'Nën', 'Dhj'];
   var colors = ['#D4AF37', '#38BDF8', '#34D399', '#F472B6', '#A78BFA', '#FBBF24', '#94A3B8'];
-  var fmt = function (n) { return '€' + Number(n).toLocaleString('de-DE'); };
+  var fmt = function (n) { return Number(n).toLocaleString('de-DE') + ' €'; };
 
   var el = document.getElementById('salesPerformanceChart');
   if (el) {
@@ -650,16 +647,53 @@
     var max = Math.max.apply(null, sales.concat([1000])), step = Math.pow(10, Math.floor(Math.log10(max)));
     max = Math.ceil(max / step) * step;
     var x = function (i) { return L + i * (W - L - R) / 11; }, y = function (v) { return T + (H - T - B) * (1 - v / max); };
-    var g = '', pts = sales.map(function (v, i) { return x(i) + ',' + y(v); }).join(' ');
+    var g = '', pointMarkup = '', pts = sales.map(function (v, i) { return x(i) + ',' + y(v); }).join(' ');
     for (var k = 0; k <= 4; k++) {
       var v = max * k / 4;
       g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="rgba(255,255,255,.06)"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end" fill="#94A3B8" font-size="11">€' + (v / 1000) + 'k</text>';
     }
     months.forEach(function (m, i) { g += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#94A3B8" font-size="11">' + m + '</text>'; });
-    sales.forEach(function (v, i) { g += '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="4" fill="#D4AF37" stroke="#0F172A" stroke-width="2"><title>' + months[i] + ': ' + fmt(v) + '</title></circle>'; });
+    sales.forEach(function (v, i) {
+      pointMarkup += '<g class="sales-chart-point" data-index="' + i + '" tabindex="0" role="img" aria-label="' + months[i] + ': ' + fmt(v) + '">' +
+        '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="10" fill="transparent"/>' +
+        '<circle class="sales-chart-marker" cx="' + x(i) + '" cy="' + y(v) + '" r="4" fill="#D4AF37" stroke="#0F172A" stroke-width="2"/>' +
+        '<title>' + months[i] + ': ' + fmt(v) + '</title></g>';
+    });
     el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full h-full" preserveAspectRatio="none">' + g +
       '<polygon points="' + x(0) + ',' + y(0) + ' ' + pts + ' ' + x(11) + ',' + y(0) + '" fill="rgba(212,175,55,.1)"/>' +
-      '<polyline points="' + pts + '" fill="none" stroke="#D4AF37" stroke-width="3" stroke-linejoin="round"/></svg>';
+      '<polyline points="' + pts + '" fill="none" stroke="#D4AF37" stroke-width="3" stroke-linejoin="round"/>' + pointMarkup + '</svg>';
+
+    var chartWrap = document.getElementById('salesPerformanceChartWrap');
+    var tooltip = document.getElementById('salesPerformanceTooltip');
+    var activePoint = null;
+    var showSalesTooltip = function (point) {
+      if (activePoint && activePoint !== point) activePoint.classList.remove('is-active');
+      activePoint = point;
+      point.classList.add('is-active');
+      var index = Number(point.getAttribute('data-index'));
+      tooltip.textContent = months[index] + ': ' + fmt(sales[index]);
+      tooltip.classList.remove('hidden');
+      var pointRect = point.getBoundingClientRect(), wrapRect = chartWrap.getBoundingClientRect();
+      var left = pointRect.left + pointRect.width / 2 - wrapRect.left - tooltip.offsetWidth / 2;
+      var top = pointRect.top - wrapRect.top - tooltip.offsetHeight - 8;
+      tooltip.style.left = Math.max(0, Math.min(left, wrapRect.width - tooltip.offsetWidth)) + 'px';
+      tooltip.style.top = Math.max(0, top) + 'px';
+    };
+    var hideSalesTooltip = function (point) {
+      if (activePoint !== point) return;
+      point.classList.remove('is-active');
+      activePoint = null;
+      tooltip.classList.add('hidden');
+    };
+    el.querySelectorAll('.sales-chart-point').forEach(function (point) {
+      point.addEventListener('pointerenter', function () { showSalesTooltip(point); });
+      point.addEventListener('pointermove', function () { showSalesTooltip(point); });
+      point.addEventListener('pointerleave', function () {
+        if (document.activeElement !== point) hideSalesTooltip(point);
+      });
+      point.addEventListener('focus', function () { showSalesTooltip(point); });
+      point.addEventListener('blur', function () { hideSalesTooltip(point); });
+    });
   }
 
   el = document.getElementById('elevatorTypesChart');
@@ -667,7 +701,7 @@
     var tot = types.data.reduce(function (a, b) { return a + b; }, 0) || 1, acc = 0, C = 2 * Math.PI * 40, arcs = '', leg = '';
     types.data.forEach(function (v, i) {
       var len = C * v / tot, c = colors[i % colors.length];
-      arcs += '<circle cx="50" cy="50" r="40" fill="none" stroke="' + c + '" stroke-width="16" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-acc) + '" transform="rotate(-90 50 50)"><title>' + types.labels[i] + ': ' + v + '</title></circle>';
+      arcs += '<circle class="elevator-chart-segment" tabindex="0" role="img" aria-label="' + types.labels[i] + ': ' + v + '" cx="50" cy="50" r="40" fill="none" stroke="' + c + '" stroke-width="16" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-acc) + '" transform="rotate(-90 50 50)"><title>' + types.labels[i] + ': ' + v + '</title></circle>';
       acc += len;
       leg += '<li class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-sm" style="background:' + c + '"></span>' + types.labels[i] + '</li>';
     });

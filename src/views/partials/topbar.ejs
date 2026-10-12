@@ -1,34 +1,48 @@
-<header class="topbar sticky top-0 z-30 flex items-center justify-between h-16 px-4 lg:px-8 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
-  <div class="flex items-center gap-3">
-    <!-- Mobile Hamburger Toggle -->
-    <button id="mobile-menu-btn" type="button" class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+<header class="topbar sticky top-0 z-40">
+  <div class="topbar-inner max-w-[96rem] mx-auto h-16 px-4 lg:px-6 flex items-center gap-3">
+    <button id="mobile-menu-btn" type="button" aria-label="Menyja" class="lg:hidden icon-btn">
+      <i data-lucide="menu" class="w-5 h-5"></i>
     </button>
 
-    <!-- Global Search Trigger -->
-    <button id="search-trigger-btn" type="button" class="flex items-center gap-3 px-3.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 text-sm transition-all shadow-inner">
-      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <span class="hidden sm:inline">Kërko në të gjithë sistemin...</span>
-      <span class="sm:hidden">Kërko...</span>
-      <kbd class="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-slate-700/60 rounded border border-slate-600 text-slate-300">Ctrl K</kbd>
-    </button>
-  </div>
-
-  <div class="flex items-center gap-3">
-    <!-- Quick Create Button -->
-    <% if (!currentUser || (currentUser.role !== 'TEKNIK' && currentUser.role !== 'MENAXHER_PROJEKTI')) { %>
-    <a href="/ofertat/krijo" class="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 transition-all">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      <span>+ Ofertë e Re</span>
+    <a href="/paneli" class="flex items-center flex-shrink-0 mr-1" aria-label="KRONEER">
+      <% const topLogo = (company && company.logoDarkBgUrl) ? company.logoDarkBgUrl : ((company && company.logoUrl) ? company.logoUrl : '/images/kroneer-logo-white.svg'); %>
+      <img src="<%= topLogo %>" alt="<%= company ? company.companyName : 'KRONEER' %>" class="h-7 w-auto max-w-[150px] object-contain">
     </a>
-    <% } %>
 
-    <!-- Dark / Light Mode Toggle -->
-    <button id="theme-toggle-btn" type="button" title="Ndrysho modalitetin e dritës/errësirës" class="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors">
-      <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-      </svg>
+    <nav class="hidden lg:flex items-center gap-0.5 ml-2" x-data="{ open: null }" @keydown.escape.window="open = null" @click.away="open = null">
+      <a href="/paneli" class="nav-link <%= (currentPath === '/paneli' || currentPath === '/menaxheri') ? 'is-active' : '' %>">Paneli</a>
+      <% navGroups.forEach(g => { const act = g.items.some(i => i.match.some(m => currentPath === m || currentPath.startsWith(m.endsWith('/') ? m : m + '/')) ); %>
+      <div class="relative" @mouseenter="open = '<%= g.key %>'" @mouseleave="open = null">
+        <button type="button" class="nav-link <%= act ? 'is-active' : '' %>" @click="open = open === '<%= g.key %>' ? null : '<%= g.key %>'" :aria-expanded="open === '<%= g.key %>'">
+          <%= g.title %>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-60"></i>
+        </button>
+        <div x-show="open === '<%= g.key %>'" x-cloak x-transition.opacity.duration.120ms class="menu-panel absolute left-0 top-full pt-2 z-50">
+          <div class="menu-card w-64 p-1.5">
+            <% g.items.forEach(i => { const on = i.match.some(m => currentPath === m || currentPath.startsWith(m.endsWith('/') ? m : m + '/')); %>
+            <a href="<%= i.href %>" class="menu-item <%= on ? 'is-active' : '' %>">
+              <i data-lucide="<%= i.icon %>" class="w-4 h-4"></i><span><%= i.label %></span>
+            </a>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </nav>
+
+    <div class="flex-1"></div>
+
+    <button id="search-trigger-btn" type="button" class="search-pill">
+      <i data-lucide="search" class="w-4 h-4 text-amber-400"></i>
+      <span class="hidden md:inline">Kërko…</span>
+      <kbd class="hidden md:inline-block">Ctrl K</kbd>
     </button>
+
+    <% if (!currentUser || (currentUser.role !== 'TEKNIK' && currentUser.role !== 'MENAXHER_PROJEKTI')) { %>
+    <% if (canCreateDocs) { %><a href="/ofertat/krijo" class="btn-primary hidden sm:inline-flex">
+      <i data-lucide="plus" class="w-4 h-4"></i><span>Ofertë e Re</span>
+    </a><% } %>
+    <% } %>
 
     <!-- Qendra e Njoftimeve (Notification Center) -->
     <div class="relative" x-data="{ open: false }">
@@ -82,6 +96,20 @@
             <p class="p-6 text-center text-xs text-slate-400">Nuk keni asnjë njoftim për momentin.</p>
           <% } %>
         </div>
+      </div>
+    </div>
+
+    <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+      <button type="button" @click="open = !open" class="avatar-btn" aria-label="Profili">
+        <%= currentUser && currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : 'A' %>
+      </button>
+      <div x-show="open" x-cloak @click.away="open = false" x-transition.opacity.duration.120ms class="menu-card absolute right-0 mt-2 w-60 p-1.5 z-50">
+        <div class="px-3 py-2.5 border-b border-white/5 mb-1">
+          <p class="text-sm font-semibold text-slate-100 truncate"><%= currentUser ? currentUser.fullName : 'Admin' %></p>
+          <p class="text-[11px] text-amber-400 tracking-wide"><%= currentUser ? currentUser.role : '' %></p>
+        </div>
+        <a href="/cilesimet" class="menu-item"><i data-lucide="settings" class="w-4 h-4"></i><span>Cilësimet</span></a>
+        <a href="/dil" class="menu-item text-rose-300 hover:!text-rose-200"><i data-lucide="log-out" class="w-4 h-4"></i><span>Çkyçu</span></a>
       </div>
     </div>
   </div>
