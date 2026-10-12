@@ -7,7 +7,7 @@ Options -Indexes -MultiViews
 ServerSignature Off
 
 # 2. Mbrojtje e rreptë për skedarët sensitivë dhe të sistemit
-<FilesMatch "(^\.env|\.git|\.gitignore|schema\.prisma|\.db|\.sqlite|\.log|package(-lock)?\.json|tsconfig\.json|\.md|\.sh|\.sql)$">
+<FilesMatch "(^\.env|\.git|\.gitignore|schema\.prisma|\.db|\.sqlite|\.log|package(-lock)?\.json|tsconfig\.json|\.md|\.sh|\.sql|\.ps1|\.bak|\.backup|\.safety-backup|nginx\.conf|^ecosystem\.config\.js|^server\.js|^db\.js)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -22,18 +22,29 @@ ServerSignature Off
     RewriteEngine On
 
     # Blloko qasjen direkte në src/, prisma/, node_modules/, config/
-    RewriteRule ^(src|prisma|node_modules|config)/ - [F,L,NC]
+    RewriteRule ^(src|prisma|node_modules|config|logs)/ - [F,L,NC]
+
+    # Blloko skedarët e konfigurimit në rrënjë
+    RewriteRule ^(server\.js|db\.js|ecosystem\.config\.js|nginx\.conf|dev-local\.ps1|package(-lock)?\.json)$ - [F,L,NC]
 
     # Blloko skedarët e fshehur (.dotfiles)
     RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Blloko metodat HTTP të rrezikshme
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK|DEBUG) [NC]
+    RewriteRule .* - [F,L]
+
+    # Blloko skedarët e ekzekutueshëm në uploads
+    RewriteRule ^uploads/.*\.(php\d?|phtml|pl|py|cgi|sh|exe|js|html?|htaccess)$ - [F,L,NC]
 
     # Blloko sulmet e zakonshme (Path Traversal, Null Byte Injection, XSS)
     RewriteCond %{QUERY_STRING} (\.\./|\.\.\\|%00|<script|eval\(|base64_) [NC]
     RewriteRule .* - [F,L]
 
     # 4. HTTPS Enforcing (nëse serveri ka certifikatë SSL)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # 5. Reverse Proxy për Node.js / Express Server (Port 3000)
     <IfModule mod_proxy.c>
@@ -65,6 +76,13 @@ ServerSignature Off
     # Permissions Policy (Fik sensorët e panevojshëm)
     Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
     
+    # Detyro HTTPS (HSTS) për 1 vit
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Izolim nga dritaret/burimet e tjera cross-origin
+    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+
     # Fshih nënshkrimin e serverit
     Header unset X-Powered-By
     Header unset Server
